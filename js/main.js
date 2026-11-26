@@ -126,7 +126,7 @@
     time: 0,
     sel: 0, settingsFrom: 'menu',
     playerName: '', nameErrT: 0, lastRank: 0,
-    gold: 0, armorLv: 0, wall: new TD.Barricade(),
+    gold: 0, armorLv: 0, wall: new TD.Barricade(), buffs: {},
     best: parseInt(store.get('td_best', '0'), 10) || 0,
     enemies: [], particles: [], bolts: [], floats: [],
     hp: 20, maxHp: 20, score: 0, combo: 0, locked: null,
@@ -153,6 +153,7 @@
         correct: 0, typos: 0, waveTypos: 0, locked: null,
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
+        buffs: {}, // one-wave shop buffs: frost, bounty, focus
       });
       this.waves = new TD.WaveManager();
       this.state = 'play';
@@ -162,6 +163,7 @@
     startWave(n) {
       this.waves.start(n);
       this.waveTypos = 0;
+      if (this.buffs.focus) { this.combo = Math.max(this.combo, 20); this.buffs.focus = false; }
       this.phase = 'banner';
       this.banner = 2.2;
       this.bannerText = 'WAVE ' + n;
@@ -170,6 +172,7 @@
     },
 
     clearWave() {
+      this.buffs = {}; // one-wave buffs run out
       this.phase = 'clear';
       this.banner = 2.4;
       this.bannerText = 'WAVE ' + this.waves.wave + ' CLEAR';
@@ -257,7 +260,7 @@
       if (!pool.length) pool = list.filter((w) => !usedWord.has(w));
       if (!pool.length) pool = list;
       const p = edgePoint();
-      const e = new TD.Enemy(kind, pick(pool), p.x, p.y, speedMul);
+      const e = new TD.Enemy(kind, pick(pool), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
       this.enemies.push(e);
       this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
     },
@@ -395,8 +398,9 @@
       const fh = e.frames[0].h;
       this.burst(e.x, e.y - fh / 2, e.t.gore, e.kind === 'tank' ? 26 : 14, e.kind === 'tank' ? 55 : 45, 80);
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
-      this.addGold(e.t.gold);
-      this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + e.t.gold + 'G', color: C.coin, life: 0.9, align: 'center' });
+      const gold = e.t.gold * (this.buffs.bounty ? 2 : 1);
+      this.addGold(gold);
+      this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + gold + 'G', color: C.coin, life: 0.9, align: 'center' });
       this.shake = Math.max(this.shake, e.kind === 'tank' ? 3 : 1.5);
       A.kill();
     },
@@ -476,7 +480,7 @@
         if (this.waves.done && this.enemies.length === 0) this.clearWave();
       } else if (this.phase === 'clear') {
         this.banner -= dt;
-        if (this.banner <= 0) { this.phase = 'shop'; TD.Shop.open(); }
+        if (this.banner <= 0) { this.phase = 'shop'; TD.Shop.open(this); }
       }
 
       for (const e of this.enemies) e.update(dt, this);
@@ -691,6 +695,10 @@
       }
       F.draw(ctx, 'WAVE ' + this.waves.wave, VW - 4, 3, C.white, 1, 'right', C.ink);
       F.draw(ctx, 'LEFT ' + (this.waves.left + this.enemies.length), VW - 4, 10, C.dim, 1, 'right', C.ink);
+      if (this.phase !== 'shop') {
+        const active = [['frost', 'FROST', '#73eff7'], ['bounty', 'BOUNTY 2X', C.coin], ['focus', 'FOCUS', C.red]].filter((b) => this.buffs[b[0]]);
+        active.forEach(([, txt, col], i) => F.draw(ctx, txt, VW - 4, 17 + i * 7, col, 1, 'right', C.ink));
+      }
       if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
 
       const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;

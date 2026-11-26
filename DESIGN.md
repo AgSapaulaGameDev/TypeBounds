@@ -26,14 +26,21 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.
-- Shop opens after every wave. **Buy by typing the item's word.** A typo clears the typed word. Backspace deletes one letter, Esc clears. Enter (or typing `fight`) starts the next wave.
+- Shop opens after every wave as **3 random upgrade cards** that spin like a slot machine and land one by one (Enter skips the spin). Only items you can use right now are offered (e.g. no `repair` when nothing is damaged).
+- **Buy a card by typing its word.** Bought cards show SOLD. A typo clears the typed word. Backspace deletes one letter.
+- `reroll` = spin 3 new cards: 10 gold, +5 each time in the same shop. `fight` or Enter = start the next wave.
 
 | Word | Effect | Cost |
 |---|---|---|
 | `armor` | +5 max HP (and +5 HP). Max level 8 | 30 + 20 × level |
 | `repair` | +10 HP and fully rebuild the wall | 20 |
 | `barricade` | Build / upgrade the wall. HP 12 → 20 → 30 → 42 → 56. Iron look from level 3 | 40 + 35 × level |
-| `fight` | Start next wave | free |
+| `frost` | Enemies 20% slower next wave | 25 |
+| `bounty` | 2× gold from kills next wave | 30 |
+| `focus` | Start next wave with 20 combo (×1.5) | 20 |
+
+- One-wave buffs (frost, bounty, focus) show under WAVE/LEFT in the HUD and run out when the wave is cleared.
+- Later cards (step 5): cannon workers, Keyboard Smash.
 
 - Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
 
