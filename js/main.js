@@ -170,6 +170,7 @@
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
         buffs: {}, // one-wave shop buffs: frost
+        tipsSeen: {}, // tip cards already shown this run
       });
       this.waves = new TD.WaveManager();
       this.state = 'play';
@@ -195,6 +196,8 @@
       if (pos === 3) this.bannerSub = 'MATHS IMPS: TYPE THE ANSWER!';
       if (pos === 6) this.bannerSub = 'COLOUR SLIMES: TYPE THE WORD!';
       if (pos === 8) this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
+      // first time a wave brings new enemies: show their tip card until Enter
+      if (TD.Tips[n] && !this.tipsSeen[n]) { this.tipsSeen[n] = true; this.phase = 'tips'; this.tipsAt = this.time; }
       if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       A.wave();
     },
@@ -426,6 +429,7 @@
       }
       if (this.state !== 'play') return;
       if (this.phase === 'shop') return TD.Shop.onChar(this, ch);
+      if (this.phase === 'tips') return;
       let e = this.locked;
       if (!e) {
         const cands = this.enemies.filter((en) => !en.hidden && en.word[0] === ch);
@@ -472,6 +476,7 @@
       const mn = this.menuName;
       if (mn) { const b = buttons(mn)[this.sel]; if (b) this.activate(b.id); return; }
       if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
+      else if (this.state === 'play' && this.phase === 'tips' && this.time - this.tipsAt > 0.4) this.phase = 'banner';
       else if (this.state === 'spam' && this.time - this.spamAt > 1.5) this.retryWave();
       else if (this.state === 'name') this.confirmName();
       else if (this.state === 'board') this.toMenu();
@@ -833,7 +838,11 @@
       // overlays, laid out in play-area coords
       ctx.save();
       ctx.translate(OX, 0);
-      if (this.state === 'play') { if (this.phase === 'shop') TD.Shop.draw(ctx, this); else this.drawBanner(); }
+      if (this.state === 'play') {
+        if (this.phase === 'shop') TD.Shop.draw(ctx, this);
+        else if (this.phase === 'tips') this.drawTips();
+        else this.drawBanner();
+      }
       else if (this.state === 'menu') this.drawMenu();
       else if (this.state === 'name') this.drawName();
       else if (this.state === 'board') this.drawBoard();
@@ -1072,6 +1081,41 @@
           F.draw(ctx, '<', b.x + b.w + 3 + bob, ty, C.gold, 2, 'left', C.ink);
         }
       });
+    },
+
+    // tip card: title, then one block per new enemy (sprite at 2x + name + rules + example)
+    drawTips() {
+      const tip = TD.Tips[this.waves.wave];
+      if (!tip) return;
+      this.dim(0.55);
+      const blocks = tip.enemies.map((en) => {
+        const f = en.sprite();
+        return { en, f, h: Math.max(f.h * 2, 9 + en.lines.length * 7) + 4 };
+      });
+      const h = 24 + blocks.reduce((a, b) => a + b.h, 0) + (tip.foot ? 9 : 0) + 12;
+      const x = 14, w = W - 28, y = Math.max(2, Math.round((H - h) / 2));
+      this.panel(x, y, w, h);
+      F.draw(ctx, tip.title, W / 2, y + 5, this.waves.boss ? C.red : C.gold, 2, 'center', C.ink);
+      let by = y + 22;
+      for (const { en, f, h: bh } of blocks) {
+        // sprite in a little box on the left
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.fillRect(x + 6, by, 40, bh - 4);
+        ctx.drawImage(f.r, x + 26 - f.w, by + Math.round((bh - 4 - f.h * 2) / 2), f.w * 2, f.h * 2);
+        const tx = x + 52;
+        let nx = tx;
+        if (en.dropper) { drawDropper(nx, by, this.time); nx += 10; }
+        F.draw(ctx, en.name, nx, by + 1, C.gold);
+        F.draw(ctx, en.tag, nx + F.advance(en.name) + 6, by + 1, C.red);
+        en.lines.forEach((ln, i) => {
+          let lx = tx;
+          const parts = typeof ln === 'string' ? [[ln, C.dim]] : ln;
+          for (const [t, col] of parts) { F.draw(ctx, t, lx, by + 10 + i * 7, col); lx += F.advance(t); }
+        });
+        by += bh;
+      }
+      if (tip.foot) { F.draw(ctx, tip.foot, W / 2, by, C.faint, 1, 'center'); by += 9; }
+      if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ENTER TO START WAVE ' + this.waves.wave, W / 2, by + 1, C.white, 1, 'center');
     },
 
     drawBanner() {

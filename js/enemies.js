@@ -28,7 +28,7 @@
       list: 'mathTerms', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
     // medium slime from the Rainbow Slime's last life: word is a tertiary colour (e.g. redorange)
-    medslime: { sprite: 'medSlime', speed: 12, dmg: 2, atkEvery: 1.2, list: 'tertiary', animFps: 5, gold: 4,
+    medslime: { sprite: 'medSlime', speed: 9, dmg: 2, atkEvery: 1.2, list: 'tertiary', animFps: 5, gold: 4,
       gore: ['#f4f4f4'] },
     // Rainbow Slime: summons Word Color slimes; its word is a long colour name.
     // A typo on its word makes it change colour and swap to a new word.

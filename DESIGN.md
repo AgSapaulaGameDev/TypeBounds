@@ -55,8 +55,12 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - **Eyedropper slimes (Ink rule)**: the first slime of every summon and ~35% of the rest are marked: a small **eyedropper icon** (gold bulb, white tube, colour-cycling drip) at the start of the label, a gold border around the label, and a pulsing gold ring on the ground under the slime. For those you type the **ink colour**, not the word ("GREEN" written in red = type RED). Inks for these are only red, blue, green, purple, pink, orange (no white: it looks like plain text). Once you start typing one, its label shows your letters + blanks. Wave banner says "EYEDROPPER = TYPE THE INK COLOUR!".
 - While they live its word is hidden and its body shimmers through the rainbow. When they're dead it holds one colour and shows a **long colour word** (crimson, turquoise, aquamarine, periwinkle, ...) with the 5 s countdown.
 - **Any typo on its word**: it changes to a new colour and a new word, and you start over.
-- **Last life**: it bursts into **4 medium slimes** (2 far left, 2 far right), a bit slower than normal slimes (speed 12 vs 15). Their words are tertiary colours typed as one word: REDORANGE, YELLOWORANGE, YELLOWGREEN, BLUEGREEN, BLUEVIOLET, REDVIOLET. Each is drawn in a different tertiary ink; killing one re-inks the others. Kill all 4 = BOSS DEFEATED (500 score, 25 gold).
+- **Last life**: it bursts into **4 medium slimes** (2 far left, 2 far right), slower than normal slimes (speed 9 vs 15). Their words are tertiary colours typed as one word: REDORANGE, YELLOWORANGE, YELLOWGREEN, BLUEGREEN, BLUEVIOLET, REDVIOLET. Each is drawn in a different tertiary ink; killing one re-inks the others. Kill all 4 = BOSS DEFEATED (500 score, 25 gold).
 - Words that start the same (BLUEGREEN / BLUEVIOLET): if your next letter fits another enemy's word better, the lock moves to that one (no typo). Works for every enemy.
+
+## Tip cards
+- Before a wave that brings new enemies (waves 1, 3, 5, 6, 8, 10), the game shows a tip card: each new enemy's sprite at 2x, name, tag, rules and a coloured example (e.g. PURPLE in green ink -> type GREEN). Text lives in `js/tips.js`.
+- Shown once per run (not again on the second loop or after a No Spamming restart). Enter starts the wave.
 
 ## No Spamming
 - **6 wrong keys within 1.5 s** during a fight = keyboard smash. Correct letters never count, so a fast typist who slips once or twice is safe.
