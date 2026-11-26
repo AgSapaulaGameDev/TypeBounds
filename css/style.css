@@ -1,9 +1,8 @@
 :root {
-  --bg: #07090d;
+  --bg: #06121a;      /* matches the game's darkest forest edge, so letterbox bars blend in */
   --fg: #c7d2de;
-  --dim: #6b7a8c;
   --accent: #ffcd75;
-  --panel: #1a1c2c;
+  --panel: rgba(10, 14, 22, 0.75);
   --edge: #333c57;
 }
 
@@ -11,48 +10,49 @@
 
 html, body {
   margin: 0;
+  width: 100%;
   height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font-family: ui-monospace, Consolas, monospace;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  overflow: hidden;
-}
-
+/* Canvas is sized in JS to the largest 16:9 box that fits the window, then centred. */
 #game {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: block;
-  background: #000;
+  background: var(--bg);
   image-rendering: crisp-edges;
   image-rendering: pixelated;
-  box-shadow: 0 0 0 2px var(--panel), 0 8px 30px rgba(0, 0, 0, 0.6);
+  touch-action: none;
 }
 
+/* Small overlay controls, bottom-right corner. */
 #bar {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
   display: flex;
-  gap: 16px;
-  align-items: center;
-  font-size: 12px;
-  color: var(--dim);
-  padding: 0 16px;
-  text-align: center;
+  gap: 6px;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+  z-index: 2;
 }
+#bar:hover { opacity: 1; }
 
 #bar button {
-  font: inherit;
+  font: 11px/1 ui-monospace, Consolas, monospace;
+  letter-spacing: 0.05em;
   color: var(--fg);
   background: var(--panel);
   border: 1px solid var(--edge);
-  padding: 3px 10px;
+  padding: 5px 9px;
   cursor: pointer;
 }
-
 #bar button:hover {
   border-color: var(--accent);
   color: var(--accent);

@@ -10,15 +10,16 @@
   ctx.imageSmoothingEnabled = false;
 
   // ---- integer pixel scaling ----
-  const bar = document.getElementById('bar');
+  // Fill the window: largest 16:9 box that fits. Snap to a whole-pixel scale when that
+  // loses less than 4% of the space (crisper pixels), otherwise use the exact fit.
   function fit() {
-    const availH = window.innerHeight - (bar ? bar.offsetHeight : 0) - 16;
-    const s = Math.min((window.innerWidth - 8) / W, availH / H);
-    const k = s >= 1 ? Math.floor(s) : s;
-    canvas.style.width = W * k + 'px';
-    canvas.style.height = H * k + 'px';
+    const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+    const k = Math.floor(s) >= 1 && Math.floor(s) / s > 0.96 ? Math.floor(s) : s;
+    canvas.style.width = Math.floor(W * k) + 'px';
+    canvas.style.height = Math.floor(H * k) + 'px';
   }
   window.addEventListener('resize', fit);
+  document.addEventListener('fullscreenchange', fit);
   fit();
 
   const C = {
@@ -743,6 +744,18 @@
   const muteLabel = () => { muteBtn.textContent = A.muted ? 'SOUND: OFF' : 'SOUND: ON'; };
   muteBtn.addEventListener('click', () => { A.unlock(); A.toggle(); muteLabel(); muteBtn.blur(); });
   muteLabel();
+
+  // ---- fullscreen toggle ----
+  const fsBtn = document.getElementById('fullscreen');
+  const fsLabel = () => { fsBtn.textContent = document.fullscreenElement ? 'EXIT FULLSCREEN' : 'FULLSCREEN'; };
+  if (!document.documentElement.requestFullscreen) fsBtn.style.display = 'none';
+  fsBtn.addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+    fsBtn.blur();
+  });
+  document.addEventListener('fullscreenchange', fsLabel);
+  fsLabel();
 
   // ---- loop ----
   let last = performance.now();
