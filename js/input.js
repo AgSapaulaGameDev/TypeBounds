@@ -9,7 +9,7 @@
         TD.Audio.unlock();
         const k = e.key;
         if (k === 'Enter') { e.preventDefault(); h.onEnter(); return; }
-        if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); h.onCancel(); return; }
+        if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); h.onCancel(k); return; }
         if (k === ' ') { e.preventDefault(); return; }
         if (k.length === 1) {
           const ch = k.toLowerCase();

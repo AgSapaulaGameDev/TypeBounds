@@ -24,10 +24,23 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | Boss | long phrase, fires 1-letter projectiles | Every 5th wave — step 4 |
 | Rainbow Boss | `red + blue` → `purple` | Every 10th wave — step 6 |
 
-## Upgrades (step 2+)
-Gold from kills. Shop between waves.
-- Armor: max HP + repair
-- Barricade: ring around the tower; enemies must break it first
+## Gold and shop (step 2 — built)
+- Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.
+- Shop opens after every wave. **Buy by typing the item's word.** A typo clears the typed word. Backspace deletes one letter, Esc clears. Enter (or typing `fight`) starts the next wave.
+
+| Word | Effect | Cost |
+|---|---|---|
+| `armor` | +5 max HP (and +5 HP). Max level 8 | 30 + 20 × level |
+| `repair` | +10 HP and fully rebuild the wall | 20 |
+| `barricade` | Build / upgrade the wall. HP 12 → 20 → 30 → 42 → 56. Iron look from level 3 | 40 + 35 × level |
+| `fight` | Start next wave | free |
+
+- Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
+
+## Loading screen
+Shows on launch while the forest is generated: castle, segmented progress bar, step label, random tip, then "PRESS ANY KEY" (this also unlocks sound).
+
+## Later upgrades
 - Cannon workers: shoot a random enemy, remove 1 letter
 - Keyboard Smash: combo-charged; for ~5 s every key removes that letter from all enemies
 - Editable base: out of scope for v1
@@ -44,6 +57,8 @@ Gold from kills. Shop between waves.
 - `js/audio.js` WebAudio bleeps
 - `js/enemies.js` enemy types + behaviour
 - `js/waves.js` wave spawning
+- `js/barricade.js` wall ring, HP levels, stake drawing
+- `js/shop.js` typed shop between waves
 - `js/input.js` keyboard
 - `js/main.js` game state, update, render
 
@@ -51,7 +66,7 @@ Note: separate files make editing easier. They do not stop copying — the brows
 
 ## Build order
 1. ✅ Map, base, Runner, Tank, typing + lock-on, HP, game over, basic waves
-2. Gold + shop (Armor, Barricade)
+2. ✅ Gold + shop (Armor, Repair, Barricade) + loading screen
 3. Mathematician, Word Color, Ink Color
 4. Boss + projectiles
 5. Cannons, Keyboard Smash

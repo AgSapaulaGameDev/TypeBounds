@@ -59,6 +59,7 @@
     typo() { tone(110, 0.16, 'sawtooth', 0.35, -40); },
     cancel() { tone(300, 0.08, 'triangle', 0.25, -120); },
     kill() { noise(0.18, 0.45); tone(660, 0.12, 'square', 0.25, -400); },
+    wood() { tone(160, 0.1, 'square', 0.3, -60); noise(0.06, 0.25); },
     hit() { tone(90, 0.22, 'triangle', 0.6, -40); noise(0.1, 0.3); },
     wave() { [523, 659, 784].forEach((f, i) => tone(f, 0.12, 'square', 0.22, 0, i * 0.1)); },
     clear() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.22, 0, i * 0.09)); },

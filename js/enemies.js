@@ -3,9 +3,9 @@
   const TD = (window.TD = window.TD || {});
 
   TD.EnemyTypes = {
-    runner: { sprite: 'runner', speed: 24, dmg: 1, atkEvery: 1.0, list: 'short', animFps: 10,
+    runner: { sprite: 'runner', speed: 24, dmg: 1, atkEvery: 1.0, list: 'short', animFps: 10, gold: 2,
       gore: ['#38b764', '#a7f070', '#257179', '#ffcd75'] },
-    tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4,
+    tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4, gold: 5,
       gore: ['#8b9bb4', '#566c86', '#c2c3c7', '#ef7d57'] },
   };
 
@@ -47,13 +47,19 @@
         if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
         this.x += (dx / d) * this.speed * dt;
         this.y += (dy / d) * this.speed * dt;
-        if (TD.inBaseZone(this.x, this.y)) this.state = 'attack';
+        if (game.wall.alive && TD.inRing(this.x, this.y)) {
+          this.state = 'attack'; this.target = 'wall'; this.atkTimer = 0.3;
+        } else if (TD.inBaseZone(this.x, this.y)) {
+          this.state = 'attack'; this.target = 'base';
+        }
       } else {
+        if (this.target === 'wall' && !game.wall.alive) { this.state = 'walk'; return; }
         this.atkTimer -= dt;
         if (this.atkTimer <= 0) {
           this.atkTimer = this.t.atkEvery;
           this.hop = 0.15;
-          game.damageBase(this.t.dmg, this);
+          if (this.target === 'wall') game.damageWall(this.t.dmg, this);
+          else game.damageBase(this.t.dmg, this);
         }
       }
     }

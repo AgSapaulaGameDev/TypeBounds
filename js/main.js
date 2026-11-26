@@ -36,7 +36,23 @@
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const distToBase = (e) => Math.hypot(e.x - B.cx, e.y - B.cy);
 
-  const bg = S.buildBackground(7);
+  // ---- loading ----
+  let bg = null;
+  const LOAD_STEPS = [
+    { label: 'DRAWING THE FOREST', run: () => { bg = S.buildBackground(7); } },
+    { label: 'CARVING LETTERS', run: () => F.prewarm(['#f4f4f4', '#ffcd75', '#94b0c2', '#ef7d57', '#1a1c2c', '#e8d27a', '#a7f070']) },
+    { label: 'WAKING THE MONSTERS', run: () => {} },
+    { label: 'RAISING THE TOWER', run: () => {} },
+  ];
+  const LOAD_MIN = 1.8; // seconds; keeps the bar visible even though building is fast
+  const TIPS = [
+    'A TYPO NEVER HURTS A MONSTER',
+    'BACKSPACE OR ESC DROPS YOUR TARGET',
+    'EVERY 10 COMBO RAISES YOUR MULTIPLIER',
+    'A WAVE WITH NO TYPOS GIVES BONUS GOLD',
+    'A BARRICADE MAKES MONSTERS STOP AND CHEW',
+  ];
+  const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
   const fireflies = Array.from({ length: 14 }, () => ({
     x: rand(10, 310), y: rand(20, 170), p: rand(0, 6.28), vx: rand(-4, 4), vy: rand(-3, 3),
   }));
@@ -52,8 +68,9 @@
   }
 
   const game = {
-    state: 'title', // title | play | paused | over
-    time: 0,
+    state: 'loading', // loading | title | play | paused | over
+    time: 0, loadT: 0, loadStep: 0, loadReady: false,
+    gold: 0, armorLv: 0, wall: new TD.Barricade(),
     best: parseInt(store.get('td_best', '0'), 10) || 0,
     enemies: [], particles: [], bolts: [], floats: [],
     hp: 20, maxHp: 20, score: 0, combo: 0, locked: null,
@@ -69,6 +86,7 @@
         hp: 20, maxHp: 20, score: 0, combo: 0, bestCombo: 0, kills: 0,
         correct: 0, typos: 0, waveTypos: 0, locked: null,
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
+        gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
       });
       this.waves = new TD.WaveManager();
       this.state = 'play';
@@ -89,14 +107,27 @@
       this.phase = 'clear';
       this.banner = 2.4;
       this.bannerText = 'WAVE ' + this.waves.wave + ' CLEAR';
+      let goldBonus = 5 + this.waves.wave * 2;
       if (this.waveTypos === 0) {
-        const bonus = 50 * this.waves.wave;
-        this.score += bonus;
-        this.bannerSub = 'PERFECT! +' + bonus;
+        this.score += 50 * this.waves.wave;
+        goldBonus += 10;
+        this.bannerSub = 'PERFECT! +' + goldBonus + ' GOLD';
       } else {
-        this.bannerSub = 'TYPOS: ' + this.waveTypos;
+        this.bannerSub = '+' + goldBonus + ' GOLD';
       }
+      this.addGold(goldBonus);
       A.clear();
+    },
+
+    addGold(n) { this.gold += n; this.goldEarned += n; },
+
+    leaveLoading() { if (this.loadReady) this.state = 'title'; },
+
+    updateLoading(dt) {
+      this.loadT += dt;
+      const target = Math.floor((this.loadT / LOAD_MIN) * LOAD_STEPS.length);
+      while (this.loadStep < LOAD_STEPS.length && this.loadStep <= target) LOAD_STEPS[this.loadStep++].run();
+      if (this.loadStep >= LOAD_STEPS.length && this.loadT >= LOAD_MIN) this.loadReady = true;
     },
 
     spawnEnemy(kind, speedMul) {
@@ -115,7 +146,9 @@
 
     // ---- input ----
     onChar(ch) {
+      if (this.state === 'loading') return this.leaveLoading();
       if (this.state !== 'play') return;
+      if (this.phase === 'shop') return TD.Shop.onChar(this, ch);
       let e = this.locked;
       if (!e) {
         const cands = this.enemies.filter((en) => en.word[0] === ch);
@@ -129,7 +162,12 @@
       this.hitLetter(e);
     },
 
-    onCancel() {
+    onCancel(key) {
+      if (this.state === 'loading') return this.leaveLoading();
+      if (this.state === 'play' && this.phase === 'shop') {
+        if (key === 'Backspace') TD.Shop.back(); else TD.Shop.clear();
+        return;
+      }
       if (this.state !== 'play' || !this.locked) return;
       this.locked.progress = 0;
       this.locked = null;
@@ -137,7 +175,9 @@
     },
 
     onEnter() {
-      if (this.state === 'title') this.reset();
+      if (this.state === 'loading') this.leaveLoading();
+      else if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
+      else if (this.state === 'title') this.reset();
       else if (this.state === 'over' && this.time - this.overAt > 0.8) this.reset();
       else if (this.state === 'paused') this.state = 'play';
     },
@@ -160,7 +200,7 @@
     miss(e) {
       this.typos++;
       this.waveTypos++;
-      if (this.combo >= 5) this.floats.push({ x: 4, y: 18, text: 'COMBO LOST', color: C.red, life: 1, align: 'left' });
+      if (this.combo >= 5) this.floats.push({ x: 4, y: 25, text: 'COMBO LOST', color: C.red, life: 1, align: 'left' });
       this.combo = 0;
       this.typoFlash = 0.2;
       this.shake = Math.max(this.shake, 1.5);
@@ -177,6 +217,8 @@
       const fh = e.frames[0].h;
       this.burst(e.x, e.y - fh / 2, e.t.gore, e.kind === 'tank' ? 26 : 14, e.kind === 'tank' ? 55 : 45, 80);
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
+      this.addGold(e.t.gold);
+      this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + e.t.gold + 'G', color: '#e8d27a', life: 0.9, align: 'center' });
       this.shake = Math.max(this.shake, e.kind === 'tank' ? 3 : 1.5);
       A.kill();
     },
@@ -190,6 +232,19 @@
       this.floats.push({ x: B.cx, y: B.drawY - 6, text: '-' + dmg, color: C.red, life: 0.8, align: 'center' });
       A.hit();
       if (this.hp <= 0) this.gameOver();
+    },
+
+    damageWall(dmg, e) {
+      if (this.state !== 'play') return;
+      const broke = this.wall.damage(dmg);
+      this.burst(e.x, e.y - 4, ['#8a5a32', '#b07a45', '#5a3a22'], 5, 30, 90);
+      A.wood();
+      if (broke) {
+        this.burst(TD.RING.cx, TD.RING.cy, ['#8a5a32', '#b07a45', '#5a3a22', '#c2a36b'], 40, 80, 90);
+        this.floats.push({ x: B.cx, y: B.drawY - 14, text: 'WALL BROKEN!', color: C.red, life: 1.4, align: 'center' });
+        this.shake = Math.max(this.shake, 4);
+        A.kill();
+      }
     },
 
     gameOver() {
@@ -223,9 +278,12 @@
         if (f.x < 0) f.x += W; if (f.x > W) f.x -= W;
         if (f.y < 16) f.vy = Math.abs(f.vy); if (f.y > H) f.vy = -Math.abs(f.vy);
       }
+      if (this.state === 'loading') return this.updateLoading(dt);
       if (this.state === 'paused') return;
       this.updateFx(dt);
       if (this.state !== 'play') return;
+      this.wall.update(dt);
+      TD.Shop.update(dt);
 
       if (this.phase === 'banner') {
         this.banner -= dt;
@@ -235,7 +293,7 @@
         if (this.waves.done && this.enemies.length === 0) this.clearWave();
       } else if (this.phase === 'clear') {
         this.banner -= dt;
-        if (this.banner <= 0) this.startWave(this.waves.wave + 1);
+        if (this.banner <= 0) { this.phase = 'shop'; TD.Shop.open(); }
       }
 
       for (const e of this.enemies) e.update(dt, this);
@@ -299,6 +357,7 @@
     render() {
       ctx.fillStyle = '#06121a';
       ctx.fillRect(0, 0, W, H);
+      if (this.state === 'loading' || !bg) return this.drawLoading();
       ctx.save();
       if (this.shake > 0) ctx.translate(Math.round(rand(-this.shake, this.shake)), Math.round(rand(-this.shake, this.shake)));
       ctx.drawImage(bg, 0, 0);
@@ -311,6 +370,7 @@
       // depth-sorted sprites
       const items = [{ y: B.sortY, draw: () => this.drawCastle() }];
       for (const e of this.enemies) items.push({ y: e.y, draw: () => this.drawEnemy(e) });
+      if (this.state !== 'title') items.push(...this.wall.items(ctx));
       items.sort((a, b) => a.y - b.y).forEach((i) => i.draw());
 
       this.drawBolts();
@@ -328,7 +388,7 @@
         ctx.fillStyle = 'rgba(239,125,87,' + (this.typoFlash * 3).toFixed(2) + ')';
         ctx.fillRect(0, 0, W, 2); ctx.fillRect(0, H - 2, W, 2); ctx.fillRect(0, 0, 2, H); ctx.fillRect(W - 2, 0, 2, H);
       }
-      if (this.state === 'play') this.drawBanner();
+      if (this.state === 'play') { if (this.phase === 'shop') TD.Shop.draw(ctx, this); else this.drawBanner(); }
       else if (this.state === 'title') this.drawTitle();
       else if (this.state === 'paused') this.drawPaused();
       else if (this.state === 'over') this.drawGameOver();
@@ -422,9 +482,16 @@
 
     drawHUD() {
       F.draw(ctx, 'SCORE ' + this.score, 4, 3, C.white, 1, 'left', C.ink);
+      F.draw(ctx, 'GOLD ' + this.gold, 4, 10, '#e8d27a', 1, 'left', C.ink);
       if (this.combo > 0) {
         const m = this.mult;
-        F.draw(ctx, 'COMBO ' + this.combo + (m > 1 ? ' X' + m : ''), 4, 10, C.gold, 1, 'left', C.ink);
+        F.draw(ctx, 'COMBO ' + this.combo + (m > 1 ? ' X' + m : ''), 4, 17, C.gold, 1, 'left', C.ink);
+      }
+      if (this.wall.level > 0) {
+        const ww = 70, wx = (W - ww) / 2, wy = 12, wr = this.wall.hp / this.wall.max;
+        ctx.fillStyle = C.ink; ctx.fillRect(wx - 1, wy - 1, ww + 2, 5);
+        ctx.fillStyle = '#333c57'; ctx.fillRect(wx, wy, ww, 3);
+        ctx.fillStyle = '#b07a45'; ctx.fillRect(wx, wy, Math.ceil(ww * wr), 3);
       }
       F.draw(ctx, 'WAVE ' + this.waves.wave, W - 4, 3, C.white, 1, 'right', C.ink);
       F.draw(ctx, 'LEFT ' + (this.waves.left + this.enemies.length), W - 4, 10, C.dim, 1, 'right', C.ink);
@@ -466,6 +533,34 @@
       if (this.best > 0) F.draw(ctx, 'BEST ' + this.best, W / 2, 170, C.dim, 1, 'center', C.ink);
     },
 
+    drawLoading() {
+      const p = Math.min(1, this.loadT / LOAD_MIN);
+      // castle at 2x
+      const cs = S.castle;
+      ctx.drawImage(cs.canvas, W / 2 - cs.w, 40, cs.w * 2, cs.h * 2);
+      ctx.fillStyle = Math.sin(this.time * 7) > -0.3 ? C.gold : C.orange;
+      ctx.fillRect(W / 2 - cs.w + 24, 70, 6, 8);
+      F.draw(ctx, 'TYPING DEFENSE', W / 2, 18, C.gold, 2, 'center', C.ink);
+
+      const bw = 140, bx = (W - bw) / 2, by = 128;
+      ctx.fillStyle = C.ink; ctx.fillRect(bx - 2, by - 2, bw + 4, 10);
+      ctx.fillStyle = '#333c57'; ctx.fillRect(bx, by, bw, 6);
+      // chunky segmented fill
+      const segs = Math.floor((bw / 5) * p);
+      ctx.fillStyle = C.gold;
+      for (let i = 0; i < segs; i++) ctx.fillRect(bx + i * 5, by, 4, 6);
+
+      if (this.loadReady) {
+        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ANY KEY', W / 2, 142, C.white, 1, 'center', C.ink);
+      } else {
+        const step = LOAD_STEPS[Math.min(LOAD_STEPS.length - 1, Math.floor(p * LOAD_STEPS.length))];
+        const dots = '...'.slice(0, 1 + (Math.floor(this.time * 3) % 3));
+        F.draw(ctx, step.label + dots, bx, 142, C.dim, 1, 'left', C.ink);
+        F.draw(ctx, Math.floor(p * 100) + '%', bx + bw, 142, C.dim, 1, 'right', C.ink);
+      }
+      F.draw(ctx, 'TIP: ' + tip, W / 2, 164, '#566c86', 1, 'center');
+    },
+
     drawPaused() {
       ctx.fillStyle = 'rgba(0,0,0,0.5)';
       ctx.fillRect(0, 0, W, H);
@@ -478,16 +573,16 @@
       ctx.fillRect(0, 0, W, H);
       F.draw(ctx, 'GAME OVER', W / 2, 30, C.red, 3, 'center', C.ink);
       const acc = this.correct + this.typos ? Math.round((this.correct / (this.correct + this.typos)) * 100) : 0;
-      this.panel(90, 60, 140, 66);
+      this.panel(90, 58, 140, 72);
       const rows = [
-        ['SCORE', this.score], ['WAVE', this.waves.wave], ['WORDS', this.kills],
+        ['SCORE', this.score], ['WAVE', this.waves.wave], ['WORDS', this.kills], ['GOLD EARNED', this.goldEarned],
         ['ACCURACY', acc + '%'], ['BEST COMBO', this.bestCombo], ['BEST SCORE', this.best],
       ];
       rows.forEach(([k, v], i) => {
-        F.draw(ctx, k, 100, 66 + i * 9, C.dim);
-        F.draw(ctx, v, 220, 66 + i * 9, C.white, 1, 'right');
+        F.draw(ctx, k, 100, 63 + i * 9, C.dim);
+        F.draw(ctx, v, 220, 63 + i * 9, C.white, 1, 'right');
       });
-      if (this.newBest) F.draw(ctx, 'NEW BEST!', W / 2, 132, C.gold, 1, 'center', C.ink);
+      if (this.newBest) F.draw(ctx, 'NEW BEST!', W / 2, 135, C.gold, 1, 'center', C.ink);
       if (this.time - this.overAt > 0.8 && Math.floor(this.time * 2) % 2 === 0)
         F.draw(ctx, 'PRESS ENTER TO RETRY', W / 2, 150, C.white, 2, 'center', C.ink);
     },

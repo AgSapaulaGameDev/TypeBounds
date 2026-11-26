@@ -92,6 +92,16 @@
   const tankA = tankTop.concat(['...kssk..kssk...', '...kssk..kssk...', '..kdddk..kdddk..', '..kkkkk..kkkkk..']);
   const tankB = tankTop.concat(['...kssk..kssk...', '..kssk....kssk..', '.kdddk....kdddk.', '.kkkkk....kkkkk.']);
 
+  // ---- Barricade stakes (5x8), anchored bottom-centre ----
+  const POST_ROWS = ['..k..', '.klk.', '.kwk.', '.kwk.', '.krk.', '.kwk.', '.kwk.', '.kdk.'];
+  const POST_BROKEN = ['.....', '.....', '.....', '.....', '.k.k.', '.kwk.', '.kwk.', '.kdk.'];
+  const WOOD_PAL = { k: '#1a1c2c', w: '#8a5a32', l: '#b07a45', d: '#5a3a22', r: '#c2a36b' };
+  const IRON_PAL = { k: '#1a1c2c', w: '#566c86', l: '#c2c3c7', d: '#333c57', r: '#ffcd75' };
+  function postSet(rows, pal) {
+    const img = fromRows(rows, pal);
+    return { img, white: silhouette(img, '#ffffff') };
+  }
+
   // ---- Castle (27x38), anchored bottom-centre ----
   function buildCastle() {
     const c = makeCanvas(27, 38), x = c.getContext('2d');
@@ -288,6 +298,9 @@
     runner: [frameSet(runnerA, RUNNER_PAL), frameSet(runnerB, RUNNER_PAL)],
     tank: [frameSet(tankA, TANK_PAL), frameSet(tankB, TANK_PAL)],
     castle: buildCastle(),
+    postWood: postSet(POST_ROWS, WOOD_PAL),
+    postIron: postSet(POST_ROWS, IRON_PAL),
+    postBroken: postSet(POST_BROKEN, WOOD_PAL),
     buildBackground,
   };
 })();

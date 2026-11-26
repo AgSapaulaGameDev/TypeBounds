@@ -71,6 +71,7 @@
 
   TD.Font = {
     H: 5,
+    prewarm(colors) { for (const c of colors) for (const ch in G) glyph(ch, c); },
     width(text, s = 1) {
       const n = String(text).length;
       return n ? (n * 4 - 1) * s : 0;
