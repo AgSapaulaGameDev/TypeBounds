@@ -38,7 +38,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Summons **Word Color slimes** (slower than normal ones, 60% speed): 3 on lives 5 and 4, 4 on lives 3 and 2. Same far-left / far-right spawn spots.
 - While they live its word is hidden and its body shimmers through the rainbow. When they're dead it holds one colour and shows a **long colour word** (crimson, turquoise, aquamarine, periwinkle, ...) with the 5 s countdown.
 - **Any typo on its word**: it changes to a new colour and a new word, and you start over.
-- **Last life**: it bursts into **6 Word Color slimes** that rush the tower. Each time you kill one, all the others switch to new ink colours. Kill all 6 = BOSS DEFEATED (500 score, 25 gold).
+- **Last life**: it bursts into **6 Word Color slimes** (3 at the far left, 3 at the far right) that rush the tower. Each time you kill one, all the others switch to new ink colours. Kill all 6 = BOSS DEFEATED (500 score, 25 gold).
 
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.

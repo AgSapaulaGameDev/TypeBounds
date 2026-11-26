@@ -470,9 +470,13 @@
       this.burst(e.x, e.y - fh / 2, e.gore, 40, 70, 80);
       this.shake = Math.max(this.shake, 5);
       const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
+      // 3 burst out to the far left, 3 to the far right, spread out like the boss summons
       for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
-        const x = clamp(e.x + Math.cos(a) * 32, 6, W - 6), y = clamp(e.y + Math.sin(a) * 22, 26, H - 8);
+        const side = i % 2 ? -1 : 1, k = Math.floor(i / 2);
+        const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
+        const y = clamp(B.cy + (k - 1) * 34, 30, H - 14);
+        // slime splash where each one lands
+        this.burst(x, y - 4, e.gore, 10, 30, 0);
         const m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul);
         m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
         m.owner = e;
