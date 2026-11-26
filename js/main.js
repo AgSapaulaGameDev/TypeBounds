@@ -185,6 +185,7 @@
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
       const pos = ((n - 1) % 10) + 1; // theme hints on the first wave of each new enemy mix
+      if (pos === 3) this.bannerSub = 'MATHS IMPS: TYPE THE ANSWER!';
       if (pos === 6) this.bannerSub = 'COLOUR SLIMES: TYPE THE WORD!';
       if (pos === 8) this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
@@ -285,6 +286,15 @@
 
     spawnEnemy(kind, speedMul) {
       const p = edgePoint();
+      if (kind === 'minion') {
+        // maths minion on a normal wave (3-4): type the answer to its sum
+        const [q, ans] = this.makeSum();
+        const m = new TD.Enemy('minion', ans, p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
+        m.prefix = q + '=';
+        this.enemies.push(m);
+        this.burst(p.x, p.y - 4, m.t.gore, 8, 20, 0);
+        return m;
+      }
       if (kind === 'cdrop') {
         // eyedropper slime on a normal wave: type its ink colour
         const m = this.spawnSlime(p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1), null, true);
@@ -346,6 +356,24 @@
       A.wave();
     },
 
+    // a + or - question whose answer starts with a digit no other enemy on screen starts with
+    makeSum() {
+      const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
+      let q, ans;
+      for (let tries = 0; tries < 40; tries++) {
+        const big = this.waves.wave >= 10 ? 20 : 12;
+        if (Math.random() < 0.5) {
+          const a = 1 + Math.floor(Math.random() * big), b = 1 + Math.floor(Math.random() * big);
+          q = a + '+' + b; ans = String(a + b);
+        } else {
+          const a = 4 + Math.floor(Math.random() * (big + 6)), b = 1 + Math.floor(Math.random() * (a - 1));
+          q = a + '-' + b; ans = String(a - b);
+        }
+        if (!used.has(ans[0])) break;
+      }
+      return [q, ans];
+    },
+
     // Mathematician summons: each minion carries a sum; its "word" is the answer.
     // Answers start with a digit no other enemy on screen starts with.
     spawnMinions(boss) {
@@ -367,19 +395,7 @@
           this.burst(x, y - 4, m.gore, 8, 25, 0);
           continue;
         }
-        const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
-        let q, ans;
-        for (let tries = 0; tries < 40; tries++) {
-          const big = this.waves.wave >= 10 ? 20 : 12;
-          if (Math.random() < 0.5) {
-            const a = 1 + Math.floor(Math.random() * big), b = 1 + Math.floor(Math.random() * big);
-            q = a + '+' + b; ans = String(a + b);
-          } else {
-            const a = 4 + Math.floor(Math.random() * (big + 6)), b = 1 + Math.floor(Math.random() * (a - 1));
-            q = a + '-' + b; ans = String(a - b);
-          }
-          if (!used.has(ans[0])) break;
-        }
+        const [q, ans] = this.makeSum();
         const m = new TD.Enemy('minion', ans, x, y, mul);
         m.prefix = q + '=';
         m.owner = boss;

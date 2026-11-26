@@ -19,10 +19,10 @@
       this.timer = this.boss ? 4 : 0.6;
       this.interval = Math.max(0.55, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1);
       this.tankChance = Math.min(0.45, 0.12 + 0.04 * n);
-      // Themes repeat every 10 waves: 1-4 maths (Calculator + Chalkboard), 5 Mathematician,
+      // Themes repeat every 10 waves: 1-2 Calculator + Chalkboard, 3-4 Chalkboard + maths imps, 5 Mathematician,
       // 6-7 colour (Word Color slime + tank colour slime), 8-9 tank colour slime + eyedropper slime, 10 Rainbow Slime
       const pos = ((n - 1) % 10) + 1;
-      [this.light, this.heavy] = pos <= 4 ? ['mfast', 'mtank'] : pos <= 7 ? ['color', 'ctank'] : ['cdrop', 'ctank'];
+      [this.light, this.heavy] = pos <= 2 ? ['mfast', 'mtank'] : pos <= 4 ? ['minion', 'mtank'] : pos <= 7 ? ['color', 'ctank'] : ['cdrop', 'ctank'];
       this.speedMul = 1 + 0.04 * (n - 1);
     }
 

@@ -19,7 +19,8 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 ### Wave themes (repeat every 10 waves, faster each loop)
 | Waves | Theme | Enemies |
 |---|---|---|
-| 1-4 | Maths | **Calculator** (fast, 3-4 letter number words: ONE, FOUR, ZERO) + **Chalkboard** tank (long number words: SEVENTEEN, THOUSAND) |
+| 1-2 | Maths | **Calculator** (fast, 3-4 letter number words: ONE, FOUR, ZERO) + **Chalkboard** tank (long number words: SEVENTEEN, THOUSAND) |
+| 3-4 | Maths | Chalkboard tank + **maths imps** (the Mathematician's minions: `7+5=__`, type the answer). Banner: "MATHS IMPS: TYPE THE ANSWER!" |
 | 5 | Maths | Mathematician boss |
 | 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
 | 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour) |
