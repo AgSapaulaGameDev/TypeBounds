@@ -30,6 +30,13 @@
     'maroon', 'emerald', 'amber', 'sapphire', 'burgundy', 'tangerine', 'periwinkle', 'chocolate', 'olive', 'navy', 'fuchsia', 'golden'];
   // inks used for "type the ink" slimes: only colours nobody argues about
   TD.ClearInks = ['red', 'blue', 'green', 'purple', 'pink', 'orange']; // no white: it looks like plain label text
+// Rainbow Slime's last life: medium slimes named after tertiary colours (type them as one word)
+  TD.Words.tertiary = ['redorange', 'yelloworange', 'yellowgreen', 'bluegreen', 'blueviolet', 'redviolet'];
+  TD.TertiaryInks = {
+    redorange: '#ff5a24', yelloworange: '#ffb12a', yellowgreen: '#9fd33b',
+    bluegreen: '#1fa59a', blueviolet: '#7a4ee8', redviolet: '#d0307e',
+  };
+  TD.inkHex = (name) => TD.Inks[name] || TD.TertiaryInks[name];
   TD.Inks = {
     red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
     white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2', orange: '#f77622',

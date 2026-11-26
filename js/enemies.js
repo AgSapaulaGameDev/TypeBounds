@@ -18,6 +18,9 @@
     math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 12, chargeSpeed: 14, dmg: 4, atkEvery: 1.5,
       list: 'long', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
+    // medium slime from the Rainbow Slime's last life: word is a tertiary colour (e.g. redorange)
+    medslime: { sprite: 'medSlime', speed: 12, dmg: 2, atkEvery: 1.2, list: 'tertiary', animFps: 5, gold: 4,
+      gore: ['#f4f4f4'] },
     // Rainbow Slime: summons Word Color slimes; its word is a long colour name.
     // A typo on its word makes it change colour and swap to a new word.
     rainbow: { sprite: 'bigSlime', name: 'RAINBOW SLIME', boss: true, minion: 'color', speed: 11, chargeSpeed: 13, dmg: 4,
@@ -70,9 +73,10 @@
 
     get frames() {
       if (this.kind === 'rainbow') return TD.Sprites.bigSlime(RAINBOW[this.hue]);
-      return this.ink ? TD.Sprites.slime(TD.Inks[this.ink]) : TD.Sprites[this.t.sprite];
+      if (this.kind === 'medslime') return TD.Sprites.medSlime(TD.inkHex(this.ink));
+      return this.ink ? TD.Sprites.slime(TD.inkHex(this.ink)) : TD.Sprites[this.t.sprite];
     }
-    get gore() { return this.ink ? [TD.Inks[this.ink], '#f4f4f4'] : this.t.gore; }
+    get gore() { return this.ink ? [TD.inkHex(this.ink), '#f4f4f4'] : this.t.gore; }
     // ink-rule slimes (drop tag): the label shows a decoy colour word, but the answer is the ink
     labelText() {
       if (this.hidden) return '???';

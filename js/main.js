@@ -316,7 +316,10 @@
         const fresh = opts.filter((c) => !used.has(c[0])); // keep first letters unique when possible
         m.ink = m.word = pick(fresh.length ? fresh : opts);
         if (m.shown === m.ink) m.shown = pick(TD.Words.colors.filter((c) => c !== m.ink));
-      } else m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word && col !== m.ink));
+      } else {
+        const pool = Object.keys(m.kind === 'medslime' ? TD.TertiaryInks : TD.Inks);
+        m.ink = pick(pool.filter((col) => col !== m.word && col !== m.ink));
+      }
       m.flash = 0.1;
     },
 
@@ -395,6 +398,14 @@
         e = this.locked = cands[0];
         A.lock();
       } else if (e.word[e.progress] !== ch) {
+        // words that share a start (REDORANGE / REDVIOLET): switch to the one that matches what you typed
+        const typed = e.word.slice(0, e.progress) + ch;
+        const alt = this.enemies.find((o) => o !== e && !o.hidden && !o.progress && o.word.startsWith(typed));
+        if (alt) {
+          alt.progress = e.progress; e.progress = 0;
+          this.locked = alt;
+          return this.hitLetter(alt);
+        }
         if (e.kind === 'rainbow') e.scramble(this); // Rainbow Slime: wrong letter = new colour + new word
         return this.miss(e); // typo: lock stays, no damage until the right letter
       }
@@ -516,15 +527,19 @@
       this.burst(e.x, e.y - fh / 2, e.gore, 40, 70, 80);
       this.shake = Math.max(this.shake, 5);
       const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
-      // 3 burst out to the far left, 3 to the far right, spread out like the boss summons
-      for (let i = 0; i < 6; i++) {
+      // 4 medium slimes named after tertiary colours (REDORANGE, BLUEVIOLET...), a little slower:
+      // 2 burst out to the far left, 2 to the far right. Each is drawn in a different tertiary ink.
+      const names = TD.Words.tertiary.slice().sort(() => Math.random() - 0.5).slice(0, 4);
+      names.forEach((word, i) => {
         const side = i % 2 ? -1 : 1, k = Math.floor(i / 2);
         const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
-        const y = clamp(B.cy + (k - 1) * 34, 30, H - 14);
-        // slime splash where each one lands
-        this.burst(x, y - 4, e.gore, 10, 30, 0);
-        this.spawnSlime(x, y, mul, e, i < 2 || Math.random() < 0.35); // at least 2 drop-tagged
-      }
+        const y = clamp(B.cy + (k - 0.5) * 40, 30, H - 14);
+        this.burst(x, y - 4, e.gore, 12, 30, 0); // slime splash where each one lands
+        const m = new TD.Enemy('medslime', word, x, y, mul);
+        m.ink = pick(TD.Words.tertiary.filter((c) => c !== word));
+        m.owner = e;
+        this.enemies.push(m);
+      });
       A.kill();
     },
 
@@ -849,11 +864,11 @@
         if (p > 0) {
           F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
           F.draw(ctx, '_'.repeat(e.word.length - p), tx + F.advance(e.word.slice(0, p)), ty, locked && this.typoFlash > 0 ? C.red : C.dim);
-        } else F.draw(ctx, e.shown, tx, ty, locked && this.typoFlash > 0 ? C.red : TD.Inks[e.ink]);
+        } else F.draw(ctx, e.shown, tx, ty, locked && this.typoFlash > 0 ? C.red : TD.inkHex(e.ink));
       } else {
         if (e.prefix) { F.draw(ctx, e.prefix, tx, ty, C.dim); tx += F.advance(e.prefix); }
         if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
-        const restCol = locked && this.typoFlash > 0 ? C.red : e.ink ? TD.Inks[e.ink] : C.white;
+        const restCol = locked && this.typoFlash > 0 ? C.red : e.ink ? TD.inkHex(e.ink) : C.white;
         // minion answers stay secret: one _ per digit still to type
         const rest = e.prefix ? '_'.repeat(e.word.length - p) : e.word.slice(p);
         F.draw(ctx, rest, tx + F.advance(e.word.slice(0, p)), ty, restCol);

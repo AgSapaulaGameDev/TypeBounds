@@ -150,7 +150,7 @@
   }
 
   // ---- Rainbow Slime boss: big crowned blob, body re-coloured per rainbow colour ----
-  function blobRows(w, h) {
+  function blobRows(w, h, crown = true) {
     const cx = (w - 1) / 2, rx = w / 2, ry = h * 0.7, cy = ry; // dome top, straight sides below
     const inside = (x, y) => x >= 0 && x < w && y >= 0 && y < h &&
       (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 || (y >= cy && Math.abs(x - cx) < rx - 0.5));
@@ -173,14 +173,26 @@
     for (let x = m0; x <= m1; x++) set(x, ey + 4, 'k');
     set(m0 - 1, ey + 3, 'k'); set(m1 + 1, ey + 3, 'k');
     // gold crown sitting on the top edge
-    const crown = ['y.y.y', 'yyyyy', 'yrwry'];
+    const crownRows = crown ? ['y.y.y', 'yyyyy', 'yrwry'] : [];
     const c0 = Math.round(cx) - 2, out = [];
-    for (const cr of crown) out.push('.'.repeat(c0) + cr + '.'.repeat(w - c0 - 5));
+    for (const cr of crownRows) out.push('.'.repeat(c0) + cr + '.'.repeat(w - c0 - 5));
     return out.concat(rows.map((r) => r.join('')).filter((r, i, a) => a.slice(0, i + 1).some((q) => q.includes('k'))));
   }
   const bigA = blobRows(22, 16);
   const bigBcore = blobRows(22, 14);
   const bigB = Array(bigA.length - bigBcore.length).fill('.'.repeat(22)).concat(bigBcore);
+  // medium slime (no crown) for the Rainbow Slime's last-life split
+  const medA = blobRows(16, 12, false);
+  const medBcore = blobRows(16, 10, false);
+  const medB = Array(medA.length - medBcore.length).fill('.'.repeat(16)).concat(medBcore);
+  const medCache = {};
+  function medSlime(hex) {
+    if (!medCache[hex]) {
+      const pal = { k: '#1a1c2c', c: hex, d: darken(hex, 0.6), h: '#ffffff', w: '#f4f4f4' };
+      medCache[hex] = [frameSet(medA, pal), frameSet(medB, pal)];
+    }
+    return medCache[hex];
+  }
   const bigCache = {};
   function bigSlime(hex) {
     if (!bigCache[hex]) {
@@ -401,6 +413,7 @@
     minion: [frameSet(minionA, MINION_PAL), frameSet(minionB, MINION_PAL)],
     slime,
     bigSlime,
+    medSlime,
     castle: buildCastle(),
     postWood: postSet(POST_ROWS, WOOD_PAL),
     postIron: postSet(POST_ROWS, IRON_PAL),
