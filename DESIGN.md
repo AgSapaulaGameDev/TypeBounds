@@ -39,6 +39,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 | Rainbow Slime (BOSS) | long colour words; summons Word Color slimes. See below | ✅ Waves 10, 20, 30... |
 
 ### Mathematician (boss)
+- Word bank (`mathTerms`, 26): algebra, calculus, theorem, variable, equation, integer, fraction, decimal, geometry, polygon, diameter, tangent, parabola, symmetry, magnitude, logarithm, algorithm, numerical, hypotenuse, polynomial, derivative, irrational, coefficient, exponential, permutation, trigonometry.
 - Boss waves: 5, 15, 25, ... (10, 20, 30 are the Rainbow Slime). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
 - Enters from the left or right edge, then roams around a wide oval around the tower (left side, over the top or bottom, right side and back), so it visits both sides. Never walks to the tower until its last life.
 - Summons **3 minions on its 1st and 2nd life (HP 5 and 4), 5 minions on its 3rd and 4th (HP 3 and 2)**. Minions always appear at the far left and far right edges of the field (split between both sides, ~34 px apart, each a step further out), not next to the boss, so they arrive one after another. They walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits). Answers start with different digits so lock-on is clear.

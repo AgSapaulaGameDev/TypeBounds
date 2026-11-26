@@ -25,7 +25,7 @@
     minion: { sprite: 'minion', speed: 9, dmg: 1, atkEvery: 1.1, animFps: 8, gold: 1,
       gore: ['#5d275d', '#b13e53', '#ffcd75'] },
     math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 12, chargeSpeed: 14, dmg: 4, atkEvery: 1.5,
-      list: 'long', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
+      list: 'mathTerms', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
     // medium slime from the Rainbow Slime's last life: word is a tertiary colour (e.g. redorange)
     medslime: { sprite: 'medSlime', speed: 12, dmg: 2, atkEvery: 1.2, list: 'tertiary', animFps: 5, gold: 4,
