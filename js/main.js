@@ -658,7 +658,7 @@
       const p = e.progress, tx = x + 2, ty = y + 2;
       if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
       const restCol = locked && this.typoFlash > 0 ? C.red : C.white;
-      F.draw(ctx, e.word.slice(p), tx + p * 4, ty, restCol);
+      F.draw(ctx, e.word.slice(p), tx + F.advance(e.word.slice(0, p)), ty, restCol);
       ctx.globalAlpha = 1;
     },
 

@@ -67,7 +67,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 
 ## Files
 - `js/words.js` word lists
-- `js/font.js` 3×5 pixel font
+- `js/font.js` 5px-tall pixel font (3 wide; M and W 5 wide, N 4 wide so they are easy to tell apart)
 - `js/title.js` TYPEBOUNDS pixel logo
 - `js/sprites.js` sprites, castle, background, base position
 - `js/audio.js` WebAudio bleeps

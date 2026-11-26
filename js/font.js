@@ -1,4 +1,5 @@
-// 3x5 pixel font drawn in code. Text is always rendered uppercase.
+// 5px-tall pixel font drawn in code. Text is always rendered uppercase.
+// Most glyphs are 3 wide; M and W are 5 wide and N is 4 wide so M / W / H / N never look alike.
 (function () {
   const TD = (window.TD = window.TD || {});
 
@@ -15,8 +16,8 @@
     J: ['..#', '..#', '..#', '#.#', '.#.'],
     K: ['#.#', '#.#', '##.', '#.#', '#.#'],
     L: ['#..', '#..', '#..', '#..', '###'],
-    M: ['#.#', '###', '###', '#.#', '#.#'],
-    N: ['##.', '#.#', '#.#', '#.#', '#.#'],
+    M: ['#...#', '##.##', '#.#.#', '#...#', '#...#'],
+    N: ['#..#', '##.#', '#.##', '#..#', '#..#'],
     O: ['.#.', '#.#', '#.#', '#.#', '.#.'],
     P: ['##.', '#.#', '##.', '#..', '#..'],
     Q: ['.#.', '#.#', '#.#', '##.', '.##'],
@@ -25,7 +26,7 @@
     T: ['###', '.#.', '.#.', '.#.', '.#.'],
     U: ['#.#', '#.#', '#.#', '#.#', '###'],
     V: ['#.#', '#.#', '#.#', '#.#', '.#.'],
-    W: ['#.#', '#.#', '###', '###', '#.#'],
+    W: ['#...#', '#...#', '#.#.#', '##.##', '#...#'],
     X: ['#.#', '#.#', '.#.', '#.#', '#.#'],
     Y: ['#.#', '#.#', '.#.', '.#.', '.#.'],
     Z: ['###', '..#', '.#.', '#..', '###'],
@@ -54,20 +55,24 @@
     '_': ['...', '...', '...', '...', '###'],
   };
 
+  const gw = (ch) => (G[ch] ? G[ch][0].length : 3); // glyph width (space and unknown = 3)
+  // horizontal space a string takes including the 1px gap after every glyph
+  const adv = (text) => { let w = 0; for (const ch of text) w += gw(ch) + 1; return w; };
+
   const cache = new Map();
   function glyph(ch, color) {
     const key = ch + color;
     let c = cache.get(key);
     if (c) return c;
     c = document.createElement('canvas');
-    c.width = 3;
+    const rows = G[ch];
+    c.width = gw(ch);
     c.height = 5;
     const x = c.getContext('2d');
     x.fillStyle = color;
-    const rows = G[ch];
     if (rows) {
       for (let r = 0; r < 5; r++)
-        for (let i = 0; i < 3; i++) if (rows[r][i] === '#') x.fillRect(i, r, 1, 1);
+        for (let i = 0; i < rows[r].length; i++) if (rows[r][i] === '#') x.fillRect(i, r, 1, 1);
     }
     cache.set(key, c);
     return c;
@@ -77,9 +82,11 @@
     H: 5,
     prewarm(colors) { for (const c of colors) for (const ch in G) glyph(ch, c); },
     width(text, s = 1) {
-      const n = String(text).length;
-      return n ? (n * 4 - 1) * s : 0;
+      const t = String(text).toUpperCase();
+      return t.length ? (adv(t) - 1) * s : 0;
     },
+    // like width() but includes the gap after the last letter: where the next letter starts
+    advance(text, s = 1) { return adv(String(text).toUpperCase()) * s; },
     // align: 'left' | 'center' | 'right'. shadow: colour drawn 1px (scaled) below.
     draw(ctx, text, x, y, color = '#fff', s = 1, align = 'left', shadow = null) {
       text = String(text).toUpperCase();
@@ -88,12 +95,14 @@
       else if (align === 'right') x -= w;
       x = Math.round(x);
       y = Math.round(y);
-      for (let i = 0; i < text.length; i++) {
-        const ch = text[i];
-        if (ch === ' ') continue;
-        const gx = x + i * 4 * s;
-        if (shadow) ctx.drawImage(glyph(ch, shadow), gx, y + s, 3 * s, 5 * s);
-        ctx.drawImage(glyph(ch, color), gx, y, 3 * s, 5 * s);
+      let gx = x;
+      for (const ch of text) {
+        const cw = gw(ch) * s;
+        if (ch !== ' ') {
+          if (shadow) ctx.drawImage(glyph(ch, shadow), gx, y + s, cw, 5 * s);
+          ctx.drawImage(glyph(ch, color), gx, y, cw, 5 * s);
+        }
+        gx += cw + s;
       }
       return w;
     },

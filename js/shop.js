@@ -98,7 +98,7 @@
         if (typed) { ctx.fillStyle = '#2e2414'; ctx.fillRect(x + 4, ry - 3, w - 8, 11); }
         const wx = x + 10;
         if (typed) F.draw(ctx, it.word.slice(0, typed), wx, ry, COL.gold);
-        F.draw(ctx, it.word.slice(typed), wx + typed * 4, ry, COL.white);
+        F.draw(ctx, it.word.slice(typed), wx + TD.Font.advance(it.word.slice(0, typed)), ry, COL.white);
         F.draw(ctx, it.info(g), x + 58, ry, COL.dim);
         if (!it.free) {
           const c = it.cost(g);
