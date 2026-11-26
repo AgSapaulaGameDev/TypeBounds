@@ -1,9 +1,5 @@
 :root {
-  --bg: #06121a;      /* matches the game's darkest forest edge, so letterbox bars blend in */
-  --fg: #c7d2de;
-  --accent: #ffcd75;
-  --panel: rgba(10, 14, 22, 0.75);
-  --edge: #333c57;
+  --bg: #06121a; /* matches the forest's darkest edge */
 }
 
 * { box-sizing: border-box; }
@@ -14,11 +10,9 @@ html, body {
   height: 100%;
   overflow: hidden;
   background: var(--bg);
-  color: var(--fg);
-  font-family: ui-monospace, Consolas, monospace;
 }
 
-/* Canvas is sized in JS to the largest 16:9 box that fits the window, then centred. */
+/* JS sizes the canvas to fill the window (the game view widens to match the screen shape). */
 #game {
   position: absolute;
   left: 50%;
@@ -29,31 +23,4 @@ html, body {
   image-rendering: crisp-edges;
   image-rendering: pixelated;
   touch-action: none;
-}
-
-/* Small overlay controls, bottom-right corner. */
-#bar {
-  position: fixed;
-  right: 10px;
-  bottom: 10px;
-  display: flex;
-  gap: 6px;
-  opacity: 0.45;
-  transition: opacity 0.15s;
-  z-index: 2;
-}
-#bar:hover { opacity: 1; }
-
-#bar button {
-  font: 11px/1 ui-monospace, Consolas, monospace;
-  letter-spacing: 0.05em;
-  color: var(--fg);
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  padding: 5px 9px;
-  cursor: pointer;
-}
-#bar button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }

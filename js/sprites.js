@@ -185,8 +185,10 @@
     }
   }
 
-  function buildBackground(seed) {
-    const W = 320, H = 180;
+  // width = view width in pixels (320 for 16:9, wider on wide screens). The clearing, plaza
+  // and castle area stay centred; extra width is filled with forest.
+  function buildBackground(seed, width) {
+    const W = Math.round(width || 320), H = 180, cx = W / 2, wk = W / 320;
     const c = makeCanvas(W, H), x = c.getContext('2d');
     const rnd = mulberry32(seed || 7);
     const GRASS = ['#0a171e', '#0e2028', '#122a31', '#16343a', '#1b3f43', '#214a4c', '#28564f'].map(hexRgb);
@@ -208,13 +210,13 @@
     const img = x.createImageData(W, H), d = img.data;
     for (let py = 0; py < H; py++) {
       for (let px = 0; px < W; px++) {
-        const ex = (px - 160) / 150, ey = (py - 96) / 85;
+        const ex = (px - cx) / 150, ey = (py - 96) / 85;
         const dist = Math.sqrt(ex * ex + ey * ey);
         const v = noise(px, py) * 0.35 + noise(px * 2.3 + 50, py * 2.3) * 0.15 + (1 - dist) * 0.6 + (rnd() - 0.5) * 0.12;
         let col = GRASS[Math.max(0, Math.min(GRASS.length - 1, Math.floor(v * GRASS.length)))];
 
         // cobblestone plaza around the castle
-        const qx = (px - 160) / 32, qy = (py - 100) / 19, pd = qx * qx + qy * qy;
+        const qx = (px - cx) / 32, qy = (py - 100) / 19, pd = qx * qx + qy * qy;
         if (pd < 1 && !(pd > 0.7 && rnd() < 0.35)) {
           const row = Math.floor(py / 3), off = row % 2 ? 2 : 0;
           const cell = Math.floor((px + off) / 4);
@@ -228,20 +230,20 @@
     x.putImageData(img, 0, 0);
 
     const insideClearing = (px, py) => {
-      const ex = (px - 160) / 140, ey = (py - 96) / 78;
+      const ex = (px - cx) / 140, ey = (py - 96) / 78;
       return ex * ex + ey * ey < 1;
     };
     const onPlaza = (px, py) => {
-      const qx = (px - 160) / 34, qy = (py - 100) / 21;
+      const qx = (px - cx) / 34, qy = (py - 100) / 21;
       return qx * qx + qy * qy < 1;
     };
 
     // castle shadow
     x.fillStyle = 'rgba(0,0,0,0.35)';
-    x.fillRect(146, 103, 29, 3);
+    x.fillRect(Math.round(cx) - 14, 103, 29, 3);
 
     // grass tufts
-    for (let i = 0; i < 240; i++) {
+    for (let i = 0; i < 240 * wk; i++) {
       const tx = Math.floor(rnd() * W), ty = Math.floor(rnd() * H);
       if (!insideClearing(tx, ty) || onPlaza(tx, ty)) continue;
       x.fillStyle = '#2b5e52';
@@ -267,9 +269,9 @@
 
     // trees ring the clearing
     const trees = [];
-    for (let i = 0; i < 900 && trees.length < 90; i++) {
-      const tx = Math.floor(rnd() * 340) - 10, ty = Math.floor(rnd() * 200) + 2;
-      const ex = (tx - 160) / 138, ey = (ty - 98) / 80;
+    for (let i = 0; i < 900 * wk && trees.length < 90 * wk; i++) {
+      const tx = Math.floor(rnd() * (W + 20)) - 10, ty = Math.floor(rnd() * 200) + 2;
+      const ex = (tx - cx) / 138, ey = (ty - 98) / 80;
       if (ex * ex + ey * ey < 1) continue;
       if (trees.some((t) => Math.abs(t.x - tx) < 9 && Math.abs(t.y - ty) < 6)) continue;
       trees.push({ x: tx, y: ty, h: 14 + Math.floor(rnd() * 12) });
@@ -281,7 +283,7 @@
     const img2 = x.getImageData(0, 0, W, H), d2 = img2.data;
     for (let py = 0; py < H; py++) {
       for (let px = 0; px < W; px++) {
-        const ex = (px - 160) / 165, ey = (py - 92) / 95;
+        const ex = (px - cx) / (165 * wk), ey = (py - 92) / 95;
         const dist = Math.sqrt(ex * ex + ey * ey);
         const shade = Math.max(0, Math.min(1, (dist - 0.75) / 0.55));
         const lvl = Math.floor(shade * 4 + bayer[(py & 3) * 4 + (px & 3)] / 16) / 4;

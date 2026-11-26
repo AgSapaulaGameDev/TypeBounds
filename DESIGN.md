@@ -37,8 +37,17 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 
 - Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
 
+## Screen
+- Fills the whole browser window. The view is always 180 px tall; its width follows the window shape (320-640 px), so wide screens show more forest instead of black bars. Gameplay stays in the centre 320 px; enemies spawn from the visible edges.
+
+## Pause and settings
+- Esc in game opens PAUSE: Resume, Settings, Main Menu (quits the run, no score saved). Esc again resumes. Losing window focus also pauses.
+- Backspace drops the current target (Esc no longer does). In the shop, Backspace deletes a letter.
+- SETTINGS (from main menu or pause): SFX on/off, Music on/off, Fullscreen on/off. Saved in the browser.
+- Music: a looping chiptune made in code (Am-F-G-Em, 96 BPM). Starts on the first key press or click.
+
 ## Main menu, name, leaderboard
-- Main menu: PLAY and LEADERBOARD. Arrows + Enter, mouse click, or press P / L.
+- Main menu: PLAY, LEADERBOARD, SETTINGS. Arrows + Enter, mouse click, or press P / L / S.
 - PLAY asks for a name first (max 10 letters/digits, remembered for next time). Enter starts, Esc goes back.
 - Game over saves name, score and wave to the leaderboard and shows the rank. Enter = play again, Esc = main menu.
 - Leaderboard = shared online top 10 (Supabase table `scores`). Uses only the publishable key; row-level security allows read + insert, no edit/delete. DB checks: name 1-10 chars A-Z0-9, score 0-1,000,000, wave 1-999.
