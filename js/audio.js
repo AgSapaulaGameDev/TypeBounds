@@ -60,38 +60,75 @@
     noiseHit(sfxBus, ac.currentTime + (delay || 0), dur, vol || 0.3);
   }
 
-  // ---- Music: 4-bar loop (Am - F - G - Em), 16 steps per bar ----
-  const BPM = 96, STEP = 60 / BPM / 4, STEPS = 64;
+  // ---- Music: two 4-bar loops, 16 steps per bar ----
+  // menu   = calm (Am - F - G - Em, 96 BPM)
+  // battle = driving (Dm - Bb - C - A, 140 BPM) with kick, snare and a pumping bass
+  const STEPS = 64;
   const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
-  const BARS = [
-    { root: 45, chord: [57, 60, 64] }, // Am
-    { root: 41, chord: [53, 57, 60] }, // F
-    { root: 43, chord: [55, 59, 62] }, // G
-    { root: 40, chord: [52, 55, 59] }, // Em
-  ];
-  // [step, midi note, length in steps]
-  const MELODY = [
-    [0, 76, 4], [4, 72, 2], [6, 74, 2], [8, 72, 4], [12, 69, 4],
-    [16, 77, 4], [20, 76, 2], [22, 74, 2], [24, 72, 8],
-    [32, 74, 4], [36, 71, 2], [38, 72, 2], [40, 74, 4], [44, 79, 4],
-    [48, 76, 6], [54, 74, 2], [56, 71, 4], [60, 67, 4],
-  ];
   const ARP = [0, 1, 2, 1];
 
-  let musicTimer = null, nextT = 0, step = 0;
+  const TRACKS = {
+    menu: {
+      bpm: 96,
+      bars: [
+        { root: 45, chord: [57, 60, 64] }, // Am
+        { root: 41, chord: [53, 57, 60] }, // F
+        { root: 43, chord: [55, 59, 62] }, // G
+        { root: 40, chord: [52, 55, 59] }, // Em
+      ],
+      // [step, midi note, length in steps]
+      melody: [
+        [0, 76, 4], [4, 72, 2], [6, 74, 2], [8, 72, 4], [12, 69, 4],
+        [16, 77, 4], [20, 76, 2], [22, 74, 2], [24, 72, 8],
+        [32, 74, 4], [36, 71, 2], [38, 72, 2], [40, 74, 4], [44, 79, 4],
+        [48, 76, 6], [54, 74, 2], [56, 71, 4], [60, 67, 4],
+      ],
+      play(s, t, st, bar, inBar) {
+        if (inBar === 0 || inBar === 3 || inBar === 8 || inBar === 11) voice(musicBus, midi(bar.root), t, st * 2.5, 'triangle', 0.55);
+        if (inBar % 2 === 0) voice(musicBus, midi(bar.chord[ARP[(inBar / 2) % 4]] + 12), t, st * 0.9, 'square', 0.09);
+        if (inBar % 4 === 2) noiseHit(musicBus, t, 0.04, 0.12, 'highpass', 6000);
+      },
+    },
+    battle: {
+      bpm: 140,
+      bars: [
+        { root: 38, chord: [62, 65, 69] }, // Dm
+        { root: 34, chord: [58, 62, 65] }, // Bb
+        { root: 36, chord: [60, 64, 67] }, // C
+        { root: 33, chord: [57, 61, 64] }, // A
+      ],
+      melody: [
+        [0, 74, 2], [2, 74, 1], [3, 77, 2], [6, 76, 2], [8, 74, 2], [10, 72, 2], [12, 69, 4],
+        [16, 70, 2], [18, 70, 1], [19, 74, 2], [22, 72, 2], [24, 70, 2], [26, 69, 2], [28, 65, 4],
+        [32, 72, 2], [34, 72, 1], [35, 76, 2], [38, 74, 2], [40, 72, 2], [42, 70, 2], [44, 67, 4],
+        [48, 69, 3], [51, 73, 3], [54, 76, 2], [56, 81, 4], [60, 79, 2], [62, 76, 2],
+      ],
+      play(s, t, st, bar, inBar) {
+        // pumping bass: root on every 8th, octave up on the off-8ths
+        if (inBar % 2 === 0) voice(musicBus, midi(bar.root + (inBar % 4 === 2 ? 12 : 0)), t, st * 1.6, 'square', 0.22);
+        // fast arpeggio on 16ths
+        voice(musicBus, midi(bar.chord[ARP[inBar % 4]] + 12), t, st * 0.7, 'square', 0.05);
+        // kick on the beat, snare on 2 and 4, hats on the off-beats
+        if (inBar % 4 === 0) voice(musicBus, 150, t, 0.12, 'sine', 0.9, -110);
+        if (inBar === 4 || inBar === 12) noiseHit(musicBus, t, 0.12, 0.35, 'bandpass', 1800);
+        if (inBar % 2 === 1) noiseHit(musicBus, t, 0.03, 0.1, 'highpass', 7000);
+      },
+    },
+  };
+
+  let musicTimer = null, nextT = 0, step = 0, track = TRACKS.menu;
 
   function playStep(s, t) {
-    const bar = BARS[Math.floor(s / 16)], inBar = s % 16;
-    if (inBar === 0 || inBar === 3 || inBar === 8 || inBar === 11) voice(musicBus, midi(bar.root), t, STEP * 2.5, 'triangle', 0.55);
-    if (inBar % 2 === 0) voice(musicBus, midi(bar.chord[ARP[(inBar / 2) % 4]] + 12), t, STEP * 0.9, 'square', 0.09);
-    if (inBar % 4 === 2) noiseHit(musicBus, t, 0.04, 0.12, 'highpass', 6000);
-    for (const [ms, note, len] of MELODY) if (ms === s) voice(musicBus, midi(note), t, STEP * len * 0.95, 'triangle', 0.32);
+    const st = 60 / track.bpm / 4;
+    const bar = track.bars[Math.floor(s / 16)], inBar = s % 16;
+    track.play(s, t, st, bar, inBar);
+    for (const [ms, note, len] of track.melody) if (ms === s) voice(musicBus, midi(note), t, st * len * 0.95, 'triangle', 0.32);
   }
 
   function schedule() {
     while (nextT < ac.currentTime + 0.15) {
       playStep(step, nextT);
-      nextT += STEP;
+      nextT += 60 / track.bpm / 4;
       step = (step + 1) % STEPS;
     }
   }
@@ -124,6 +161,15 @@
       if (ac.state !== 'running') { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); }
       startMusic();
     },
+    // 'menu' or 'battle'. Switching restarts the loop from bar 1 of the new song.
+    setTrack(name) {
+      const next = TRACKS[name];
+      if (!next || next === track) return;
+      track = next;
+      step = 0;
+      if (ac) nextT = ac.currentTime + 0.05;
+    },
+    get track() { return track === TRACKS.battle ? 'battle' : 'menu'; },
     // true until the browser lets sound play (no click/key yet)
     get blocked() { return !ac || ac.state !== 'running'; },
     get sfxOn() { return sfxOn; },
