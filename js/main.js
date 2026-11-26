@@ -274,10 +274,9 @@
     // Bosses enter from the far left or right edge, on the side they will roam.
     spawnBoss(kind, speedMul) {
       const e = this.spawnEnemy(kind, speedMul);
-      const side = Math.random() < 0.5 ? -1 : 1;
+      const side = e.dest.x < B.cx ? -1 : 1; // enter on the side of its first roam point
       e.x = B.cx + side * 158;
-      e.y = rand(50, 130);
-      if (e.dest) e.dest = { x: B.cx + side * (100 + rand(0, 40)), y: rand(45, 140), side };
+      e.y = rand(70, 115);
       this.floats.push({ x: e.x, y: e.y - 26, text: e.t.name + '!', color: C.red, life: 1.6, align: 'center' });
       A.wave();
     },
@@ -285,7 +284,12 @@
     // Mathematician summons: each minion carries a sum; its "word" is the answer.
     // Answers start with a digit no other enemy on screen starts with.
     spawnMinions(boss) {
-      const n = Math.min(5, 2 + Math.floor(this.waves.wave / 5));
+      const n = boss.minionCount;
+      // split between the left and right edges of the field; each side is a spread-out column
+      const first = Math.random() < 0.5 ? -1 : 1;
+      const sides = Array.from({ length: n }, (_, i) => (i % 2 ? -first : first));
+      const count = { '-1': sides.filter((s) => s < 0).length, '1': sides.filter((s) => s > 0).length };
+      const seen = { '-1': 0, '1': 0 };
       const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
       for (let i = 0; i < n; i++) {
         const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
@@ -301,11 +305,10 @@
           }
           if (!used.has(ans[0])) break;
         }
-        // a tall, staggered column on the far side of the boss: ~26 px apart vertically and each
-        // one a step further out, so they reach the tower one after another
-        const side = boss.x < B.cx ? -1 : 1;
-        const x = clamp(boss.x + side * (8 + i * 12), -OX + 6, W + OX - 6);
-        const y = clamp(B.cy + (i - (n - 1) / 2) * 26 + (boss.y - B.cy) * 0.3, 30, H - 14);
+        // ~34 px apart vertically, each one a step further out, so they arrive one after another
+        const side = sides[i], k = seen[side]++, c = count[side];
+        const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
+        const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 30, H - 14);
         const m = new TD.Enemy('minion', ans, x, y, mul);
         m.prefix = q + '=';
         m.owner = boss;

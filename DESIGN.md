@@ -26,9 +26,8 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 
 ### Mathematician (boss)
 - Boss waves: every 5th wave (5, 10, 15, ...). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
-- Enters from the far left or right and roams only on that side, at least ~95 px from the tower (never above/below it). Slow. Never walks to the tower until its last life. It only summons / shows its word once it is out on its side.
-- Minions appear in a tall staggered column on the far side of the boss (about 26 px apart, each a bit further out) so they arrive one after another, and walk slowly.
-- Summons 2-5 **math minions** (more on later waves). Minions walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits) to kill it. Answers start with different digits so lock-on is clear.
+- Enters from the left or right edge, then roams around a wide oval around the tower (left side, over the top or bottom, right side and back), so it visits both sides. Never walks to the tower until its last life.
+- Summons **3 minions on its 1st and 2nd life (HP 5 and 4), 5 minions on its 3rd and 4th (HP 3 and 2)**. Minions always appear at the far left and far right edges of the field (split between both sides, ~34 px apart, each a step further out), not next to the boss, so they arrive one after another. They walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits). Answers start with different digits so lock-on is clear.
 - While any of its minions are alive, its word is hidden (`???`) and it cannot be targeted.
 - When all its minions are dead its long word shows, with a 5 s red countdown bar. Type the word = -1 HP and it summons again. If the countdown runs out it summons again anyway.
 - At 1 HP it **charges the tower** and its word becomes a 10-digit number. Reaching the tower it hits for 4.
