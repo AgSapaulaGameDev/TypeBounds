@@ -869,7 +869,7 @@
         : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', C.red]
         : ['LOADING...', C.faint];
       F.draw(ctx, st[0], W / 2, 150, st[1], 1, 'center');
-      F.draw(ctx, 'ENTER, ESC OR CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
+      F.draw(ctx, 'ENTER / ESC / CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
     },
 
     drawGameOver() {
@@ -885,9 +885,11 @@
         F.draw(ctx, k, 100, 63 + i * 9, C.dim);
         F.draw(ctx, v, 220, 63 + i * 9, C.white, 1, 'right');
       });
+      const LB = TD.Leaderboard;
       const note = this.lastRank === null ? 'SAVING SCORE...'
-        : this.lastRank ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '')
-        : 'NOT IN THE TOP 10 THIS TIME';
+        : !this.lastRank ? 'NOT IN THE TOP 10 THIS TIME'
+        : LB.improved ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '')
+        : 'YOUR BEST ' + LB.bestScore + ' STAYS AT RANK #' + this.lastRank;
       F.draw(ctx, note, W / 2, 135, this.lastRank ? C.gold : C.dim, 1, 'center', C.ink);
       if (this.time - this.overAt > 0.8) {
         if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'ENTER: PLAY AGAIN', W / 2, 148, C.white, 2, 'center', C.ink);

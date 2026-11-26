@@ -19,12 +19,22 @@
 
   const byScore = (a, b) => b.score - a.score || b.wave - a.wave;
 
+  // One row per player name: keep only each name's best run.
+  function bestPerName(list) {
+    const seen = new Set(), out = [];
+    for (const e of list.slice().sort(byScore)) {
+      if (seen.has(e.name)) continue;
+      seen.add(e.name);
+      out.push(e);
+    }
+    return out;
+  }
+
   function saveLocal(entry) {
     const list = ls.get(LOCAL_KEY, []);
     if (!Array.isArray(list)) return;
     list.push(entry);
-    list.sort(byScore);
-    ls.set(LOCAL_KEY, list.slice(0, TOP));
+    ls.set(LOCAL_KEY, bestPerName(list).slice(0, TOP));
   }
 
   function withTimeout(promise, ms) {
@@ -32,10 +42,12 @@
   }
 
   async function fetchTop() {
-    const url = API + '?select=name,score,wave&order=score.desc,wave.desc&limit=' + TOP;
+    // Fetch extra rows so older duplicate rows (from before the database kept one row per
+    // name) can't push real players out of the top 10.
+    const url = API + '?select=name,score,wave&order=score.desc,wave.desc&limit=200';
     const res = await withTimeout(fetch(url, { headers: HEADERS }), 8000);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
+    return bestPerName(await res.json()).slice(0, TOP);
   }
 
   async function postScore(e) {
@@ -60,6 +72,8 @@
     status: 'idle',   // idle | loading | online | offline
     entries: [],      // what the board shows
     mine: null,       // { name, score } of this session's last run, for highlighting
+    improved: true,   // did the last run beat that name's best on the board?
+    bestScore: 0,     // that name's best score on the board after the last run
 
     list() { return this.entries; },
     top() { return this.entries[0] || null; },
@@ -77,7 +91,8 @@
       }
     },
 
-    // Save a finished run. Resolves to its rank (1-10) or 0 if it did not make the top 10.
+    // Save a finished run. The board keeps one row per name (their best run).
+    // Resolves to that name's rank (1-10), or 0 if the name is not in the top 10.
     async submit(name, score, wave) {
       const entry = { name, score, wave };
       this.mine = { name, score };
@@ -91,11 +106,14 @@
       }
       this.status = 'idle';
       await this.refresh();
-      const i = this.entries.findIndex((e) => e.name === name && e.score === score);
+      const i = this.entries.findIndex((e) => e.name === name);
+      const best = i >= 0 ? this.entries[i].score : score;
+      this.bestScore = Math.max(best, score);
+      this.improved = score >= best;
       return i + 1;
     },
 
-    isMine(e) { return !!this.mine && e.name === this.mine.name && e.score === this.mine.score; },
+    isMine(e) { return !!this.mine && e.name === this.mine.name; },
 
     lastName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; } },
     setName(n) { try { localStorage.setItem(NAME_KEY, n); } catch (e) {} },

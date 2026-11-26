@@ -51,7 +51,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Main menu: TYPEBOUNDS logo (chunky gold pixel letters), PLAY, LEADERBOARD, SETTINGS. Arrows + Enter, mouse click, or press P / L / S.
 - PLAY asks for a name first (max 10 letters/digits, remembered for next time). Enter starts, Esc goes back.
 - Game over saves name, score and wave to the leaderboard and shows the rank. Enter = play again, Esc = main menu.
-- Leaderboard = shared online top 10 (Supabase table `scores`). Uses only the publishable key; row-level security allows read + insert, no edit/delete. DB checks: name 1-10 chars A-Z0-9, score 0-1,000,000, wave 1-999.
+- Leaderboard = shared online top 10 (Supabase table `scores`), ONE row per name = that name's best run. The game also merges duplicates when it reads the board; `supabase/one-row-per-name.sql` makes the database itself keep one row per name (unique name + trigger that only raises a row when the new run is better). Uses only the publishable key; row-level security allows read + insert, no edit/delete. DB checks: name 1-10 chars A-Z0-9, score 0-1,000,000, wave 1-999.
 - Offline fallback: shows this device's scores; unsent scores are queued and sent on the next refresh.
 - Free Supabase projects pause after ~1 week idle — restore from the dashboard if the board shows OFFLINE.
 
