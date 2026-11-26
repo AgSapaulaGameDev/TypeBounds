@@ -76,7 +76,7 @@
     // ink-rule slimes (drop tag): the label shows a decoy colour word, but the answer is the ink
     labelText() {
       if (this.hidden) return '???';
-      if (this.inkRule) return 'INK  ' + (this.progress ? this.word : this.shown); // room for the INK badge
+      if (this.inkRule) return '  ' + (this.progress ? this.word : this.shown); // room for the hue-wheel icon
       return this.prefix + this.word;
     }
 

@@ -55,6 +55,18 @@
   const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+  // 7x7 pixel colour wheel (hue picker) used to mark "type the ink colour" slimes
+  const HUE_WHEEL = [];
+  for (let py = 0; py < 7; py++) for (let px = 0; px < 7; px++) {
+    const dx = px - 3, dy = py - 3, d = Math.hypot(dx, dy);
+    if (d > 3.4) continue;
+    const hue = Math.round(((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360);
+    HUE_WHEEL.push([px, py, d < 1 ? '#ffffff' : 'hsl(' + hue + ',90%,' + (d < 2 ? 70 : 58) + '%)']);
+  }
+  function drawHueWheel(x, y) {
+    for (const [px, py, col] of HUE_WHEEL) { ctx.fillStyle = col; ctx.fillRect(x + px, y + py, 1, 1); }
+  }
   const distToBase = (e) => Math.hypot(e.x - B.cx, e.y - B.cy);
   const inRect = (x, y, r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
@@ -168,7 +180,7 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
-      if (this.waves.boss === 'rainbow') this.bannerSub = 'INK TAG = TYPE THE INK COLOUR!';
+      if (this.waves.boss === 'rainbow') this.bannerSub = 'COLOUR WHEEL = TYPE THE INK COLOUR!';
       A.wave();
     },
 
@@ -830,11 +842,9 @@
       let tx = x + 2;
       if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
       else if (e.inkRule) {
-        // gold "INK" badge, then the decoy word in its ink; once you start typing, your letters + blanks
-        const bw = F.advance('INK') + 2;
-        ctx.fillStyle = C.gold; ctx.fillRect(x, y, bw + 1, 9);
-        F.draw(ctx, 'INK', x + 2, ty, C.ink);
-        tx = x + bw + 3;
+        // hue-wheel icon, then the decoy word in its ink; once you start typing, your letters + blanks
+        drawHueWheel(x + 2, y + 1);
+        tx = x + 11;
         if (!locked) { ctx.fillStyle = C.gold; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 8, w, 1); ctx.fillRect(x + w - 1, y, 1, 9); }
         if (p > 0) {
           F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
