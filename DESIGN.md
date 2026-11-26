@@ -43,9 +43,6 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Game over saves name, score and wave to the leaderboard and shows the rank. Enter = play again, Esc = main menu.
 - Leaderboard = top 10, saved in this browser only (localStorage). A shared online board would need a backend (e.g. Vercel KV / Supabase).
 
-## Loading screen
-Shows on launch while the forest is generated: castle, segmented progress bar, step label, random tip, then "PRESS ANY KEY" (this also unlocks sound).
-
 ## Later upgrades
 - Cannon workers: shoot a random enemy, remove 1 letter
 - Keyboard Smash: combo-charged; for ~5 s every key removes that letter from all enemies

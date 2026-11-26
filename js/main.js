@@ -37,23 +37,7 @@
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
   const distToBase = (e) => Math.hypot(e.x - B.cx, e.y - B.cy);
 
-  // ---- loading ----
-  let bg = null;
-  const LOAD_STEPS = [
-    { label: 'DRAWING THE FOREST', run: () => { bg = S.buildBackground(7); } },
-    { label: 'CARVING LETTERS', run: () => F.prewarm(['#f4f4f4', '#ffcd75', '#94b0c2', '#ef7d57', '#1a1c2c', '#e8d27a', '#a7f070']) },
-    { label: 'WAKING THE MONSTERS', run: () => {} },
-    { label: 'RAISING THE TOWER', run: () => {} },
-  ];
-  const LOAD_MIN = 1.8; // seconds; keeps the bar visible even though building is fast
-  const TIPS = [
-    'A TYPO NEVER HURTS A MONSTER',
-    'BACKSPACE OR ESC DROPS YOUR TARGET',
-    'EVERY 10 COMBO RAISES YOUR MULTIPLIER',
-    'A WAVE WITH NO TYPOS GIVES BONUS GOLD',
-    'A BARRICADE MAKES MONSTERS STOP AND CHEW',
-  ];
-  const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
+  const bg = S.buildBackground(7);
   const fireflies = Array.from({ length: 14 }, () => ({
     x: rand(10, 310), y: rand(20, 170), p: rand(0, 6.28), vx: rand(-4, 4), vy: rand(-3, 3),
   }));
@@ -77,8 +61,8 @@
   const inRect = (x, y, r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
   const game = {
-    state: 'loading', // loading | menu | name | board | play | paused | over
-    time: 0, loadT: 0, loadStep: 0, loadReady: false,
+    state: 'menu', // menu | name | board | play | paused | over
+    time: 0,
     menuSel: 0, playerName: '', nameErrT: 0, lastRank: 0, lastId: null,
 
     get inGame() { return this.state === 'play' || this.state === 'paused' || this.state === 'over'; },
@@ -133,8 +117,6 @@
 
     addGold(n) { this.gold += n; this.goldEarned += n; },
 
-    leaveLoading() { if (this.loadReady) this.toMenu(); },
-
     toMenu() { this.state = 'menu'; this.locked = null; },
 
     menuGo(id) {
@@ -156,12 +138,6 @@
       this.reset();
     },
 
-    updateLoading(dt) {
-      this.loadT += dt;
-      const target = Math.floor((this.loadT / LOAD_MIN) * LOAD_STEPS.length);
-      while (this.loadStep < LOAD_STEPS.length && this.loadStep <= target) LOAD_STEPS[this.loadStep++].run();
-      if (this.loadStep >= LOAD_STEPS.length && this.loadT >= LOAD_MIN) this.loadReady = true;
-    },
 
     spawnEnemy(kind, speedMul) {
       const list = TD.Words[TD.EnemyTypes[kind].list];
@@ -179,7 +155,6 @@
 
     // ---- input ----
     onChar(ch) {
-      if (this.state === 'loading') return this.leaveLoading();
       if (this.state === 'menu') {
         if (ch === 'p') this.menuGo('play');
         else if (ch === 'l') this.menuGo('board');
@@ -205,7 +180,6 @@
     },
 
     onCancel(key) {
-      if (this.state === 'loading') return this.leaveLoading();
       if (this.state === 'name') {
         if (key === 'Backspace') this.playerName = this.playerName.slice(0, -1);
         else this.toMenu();
@@ -227,8 +201,7 @@
     },
 
     onEnter() {
-      if (this.state === 'loading') this.leaveLoading();
-      else if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
+      if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
       else if (this.state === 'menu') this.menuGo(MENU[this.menuSel].id);
       else if (this.state === 'name') this.confirmName();
       else if (this.state === 'board') this.toMenu();
@@ -250,7 +223,6 @@
 
     onClick(x, y) {
       A.unlock();
-      if (this.state === 'loading') return this.leaveLoading();
       if (this.state === 'menu') {
         const b = MENU.find((m) => inRect(x, y, m));
         if (b) this.menuGo(b.id);
@@ -357,7 +329,6 @@
         if (f.x < 0) f.x += W; if (f.x > W) f.x -= W;
         if (f.y < 16) f.vy = Math.abs(f.vy); if (f.y > H) f.vy = -Math.abs(f.vy);
       }
-      if (this.state === 'loading') return this.updateLoading(dt);
       if (this.state === 'paused') return;
       this.updateFx(dt);
       if (this.state !== 'play') return;
@@ -436,7 +407,6 @@
     render() {
       ctx.fillStyle = '#06121a';
       ctx.fillRect(0, 0, W, H);
-      if (this.state === 'loading' || !bg) return this.drawLoading();
       ctx.save();
       if (this.shake > 0) ctx.translate(Math.round(rand(-this.shake, this.shake)), Math.round(rand(-this.shake, this.shake)));
       ctx.drawImage(bg, 0, 0);
@@ -676,34 +646,6 @@
       });
       F.draw(ctx, 'SAVED ON THIS DEVICE', W / 2, 150, '#566c86', 1, 'center');
       F.draw(ctx, 'ENTER, ESC OR CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
-    },
-
-    drawLoading() {
-      const p = Math.min(1, this.loadT / LOAD_MIN);
-      // castle at 2x
-      const cs = S.castle;
-      ctx.drawImage(cs.canvas, W / 2 - cs.w, 40, cs.w * 2, cs.h * 2);
-      ctx.fillStyle = Math.sin(this.time * 7) > -0.3 ? C.gold : C.orange;
-      ctx.fillRect(W / 2 - cs.w + 24, 70, 6, 8);
-      F.draw(ctx, 'TYPING DEFENSE', W / 2, 18, C.gold, 2, 'center', C.ink);
-
-      const bw = 140, bx = (W - bw) / 2, by = 128;
-      ctx.fillStyle = C.ink; ctx.fillRect(bx - 2, by - 2, bw + 4, 10);
-      ctx.fillStyle = '#333c57'; ctx.fillRect(bx, by, bw, 6);
-      // chunky segmented fill
-      const segs = Math.floor((bw / 5) * p);
-      ctx.fillStyle = C.gold;
-      for (let i = 0; i < segs; i++) ctx.fillRect(bx + i * 5, by, 4, 6);
-
-      if (this.loadReady) {
-        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ANY KEY', W / 2, 142, C.white, 1, 'center', C.ink);
-      } else {
-        const step = LOAD_STEPS[Math.min(LOAD_STEPS.length - 1, Math.floor(p * LOAD_STEPS.length))];
-        const dots = '...'.slice(0, 1 + (Math.floor(this.time * 3) % 3));
-        F.draw(ctx, step.label + dots, bx, 142, C.dim, 1, 'left', C.ink);
-        F.draw(ctx, Math.floor(p * 100) + '%', bx + bw, 142, C.dim, 1, 'right', C.ink);
-      }
-      F.draw(ctx, 'TIP: ' + tip, W / 2, 164, '#566c86', 1, 'center');
     },
 
     drawPaused() {
