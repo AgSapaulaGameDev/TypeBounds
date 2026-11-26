@@ -56,17 +56,21 @@
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
-  // 7x7 pixel colour wheel (hue picker) used to mark "type the ink colour" slimes
-  const HUE_WHEEL = [];
-  for (let py = 0; py < 7; py++) for (let px = 0; px < 7; px++) {
-    const dx = px - 3, dy = py - 3, d = Math.hypot(dx, dy);
-    if (d > 3.4) continue;
-    const hue = Math.round(((Math.atan2(dy, dx) * 180) / Math.PI + 360) % 360);
-    HUE_WHEEL.push([px, py, d < 1 ? '#ffffff' : 'hsl(' + hue + ',90%,' + (d < 2 ? 70 : 58) + '%)']);
+  // 7x8 pixel eyedropper (colour picker) used to mark "type the ink colour" slimes:
+  // gold bulb top-right, grey collar, white glass tube down to the tip, then a drip
+  const DROPPER = ['.....BB', '....CBB', '...WC..', '..WW...', '.WW....', '.W.....', '.......', '.D.....'];
+  const DROPPER_COL = { B: '#ffcd75', C: '#94b0c2', W: '#f4f4f4' };
+  function drawDropper(x, y, t) {
+    DROPPER.forEach((row, py) => {
+      for (let px = 0; px < row.length; px++) {
+        const ch = row[px];
+        if (ch === '.') continue;
+        ctx.fillStyle = ch === 'D' ? 'hsl(' + Math.floor(t * 120) % 360 + ',90%,62%)' : DROPPER_COL[ch]; // drip cycles colours
+        ctx.fillRect(x + px, y + py, 1, 1);
+      }
+    });
   }
-  function drawHueWheel(x, y) {
-    for (const [px, py, col] of HUE_WHEEL) { ctx.fillStyle = col; ctx.fillRect(x + px, y + py, 1, 1); }
-  }
+
   const distToBase = (e) => Math.hypot(e.x - B.cx, e.y - B.cy);
   const inRect = (x, y, r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
@@ -180,7 +184,7 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
-      if (this.waves.boss === 'rainbow') this.bannerSub = 'COLOUR WHEEL = TYPE THE INK COLOUR!';
+      if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       A.wave();
     },
 
@@ -857,10 +861,10 @@
       let tx = x + 2;
       if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
       else if (e.inkRule) {
-        // hue-wheel icon, then the decoy word in its ink; once you start typing, your letters + blanks
-        drawHueWheel(x + 2, y + 1);
-        tx = x + 11;
+        // eyedropper icon, then the decoy word in its ink; once you start typing, your letters + blanks
         if (!locked) { ctx.fillStyle = C.gold; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 8, w, 1); ctx.fillRect(x + w - 1, y, 1, 9); }
+        drawDropper(x + 2, y + 1, this.time); // drawn after the border so the drip hangs over its edge
+        tx = x + 11;
         if (p > 0) {
           F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
           F.draw(ctx, '_'.repeat(e.word.length - p), tx + F.advance(e.word.slice(0, p)), ty, locked && this.typoFlash > 0 ? C.red : C.dim);
