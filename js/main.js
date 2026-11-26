@@ -184,6 +184,9 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
+      const pos = ((n - 1) % 10) + 1; // theme hints on the first wave of each new enemy mix
+      if (pos === 6) this.bannerSub = 'COLOUR SLIMES: TYPE THE WORD!';
+      if (pos === 8) this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       A.wave();
     },
@@ -282,8 +285,14 @@
 
     spawnEnemy(kind, speedMul) {
       const p = edgePoint();
+      if (kind === 'cdrop') {
+        // eyedropper slime on a normal wave: type its ink colour
+        const m = this.spawnSlime(p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1), null, true);
+        this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
+        return m;
+      }
       const e = new TD.Enemy(kind, this.pickWord(TD.EnemyTypes[kind].list), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
-      if (kind === 'color') e.ink = pick(Object.keys(TD.Inks).filter((c) => c !== e.word)); // never its own colour
+      if (kind === 'color' || kind === 'ctank') e.ink = pick(Object.keys(TD.Inks).filter((c) => c !== e.word)); // never its own colour
       this.enemies.push(e);
       this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
       return e;
@@ -581,14 +590,14 @@
       const pts = Math.round((e.word.length + e.prefix.length) * 10 * this.mult) + (e.t.boss ? 500 : 0);
       this.score += pts;
       const fh = e.frames[0].h;
-      const big = e.kind === 'tank' || e.t.boss;
+      const big = e.kind === 'tank' || e.t.heavy || e.t.boss;
       this.burst(e.x, e.y - fh / 2, e.gore, e.t.boss ? 60 : big ? 26 : 14, e.t.boss ? 80 : big ? 55 : 45, 80);
       if (e.t.boss) this.floats.push({ x: e.x, y: e.y - fh - 12, text: 'BOSS DEFEATED!', color: C.gold, life: 1.8, align: 'center' });
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       const gold = e.t.gold;
       this.addGold(gold);
       this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + gold + 'G', color: C.coin, life: 0.9, align: 'center' });
-      this.shake = Math.max(this.shake, e.t.boss ? 6 : e.kind === 'tank' ? 3 : 1.5);
+      this.shake = Math.max(this.shake, e.t.boss ? 6 : e.kind === 'tank' || e.t.heavy ? 3 : 1.5);
       A.kill();
       if (e.t.boss) A.clear();
     },

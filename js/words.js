@@ -37,6 +37,10 @@
     bluegreen: '#1fa59a', blueviolet: '#7a4ee8', redviolet: '#d0307e',
   };
   TD.inkHex = (name) => TD.Inks[name] || TD.TertiaryInks[name];
+// Math theme: fast Calculators get 3-4 letter number words, Chalkboard tanks get long ones
+  TD.Words.numShort = ['one', 'two', 'six', 'ten', 'four', 'five', 'nine', 'zero'];
+  TD.Words.numLong = ['eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
+    'nineteen', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred', 'thousand', 'million'];
   TD.Inks = {
     red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
     white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2', orange: '#f77622',

@@ -19,8 +19,10 @@
       this.timer = this.boss ? 4 : 0.6;
       this.interval = Math.max(0.55, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1);
       this.tankChance = Math.min(0.45, 0.12 + 0.04 * n);
-      // Word Color slimes join normal waves after the first boss (wave 6+)
-      this.colorChance = n >= 6 ? Math.min(0.3, 0.15 + 0.02 * (n - 6)) : 0;
+      // Themes repeat every 10 waves: 1-4 maths (Calculator + Chalkboard), 5 Mathematician,
+      // 6-7 colour (Word Color slime + tank colour slime), 8-9 tank colour slime + eyedropper slime, 10 Rainbow Slime
+      const pos = ((n - 1) % 10) + 1;
+      [this.light, this.heavy] = pos <= 4 ? ['mfast', 'mtank'] : pos <= 7 ? ['color', 'ctank'] : ['cdrop', 'ctank'];
       this.speedMul = 1 + 0.04 * (n - 1);
     }
 
@@ -35,7 +37,7 @@
         this.timer = this.interval * (0.7 + Math.random() * 0.6);
         this.spawned++;
         const r = Math.random();
-        const kind = r < this.tankChance ? 'tank' : r < this.tankChance + this.colorChance ? 'color' : 'runner';
+        const kind = r < this.tankChance ? this.heavy : this.light;
         game.spawnEnemy(kind, this.speedMul);
       }
     }

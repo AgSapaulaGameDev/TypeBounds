@@ -5,10 +5,19 @@
   const TD = (window.TD = window.TD || {});
 
   TD.EnemyTypes = {
+    // ARCHIVED for now (not spawned): original runner and tank, kept for later
     runner: { sprite: 'runner', speed: 24, dmg: 1, atkEvery: 1.0, list: 'short', animFps: 10, gold: 2,
       gore: ['#38b764', '#a7f070', '#257179', '#ffcd75'] },
     tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4, gold: 5,
       gore: ['#8b9bb4', '#566c86', '#c2c3c7', '#ef7d57'] },
+    // Math theme (waves 1-4): fast Calculator (short number words), slow Chalkboard tank (long number words)
+    mfast: { sprite: 'calc', speed: 24, dmg: 1, atkEvery: 1.0, list: 'numShort', animFps: 10, gold: 2,
+      gore: ['#a7f070', '#566c86', '#f4f4f4', '#e83b3b'] },
+    mtank: { sprite: 'board', heavy: true, speed: 7, dmg: 3, atkEvery: 1.6, list: 'numLong', animFps: 4, gold: 5,
+      gore: ['#2b5e48', '#8a5a32', '#f4f4f4'] },
+    // Colour theme (waves 6-9): tank colour slime = medium slime with a long colour word, slower
+    ctank: { sprite: 'medSlime', heavy: true, speed: 8, dmg: 3, atkEvery: 1.6, list: 'longColors', animFps: 4, gold: 5,
+      gore: ['#f4f4f4'] },
     // Word Color: word is a colour name drawn in a DIFFERENT ink colour; you type the word
     color: { sprite: 'slime', speed: 15, dmg: 2, atkEvery: 1.2, list: 'colors', animFps: 6, gold: 3,
       gore: ['#f4f4f4'] },
@@ -73,8 +82,8 @@
 
     get frames() {
       if (this.kind === 'rainbow') return TD.Sprites.bigSlime(RAINBOW[this.hue]);
-      if (this.kind === 'medslime') return TD.Sprites.medSlime(TD.inkHex(this.ink));
-      return this.ink ? TD.Sprites.slime(TD.inkHex(this.ink)) : TD.Sprites[this.t.sprite];
+      if (this.ink) return this.t.sprite === 'medSlime' ? TD.Sprites.medSlime(TD.inkHex(this.ink)) : TD.Sprites.slime(TD.inkHex(this.ink));
+      return TD.Sprites[this.t.sprite];
     }
     get gore() { return this.ink ? [TD.inkHex(this.ink), '#f4f4f4'] : this.t.gore; }
     // ink-rule slimes (drop tag): the label shows a decoy colour word, but the answer is the ink

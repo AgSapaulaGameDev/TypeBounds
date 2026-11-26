@@ -16,6 +16,17 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - A wave with zero typos gives a PERFECT bonus (50 × wave).
 
 ## Enemies
+### Wave themes (repeat every 10 waves, faster each loop)
+| Waves | Theme | Enemies |
+|---|---|---|
+| 1-4 | Maths | **Calculator** (fast, 3-4 letter number words: ONE, FOUR, ZERO) + **Chalkboard** tank (long number words: SEVENTEEN, THOUSAND) |
+| 5 | Maths | Mathematician boss |
+| 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
+| 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour) |
+| 10 | Colour | Rainbow Slime boss |
+
+Runner and Tank below are **archived** (code and sprites kept, not spawned) for later use.
+
 | Enemy | Word | Status |
 |---|---|---|
 | Runner | 3 letters, fast | Built (step 1) |

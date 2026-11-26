@@ -123,6 +123,14 @@
   const minionA = minionTop.concat(['.kp..pk.', '.kk..kk.']);
   const minionB = minionTop.concat(['..kppk..', '..kkkk..']);
 
+  // ---- Math theme (waves 1-4): Calculator (fast) and Chalkboard (tank) ----
+  const CALC_PAL = { k: '#1a1c2c', s: '#a7f070', d: '#257179', b: '#566c86', w: '#f4f4f4', r: '#e83b3b' };
+  const calcA = ['.kkkkkkkk.', 'kssssssssk', 'kskssssksk', 'ksssddsssk', 'kbbbbbbbbk', 'kbwbwbwbbk', 'kbbbbbbbbk', 'kbwbwbrbbk', '.kkkkkkkk.', '.kk....kk.'];
+  const calcB = ['.kkkkkkkk.', 'kssssssssk', 'kskssssksk', 'ksssddsssk', 'kbbbbbbbbk', 'kbwbwbwbbk', 'kbbbbbbbbk', 'kbwbwbrbbk', '.kkkkkkkk.', '..kk..kk..'];
+  const BOARD_PAL = { k: '#1a1c2c', f: '#8a5a32', c: '#2b5e48', w: '#f4f4f4' };
+  const boardA = ['.kkkkkkkkkkkk.', 'kffffffffffffk', 'kfccccccccccfk', 'kfcwkccccwkcfk', 'kfcwwccccwwcfk', 'kfccccccccccfk', 'kfccwwwwwwccfk', 'kfccccccccccfk', 'kfccwwwwwwccfk', 'kfccccccccccfk', 'kffffffffffffk', '.kkkkkkkkkkkk.', '..kfk....kfk..', '..kkk....kkk..'];
+  const boardB = ['.kkkkkkkkkkkk.', 'kffffffffffffk', 'kfccccccccccfk', 'kfcwkccccwkcfk', 'kfcwwccccwwcfk', 'kfccccccccccfk', 'kfccwwwwwwccfk', 'kfccccccccccfk', 'kfccwwwwwwccfk', 'kfccccccccccfk', 'kffffffffffffk', '.kkkkkkkkkkkk.', '...kfk..kfk...', '...kkk..kkk...'];
+
   // ---- Paint slime (Word Color enemy): body takes the ink colour, so frames are made per colour ----
   const slimeBody = [
     '.kccchhccck.',
@@ -409,6 +417,8 @@
   TD.Sprites = {
     runner: [frameSet(runnerA, RUNNER_PAL), frameSet(runnerB, RUNNER_PAL)],
     tank: [frameSet(tankA, TANK_PAL), frameSet(tankB, TANK_PAL)],
+    calc: [frameSet(calcA, CALC_PAL), frameSet(calcB, CALC_PAL)],
+    board: [frameSet(boardA, BOARD_PAL), frameSet(boardB, BOARD_PAL)],
     math: [frameSet(mathA, MATH_PAL), frameSet(mathB, MATH_PAL)],
     minion: [frameSet(minionA, MINION_PAL), frameSet(minionB, MINION_PAL)],
     slime,
