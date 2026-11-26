@@ -296,8 +296,10 @@
           }
           if (!used.has(ans[0])) break;
         }
-        const a = (i / n) * Math.PI * 2 + Math.random();
-        const x = clamp(boss.x + Math.cos(a) * 14, -OX + 6, W + OX - 6), y = clamp(boss.y + Math.sin(a) * 10, 24, H - 16);
+        // spread out on the far side of the boss (away from the tower)
+        const away = Math.atan2(boss.y - B.cy, boss.x - B.cx);
+        const a = away + ((i + 0.5) / n - 0.5) * 2.4;
+        const x = clamp(boss.x + Math.cos(a) * 16, -OX + 6, W + OX - 6), y = clamp(boss.y + Math.sin(a) * 12, 24, H - 6);
         const m = new TD.Enemy('minion', ans, x, y, mul);
         m.prefix = q + '=';
         m.owner = boss;

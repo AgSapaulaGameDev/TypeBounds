@@ -25,8 +25,9 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | Rainbow Boss | `red + blue` → `purple` | Every 10th wave — step 6 |
 
 ### Mathematician (boss)
-- Boss waves: every 4th wave (4, 8, 12, ...). Banner "BOSS WAVE n". A few normal enemies come too. Boss HP bar (5) at the bottom of the screen.
-- Roams around the field outside the barricade; never walks to the tower until its last life.
+- Boss waves: every 4th wave (4, 8, 12, ...). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
+- Roams near the edges of the field, far from the tower, slowly; never walks to the tower until its last life.
+- Minions appear on the far side of the boss (away from the tower) and walk slowly.
 - Summons 2-5 **math minions** (more on later waves). Minions walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits) to kill it. Answers start with different digits so lock-on is clear.
 - While any of its minions are alive, its word is hidden (`???`) and it cannot be targeted.
 - When all its minions are dead its long word shows, with a 5 s red countdown bar. Type the word = -1 HP and it summons again. If the countdown runs out it summons again anyway.

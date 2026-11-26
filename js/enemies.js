@@ -10,21 +10,21 @@
     tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4, gold: 5,
       gore: ['#8b9bb4', '#566c86', '#c2c3c7', '#ef7d57'] },
     // word = the answer, prefix = the question ("7+5=")
-    minion: { sprite: 'minion', speed: 14, dmg: 1, atkEvery: 1.1, animFps: 8, gold: 1,
+    minion: { sprite: 'minion', speed: 9, dmg: 1, atkEvery: 1.1, animFps: 8, gold: 1,
       gore: ['#5d275d', '#b13e53', '#ffcd75'] },
-    math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 9, chargeSpeed: 20, dmg: 4, atkEvery: 1.5,
+    math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 7, chargeSpeed: 14, dmg: 4, atkEvery: 1.5,
       list: 'long', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
   };
 
-  // where the boss wanders: on screen, but well outside the barricade ring
+  // where the boss wanders: near the edges of the field, far from the tower
   function roamPoint() {
-    for (let i = 0; i < 40; i++) {
-      const x = 40 + Math.random() * 240, y = 40 + Math.random() * 110;
-      const dx = (x - TD.BASE.cx) / 85, dy = (y - TD.BASE.cy) / 60;
+    for (let i = 0; i < 60; i++) {
+      const x = 22 + Math.random() * 276, y = 34 + Math.random() * 128;
+      const dx = (x - TD.BASE.cx) / 112, dy = (y - TD.BASE.cy) / 64;
       if (dx * dx + dy * dy > 1) return { x, y };
     }
-    return { x: 60, y: 60 };
+    return { x: 30, y: 40 };
   }
 
   let nextId = 1;

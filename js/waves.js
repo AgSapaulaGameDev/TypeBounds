@@ -1,5 +1,5 @@
 // Wave spawning. Each wave = more enemies, faster spawns, more tanks, slightly faster walk.
-// Boss waves (4, 8, 12, ...) bring the Mathematician plus a few regular enemies.
+// Boss waves (4, 8, 12, ...) bring only the Mathematician (and the minions it summons).
 (function () {
   const TD = (window.TD = window.TD || {});
 
@@ -13,7 +13,7 @@
       this.boss = bossFor(n);
       this.bossPending = !!this.boss;
       this.bossTimer = 1.2;
-      this.total = this.boss ? 2 + Math.floor(n / 2) : 6 + 2 * n; // boss waves: fewer normal enemies
+      this.total = this.boss ? 0 : 6 + 2 * n; // boss waves: no runners or tanks
       this.spawned = 0;
       this.timer = this.boss ? 4 : 0.6;
       this.interval = Math.max(0.55, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1);
