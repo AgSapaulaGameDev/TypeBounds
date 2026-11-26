@@ -282,15 +282,17 @@
       if (!mn) return;
       const n = buttons(mn).length;
       this.sel = (this.sel + dir + n) % n;
-      A.type(1);
+      A.hover();
     },
 
     // x, y arrive in canvas (view) coords; convert to play-area coords.
+    // Plays the hover sound once each time the mouse moves onto a button.
     onHover(x, y) {
       const mn = this.menuName;
-      if (!mn) return;
-      const i = buttons(mn).findIndex((b) => inRect(x - OX, y, b));
-      if (i >= 0) this.sel = i;
+      const i = mn ? buttons(mn).findIndex((b) => inRect(x - OX, y, b)) : -1;
+      const key = i >= 0 ? mn + ':' + i : null;
+      if (key && key !== this.hoverKey) { this.sel = i; A.hover(); }
+      this.hoverKey = key;
     },
 
     onClick(x, y) {

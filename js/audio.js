@@ -126,6 +126,7 @@
       if (on) startMusic(); else stopMusic();
     },
 
+    hover() { tone(1320, 0.03, 'square', 0.08); tone(1760, 0.03, 'square', 0.06, 0, 0.025); },
     lock() { tone(880, 0.04, 'square', 0.15); },
     type(p) { tone(520 + Math.min(p, 12) * 35, 0.05, 'square', 0.2); },
     typo() { tone(110, 0.16, 'sawtooth', 0.35, -40); },
