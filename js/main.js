@@ -58,6 +58,11 @@
   const distToBase = (e) => Math.hypot(e.x - B.cx, e.y - B.cy);
   const inRect = (x, y, r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
 
+  // faint letters drifting down behind the main menu (position comes from time, no state)
+  const driftLetters = Array.from({ length: 22 }, () => ({
+    x: rand(0, 1), y: rand(0, 200), v: rand(5, 13), ch: String.fromCharCode(65 + Math.floor(rand(0, 26))), s: Math.random() < 0.3 ? 2 : 1,
+  }));
+
   const fireflies = Array.from({ length: 24 }, () => ({
     x: rand(-160, 480), y: rand(20, 170), p: rand(0, 6.28), vx: rand(-4, 4), vy: rand(-3, 3),
   }));
@@ -102,7 +107,7 @@
 
   const game = {
     state: 'menu', // menu | name | board | settings | play | paused | over
-    time: 0,
+    time: 0, menuAt: 0,
     sel: 0, settingsFrom: 'menu',
     playerName: '', nameErrT: 0, lastRank: 0,
     gold: 0, armorLv: 0, wall: new TD.Barricade(),
@@ -167,7 +172,7 @@
     addGold(n) { this.gold += n; this.goldEarned += n; },
 
     // ---- screens ----
-    toMenu() { this.state = 'menu'; this.sel = 0; this.locked = null; this.enemies = []; this.particles = []; this.floats = []; this.bolts = []; },
+    toMenu() { this.menuAt = this.time; this.state = 'menu'; this.sel = 0; this.locked = null; this.enemies = []; this.particles = []; this.floats = []; this.bolts = []; },
     pause() { if (this.state === 'play') { this.state = 'paused'; this.sel = 0; A.lock(); } },
     resume() { this.state = 'play'; },
     openSettings(from) { this.settingsFrom = from; this.state = 'settings'; this.sel = 0; },
@@ -652,23 +657,31 @@
       ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1);
     },
 
+    // Buttons look like wide keyboard keys: face + side, with the shortcut letter on a mini key.
     drawButtons(list) {
       list.forEach((b, i) => {
         const sel = i === this.sel;
-        ctx.fillStyle = C.ink;
-        ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
-        ctx.fillStyle = sel ? '#3b2a12' : '#16202e';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.fillStyle = sel ? C.gold : '#333c57';
-        ctx.fillRect(b.x, b.y, b.w, 1); ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1);
-        ctx.fillRect(b.x, b.y, 1, b.h); ctx.fillRect(b.x + b.w - 1, b.y, 1, b.h);
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
-        ctx.fillRect(b.x + 1, b.y + 1, b.w - 2, 1);
-        F.draw(ctx, b.label, b.x + b.w / 2, b.y + 3, sel ? C.gold : C.white, 2, 'center', C.ink);
+        const face = b.h - 3;
+        const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+        r(b.x, b.y - 1, b.w, b.h + 2, '#0a0c14');
+        r(b.x - 1, b.y, b.w + 2, b.h, '#0a0c14');
+        r(b.x, b.y + face - 1, b.w, 4, sel ? '#8a5a14' : '#0f1520');          // side
+        r(b.x + 1, b.y, b.w - 2, face, sel ? '#4a3416' : '#1c2638');           // face
+        r(b.x, b.y + 1, b.w, face - 2, sel ? '#4a3416' : '#1c2638');
+        r(b.x + 1, b.y, b.w - 2, 1, sel ? C.gold : '#3d4b6b');                // top light
+        r(b.x, b.y + 1, 1, face - 2, sel ? '#c48a2c' : '#2c3850');
+        if (b.key) {
+          const kx = b.x + 3, ky = b.y + 2;
+          r(kx, ky, 9, 9, '#0a0c14');
+          r(kx + 1, ky + 1, 7, 6, sel ? '#ffcd75' : '#333c57');
+          r(kx + 1, ky + 7, 7, 1, sel ? '#a0620f' : '#222a3e');
+          F.draw(ctx, b.key, kx + 3, ky + 2, sel ? C.ink : C.dim, 1, 'left');
+        }
+        F.draw(ctx, b.label, b.x + b.w / 2, b.y + 2, sel ? C.gold : C.white, 2, 'center', C.ink);
         if (sel) {
           const bob = Math.floor(this.time * 4) % 2;
-          F.draw(ctx, '>', b.x - 8 - bob, b.y + 3, C.gold, 2, 'left', C.ink);
-          F.draw(ctx, '<', b.x + b.w + 3 + bob, b.y + 3, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '>', b.x - 9 - bob, b.y + 2, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '<', b.x + b.w + 4 + bob, b.y + 2, C.gold, 2, 'left', C.ink);
         }
       });
     },
@@ -682,13 +695,44 @@
     },
 
     drawMenu() {
-      this.dim(0.35);
-      F.draw(ctx, 'TYPING DEFENSE', W / 2, 16, C.gold, 3, 'center', C.ink);
-      F.draw(ctx, 'PROTECT THE TOWER', W / 2, 38, C.dim, 1, 'center', C.ink);
+      const t = this.time - this.menuAt;
+      this.dim(0.3);
+      // darker band behind the logo
+      for (let i = 0; i < 6; i++) { ctx.fillStyle = 'rgba(6,10,18,' + (0.5 - i * 0.08) + ')'; ctx.fillRect(-OX, i * 9, VW, 9); }
+
+      // drifting letters
+      for (const d of driftLetters) {
+        const y = ((d.y + this.time * d.v) % 200) - 12;
+        const x = Math.round(-OX + d.x * VW);
+        ctx.globalAlpha = 0.18;
+        F.draw(ctx, d.ch, x, Math.round(y), d.s > 1 ? '#73eff7' : C.dim, d.s, 'left');
+      }
+      ctx.globalAlpha = 1;
+
+      TD.Title.draw(ctx, W / 2, 9, t);
+      // tagline with little rules either side
+      const tag = 'TYPE FAST - HOLD THE LINE', tw = F.width(tag);
+      F.draw(ctx, tag, W / 2, 48, C.dim, 1, 'center', C.ink);
+      ctx.fillStyle = '#566c86';
+      ctx.fillRect(W / 2 - tw / 2 - 26, 50, 20, 1); ctx.fillRect(W / 2 + tw / 2 + 6, 50, 20, 1);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(W / 2 - tw / 2 - 5, 50, 1, 1); ctx.fillRect(W / 2 + tw / 2 + 4, 50, 1, 1);
+
       this.drawButtons(buttons('main'));
-      F.draw(ctx, 'ARROWS + ENTER OR CLICK', W / 2, 166, C.faint, 1, 'center');
+
+      if (A.blocked) {
+        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 166, C.gold, 1, 'center', C.ink);
+      } else {
+        F.draw(ctx, 'ARROWS + ENTER  /  CLICK  /  P L S', W / 2, 166, C.faint, 1, 'center');
+      }
       const top = TD.Leaderboard.top();
-      if (top) F.draw(ctx, 'TOP: ' + top.name + '  ' + top.score, W / 2, 174, C.dim, 1, 'center', C.ink);
+      if (top) {
+        const txt = 'BEST  ' + top.name + '  ' + top.score, w = F.width(txt) + 10;
+        const x = Math.round(W / 2 - w / 2);
+        ctx.fillStyle = 'rgba(10,12,20,0.75)'; ctx.fillRect(x, 173, w, 7);
+        ctx.fillStyle = '#333c57'; ctx.fillRect(x, 173, w, 1);
+        F.draw(ctx, txt, W / 2, 174, C.coin, 1, 'center');
+      }
     },
 
     drawPause() {

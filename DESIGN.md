@@ -1,4 +1,4 @@
-# Typing Defense — Design
+# TypeBounds — Design
 
 Pixel-art typing tower defense. Protect the tower in the center. Enemies walk in from every edge with words under them. Type a word to kill its enemy.
 
@@ -44,10 +44,10 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Esc in game opens PAUSE: Resume, Settings, Main Menu (quits the run, no score saved). Esc again resumes. Losing window focus also pauses.
 - Backspace drops the current target (Esc no longer does). In the shop, Backspace deletes a letter.
 - SETTINGS (from main menu or pause): SFX on/off, Music on/off, Fullscreen on/off. Saved in the browser.
-- Music: a looping chiptune made in code (Am-F-G-Em, 96 BPM). Starts on the first key press or click.
+- Music: a looping chiptune made in code (Am-F-G-Em, 96 BPM). Audio starts on page load; if the browser blocks autoplay (most do until the first click/tap/key anywhere on the page), the menu shows "CLICK OR PRESS ANY KEY FOR SOUND".
 
 ## Main menu, name, leaderboard
-- Main menu: PLAY, LEADERBOARD, SETTINGS. Arrows + Enter, mouse click, or press P / L / S.
+- Main menu: animated TYPEBOUNDS logo (letters are keyboard keys that get "typed" in a ripple), PLAY, LEADERBOARD, SETTINGS as key-style buttons. Arrows + Enter, mouse click, or press P / L / S.
 - PLAY asks for a name first (max 10 letters/digits, remembered for next time). Enter starts, Esc goes back.
 - Game over saves name, score and wave to the leaderboard and shows the rank. Enter = play again, Esc = main menu.
 - Leaderboard = shared online top 10 (Supabase table `scores`). Uses only the publishable key; row-level security allows read + insert, no edit/delete. DB checks: name 1-10 chars A-Z0-9, score 0-1,000,000, wave 1-999.
@@ -67,6 +67,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 ## Files
 - `js/words.js` word lists
 - `js/font.js` 3×5 pixel font
+- `js/title.js` TYPEBOUNDS key-cap logo
 - `js/sprites.js` sprites, castle, background, base position
 - `js/audio.js` WebAudio bleeps
 - `js/enemies.js` enemy types + behaviour

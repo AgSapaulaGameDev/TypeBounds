@@ -107,13 +107,25 @@
     musicTimer = null;
   }
 
+  // Browsers only let sound start after the player's first click/tap/key on the page.
+  // We create the audio and queue the music right away (it starts instantly if the browser
+  // allows autoplay), and listen on the whole page for the first gesture to unmute it.
+  const GESTURES = ['pointerdown', 'mousedown', 'touchstart', 'touchend', 'keydown', 'click'];
+  function onGesture() {
+    TD.Audio.unlock();
+    if (ac && ac.state === 'running') GESTURES.forEach((g) => window.removeEventListener(g, onGesture, true));
+  }
+  GESTURES.forEach((g) => window.addEventListener(g, onGesture, true));
+
   TD.Audio = {
     unlock() {
       ensure();
       if (!ac) return;
-      if (ac.state === 'suspended') ac.resume();
+      if (ac.state !== 'running') { const p = ac.resume(); if (p && p.catch) p.catch(() => {}); }
       startMusic();
     },
+    // true until the browser lets sound play (no click/key yet)
+    get blocked() { return !ac || ac.state !== 'running'; },
     get sfxOn() { return sfxOn; },
     get musicOn() { return musicOn; },
     setSfx(on) {
@@ -136,6 +148,8 @@
     hit() { tone(90, 0.22, 'triangle', 0.6, -40); noise(0.1, 0.3); },
     wave() { [523, 659, 784].forEach((f, i) => tone(f, 0.12, 'square', 0.22, 0, i * 0.1)); },
     clear() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.22, 0, i * 0.09)); },
-    over() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.3, 'triangle', 0.4, 0, i * 0.2)); },
-  };
+    over() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.3, 'triangle', 0.4, 0, i * 0.2)); },  };
+
+  // Try to start straight away on page load.
+  TD.Audio.unlock();
 })();
