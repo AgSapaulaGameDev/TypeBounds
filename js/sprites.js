@@ -149,6 +149,47 @@
     return slimeCache[hex];
   }
 
+  // ---- Rainbow Slime boss: big crowned blob, body re-coloured per rainbow colour ----
+  function blobRows(w, h) {
+    const cx = (w - 1) / 2, rx = w / 2, ry = h * 0.7, cy = ry; // dome top, straight sides below
+    const inside = (x, y) => x >= 0 && x < w && y >= 0 && y < h &&
+      (((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 || (y >= cy && Math.abs(x - cx) < rx - 0.5));
+    const rows = [];
+    for (let y = 0; y < h; y++) {
+      const r = [];
+      for (let x = 0; x < w; x++) {
+        if (!inside(x, y)) r.push('.');
+        else r.push(!inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || y === h - 1 ? 'k' : y >= h - 3 ? 'd' : 'c');
+      }
+      rows.push(r);
+    }
+    const set = (x, y, ch) => { if (rows[y] && rows[y][x] && rows[y][x] !== '.' && rows[y][x] !== 'k') rows[y][x] = ch; };
+    // shine, eyes, grin
+    const sx = Math.round(w * 0.22);
+    set(sx, 3, 'h'); set(sx + 1, 2, 'h'); set(sx + 2, 2, 'h');
+    const ey = Math.round(h * 0.45);
+    for (const ex of [Math.round(w * 0.3), Math.round(w * 0.6)]) { set(ex, ey, 'w'); set(ex + 1, ey, 'w'); set(ex, ey + 1, 'w'); set(ex + 1, ey + 1, 'k'); }
+    const m0 = Math.round(w * 0.38), m1 = Math.round(w * 0.6);
+    for (let x = m0; x <= m1; x++) set(x, ey + 4, 'k');
+    set(m0 - 1, ey + 3, 'k'); set(m1 + 1, ey + 3, 'k');
+    // gold crown sitting on the top edge
+    const crown = ['y.y.y', 'yyyyy', 'yrwry'];
+    const c0 = Math.round(cx) - 2, out = [];
+    for (const cr of crown) out.push('.'.repeat(c0) + cr + '.'.repeat(w - c0 - 5));
+    return out.concat(rows.map((r) => r.join('')).filter((r, i, a) => a.slice(0, i + 1).some((q) => q.includes('k'))));
+  }
+  const bigA = blobRows(22, 16);
+  const bigBcore = blobRows(22, 14);
+  const bigB = Array(bigA.length - bigBcore.length).fill('.'.repeat(22)).concat(bigBcore);
+  const bigCache = {};
+  function bigSlime(hex) {
+    if (!bigCache[hex]) {
+      const pal = { k: '#1a1c2c', c: hex, d: darken(hex, 0.6), h: '#ffffff', w: '#f4f4f4', y: '#ffcd75', r: '#b13e53' };
+      bigCache[hex] = [frameSet(bigA, pal), frameSet(bigB, pal)];
+    }
+    return bigCache[hex];
+  }
+
   // ---- Fence posts (5x10), anchored bottom-centre. Rails between posts are drawn in barricade.js ----
   const POST_ROWS = ['..k..', '.krk.', 'klwdk', 'klwdk', 'kbbbk', 'klwdk', 'klwdk', 'kbbbk', 'klwdk', 'kkkkk'];
   const POST_BROKEN = ['.....', '.....', '.....', '.....', '.....', '..k..', '.kwk.', 'klwdk', 'klwdk', 'kkkkk'];
@@ -359,6 +400,7 @@
     math: [frameSet(mathA, MATH_PAL), frameSet(mathB, MATH_PAL)],
     minion: [frameSet(minionA, MINION_PAL), frameSet(minionB, MINION_PAL)],
     slime,
+    bigSlime,
     castle: buildCastle(),
     postWood: postSet(POST_ROWS, WOOD_PAL),
     postIron: postSet(POST_ROWS, IRON_PAL),

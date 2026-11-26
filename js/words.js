@@ -25,6 +25,9 @@
 
   // Ink colours (bright enough to read on the dark label plates). Yellow and orange are words
   // only, never inks, so the gold "already typed" letters stay easy to tell apart.
+  // Rainbow Slime boss words: long colour names
+  TD.Words.longColors = ['crimson', 'scarlet', 'magenta', 'lavender', 'turquoise', 'aquamarine', 'violet', 'indigo',
+    'maroon', 'emerald', 'amber', 'sapphire', 'burgundy', 'tangerine', 'periwinkle', 'chocolate', 'olive', 'navy', 'fuchsia', 'golden'];
   TD.Inks = {
     red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
     white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2',

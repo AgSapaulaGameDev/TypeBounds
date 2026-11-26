@@ -18,20 +18,27 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 |---|---|---|
 | Runner | 3 letters, fast | Built (step 1) |
 | Tank | 7–12 letters, slow, hits hard | Built (step 1) |
-| Mathematician (BOSS) | Boss waves 5, 10, 15... See below | Built (step 3) |
+| Mathematician (BOSS) | Boss waves 5, 15, 25... See below | Built (step 3) |
 | Word Color | slime in a random ink; its word is a colour name drawn in a DIFFERENT colour — type the word. Joins normal waves with runners and tanks | ✅ Wave 6+ (15% → 30% of spawns) |
 | Ink Color | type the ink color; must look clearly different from Word Color | Wave TBD (not 9) — step 3 |
 | Boss | long phrase, fires 1-letter projectiles | Every 5th wave — step 4 |
-| Rainbow Boss | `red + blue` → `purple` | Every 10th wave — step 6 |
+| Rainbow Slime (BOSS) | long colour words; summons Word Color slimes. See below | ✅ Waves 10, 20, 30... |
 
 ### Mathematician (boss)
-- Boss waves: every 5th wave (5, 10, 15, ...). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
+- Boss waves: 5, 15, 25, ... (10, 20, 30 are the Rainbow Slime). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
 - Enters from the left or right edge, then roams around a wide oval around the tower (left side, over the top or bottom, right side and back), so it visits both sides. Never walks to the tower until its last life.
 - Summons **3 minions on its 1st and 2nd life (HP 5 and 4), 5 minions on its 3rd and 4th (HP 3 and 2)**. Minions always appear at the far left and far right edges of the field (split between both sides, ~34 px apart, each a step further out), not next to the boss, so they arrive one after another. They walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits). Answers start with different digits so lock-on is clear.
 - While any of its minions are alive, its word is hidden (`???`) and it cannot be targeted.
 - When all its minions are dead its long word shows, with a 5 s red countdown bar. Type the word = -1 HP and it summons again. If the countdown runs out it summons again anyway.
 - At 1 HP it **charges the tower** and its word becomes a 10-digit number. Reaching the tower it hits for 4.
 - Rewards: 5 gold per hit, 25 gold + 500 score on kill. Minions give 1 gold.
+
+### Rainbow Slime (boss)
+- Waves 10, 20, 30, ... Big crowned slime, 5 HP (boss HP bar). Enters and roams the same oval as the Mathematician.
+- Summons **Word Color slimes** (slower than normal ones, 60% speed): 3 on lives 5 and 4, 4 on lives 3 and 2. Same far-left / far-right spawn spots.
+- While they live its word is hidden and its body shimmers through the rainbow. When they're dead it holds one colour and shows a **long colour word** (crimson, turquoise, aquamarine, periwinkle, ...) with the 5 s countdown.
+- **Any typo on its word**: it changes to a new colour and a new word, and you start over.
+- **Last life**: it bursts into **6 Word Color slimes** that rush the tower. Each time you kill one, all the others switch to new ink colours. Kill all 6 = BOSS DEFEATED (500 score, 25 gold).
 
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.
@@ -101,4 +108,4 @@ Note: separate files make editing easier. They do not stop copying — the brows
 3. ✅ Mathematician, ✅ Word Color, Ink Color
 4. Boss + projectiles
 5. Cannons, Keyboard Smash
-6. Rainbow Boss, sound polish, title polish
+6. ✅ Rainbow Slime, sound polish, title polish

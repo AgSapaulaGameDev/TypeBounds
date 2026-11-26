@@ -1,9 +1,10 @@
 // Wave spawning. Each wave = more enemies, faster spawns, more tanks, slightly faster walk.
-// Boss waves (5, 10, 15, ...) bring only the Mathematician (and the minions it summons).
+// Boss waves (every 5th) bring only the boss and the minions it summons.
 (function () {
   const TD = (window.TD = window.TD || {});
 
-  const bossFor = (n) => (n >= 5 && n % 5 === 0 ? 'math' : null);
+  // waves 5, 15, 25 = Mathematician; 10, 20, 30 = Rainbow Slime
+  const bossFor = (n) => (n % 10 === 0 ? 'rainbow' : n % 5 === 0 ? 'math' : null);
 
   class WaveManager {
     constructor() { this.wave = 0; this.total = 0; this.spawned = 0; this.boss = null; }

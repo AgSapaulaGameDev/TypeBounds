@@ -150,7 +150,7 @@
       Object.assign(this, {
         enemies: [], particles: [], bolts: [], floats: [],
         hp: 20, maxHp: 20, score: 0, combo: 0, bestCombo: 0, kills: 0,
-        correct: 0, typos: 0, waveTypos: 0, locked: null,
+        correct: 0, typos: 0, waveTypos: 0, locked: null, splitFrom: null,
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
         buffs: {}, // one-wave shop buffs: frost
@@ -293,6 +293,18 @@
       const seen = { '-1': 0, '1': 0 };
       const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
       for (let i = 0; i < n; i++) {
+        const side = sides[i], k = seen[side]++, c = count[side];
+        const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
+        const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 30, H - 14);
+        if (boss.t.minion === 'color') {
+          // Rainbow Slime: Word Color slimes
+          const m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul * 0.6); // slower than normal slimes
+          m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
+          m.owner = boss;
+          this.enemies.push(m);
+          this.burst(x, y - 4, m.gore, 8, 25, 0);
+          continue;
+        }
         const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
         let q, ans;
         for (let tries = 0; tries < 40; tries++) {
@@ -306,10 +318,6 @@
           }
           if (!used.has(ans[0])) break;
         }
-        // ~34 px apart vertically, each one a step further out, so they arrive one after another
-        const side = sides[i], k = seen[side]++, c = count[side];
-        const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
-        const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 30, H - 14);
         const m = new TD.Enemy('minion', ans, x, y, mul);
         m.prefix = q + '=';
         m.owner = boss;
@@ -341,6 +349,7 @@
         e = this.locked = cands[0];
         A.lock();
       } else if (e.word[e.progress] !== ch) {
+        if (e.kind === 'rainbow') e.scramble(this); // Rainbow Slime: wrong letter = new colour + new word
         return this.miss(e); // typo: lock stays, no damage until the right letter
       }
       this.hitLetter(e);
@@ -440,12 +449,35 @@
       this.score += pts;
       const fh = e.frames[0].h;
       if (e.bossHit(this)) return this.kill(e);
+      if (e.splitting) return this.splitBoss(e, pts);
       this.addGold(e.t.hitGold);
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       this.floats.push({ x: e.x, y: e.y - fh + 3, text: e.hp === 1 ? 'HE CHARGES!' : '-1 HP', color: C.red, life: 1.1, align: 'center' });
       this.burst(e.x, e.y - fh / 2, e.gore, 18, 50, 80);
       e.flash = 0.2;
       this.shake = Math.max(this.shake, 3);
+      A.kill();
+    },
+
+    // Rainbow Slime's last life: it bursts into 6 Word Color slimes that rush the tower.
+    // Killing one re-inks the others; killing all 6 defeats the boss.
+    splitBoss(e, pts) {
+      this.enemies.splice(this.enemies.indexOf(e), 1);
+      this.splitFrom = e;
+      const fh = e.frames[0].h;
+      this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
+      this.floats.push({ x: e.x, y: e.y - fh + 3, text: 'IT SPLITS!', color: C.red, life: 1.4, align: 'center' });
+      this.burst(e.x, e.y - fh / 2, e.gore, 40, 70, 80);
+      this.shake = Math.max(this.shake, 5);
+      const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
+        const x = clamp(e.x + Math.cos(a) * 32, 6, W - 6), y = clamp(e.y + Math.sin(a) * 22, 26, H - 8);
+        const m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul);
+        m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
+        m.owner = e;
+        this.enemies.push(m);
+      }
       A.kill();
     },
 
@@ -464,6 +496,22 @@
       this.enemies.splice(this.enemies.indexOf(e), 1);
       if (this.locked === e) this.locked = null;
       this.kills++;
+      if (e.owner && e.owner === this.splitFrom) {
+        const sibs = this.enemies.filter((m) => m.owner === e.owner);
+        // every split slime killed: the others swap to new ink colours; last one = boss defeated
+        for (const m of sibs) { m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word && col !== m.ink)); m.flash = 0.1; }
+        if (!sibs.length) {
+          const b = this.splitFrom;
+          this.splitFrom = null;
+          b.hp = 0;
+          this.score += 500;
+          this.addGold(b.t.gold);
+          this.floats.push({ x: e.x, y: e.y - 22, text: 'BOSS DEFEATED!', color: C.gold, life: 1.8, align: 'center' });
+          this.burst(e.x, e.y - 6, b.t.gore, 60, 80, 80);
+          this.shake = Math.max(this.shake, 6);
+          A.clear();
+        }
+      }
       const pts = Math.round((e.word.length + e.prefix.length) * 10 * this.mult) + (e.t.boss ? 500 : 0);
       this.score += pts;
       const fh = e.frames[0].h;
@@ -788,7 +836,7 @@
       if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
 
       // boss health bar, bottom centre
-      const boss = this.enemies.find((e) => e.t.boss);
+      const boss = this.enemies.find((e) => e.t.boss) || this.splitFrom;
       if (boss) {
         const segs = boss.t.maxHp, sw = 14, bw = segs * (sw + 1) - 1, bx = mid - Math.floor(bw / 2), by = H - 9;
         F.draw(ctx, boss.t.name, mid, by - 8, C.red, 1, 'center', C.ink);

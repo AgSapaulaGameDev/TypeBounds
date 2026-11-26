@@ -18,7 +18,13 @@
     math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 12, chargeSpeed: 14, dmg: 4, atkEvery: 1.5,
       list: 'long', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
+    // Rainbow Slime: summons Word Color slimes; its word is a long colour name.
+    // A typo on its word makes it change colour and swap to a new word.
+    rainbow: { sprite: 'bigSlime', name: 'RAINBOW SLIME', boss: true, minion: 'color', speed: 11, chargeSpeed: 13, dmg: 4,
+      atkEvery: 1.5, list: 'longColors', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
+      gore: ['#e83b3b', '#f9a31b', '#ffd541', '#5ac54f', '#4d9be6', '#a884f3'] },
   };
+  const RAINBOW = TD.EnemyTypes.rainbow.gore;
 
   // The boss wanders along a wide oval around the tower (left side -> over the top/bottom ->
   // right side and back), so it visits both sides and never walks through the middle.
@@ -58,10 +64,14 @@
         this.charging = false;
         this.dir = Math.random() < 0.5 ? -1 : 1; // which way round the oval it walks
         this.dest = roamPoint(Math.random() < 0.5 ? 0 : Math.PI);
+        this.hue = 0; this.hueT = 0;
       }
     }
 
-    get frames() { return this.ink ? TD.Sprites.slime(TD.Inks[this.ink]) : TD.Sprites[this.t.sprite]; }
+    get frames() {
+      if (this.kind === 'rainbow') return TD.Sprites.bigSlime(RAINBOW[this.hue]);
+      return this.ink ? TD.Sprites.slime(TD.Inks[this.ink]) : TD.Sprites[this.t.sprite];
+    }
     get gore() { return this.ink ? [TD.Inks[this.ink], '#f4f4f4'] : this.t.gore; }
     labelText() { return this.hidden ? '???' : this.prefix + this.word; }
 
@@ -71,6 +81,8 @@
       if (this.flash > 0) this.flash -= dt;
       if (this.hop > 0) this.hop -= dt;
       if (this.shake > 0) this.shake -= dt;
+      // Rainbow Slime shimmers through the rainbow while its word is hidden, holds still while you type
+      if (this.kind === 'rainbow' && this.hidden && (this.hueT += dt) > 0.35) { this.hueT = 0; this.hue = (this.hue + 1) % RAINBOW.length; }
       if (this.t.boss && !this.charging) return this.roam(dt, game);
       this.walkAttack(dt, game);
     }
@@ -120,7 +132,17 @@
     }
 
     // minions per summon: 3 on its 1st and 2nd life, 5 on its 3rd and 4th
-    get minionCount() { return this.hp >= this.t.maxHp - 1 ? 3 : 5; }
+    // Rainbow Slime: 3 on its 1st and 2nd life, 4 on its 3rd and 4th
+    get minionCount() { return this.hp >= this.t.maxHp - 1 ? 3 : this.kind === 'rainbow' ? 4 : 5; }
+
+    // Rainbow Slime: wrong letter -> new colour, new word, start over
+    scramble(game) {
+      this.hue = (this.hue + 1 + Math.floor(Math.random() * (RAINBOW.length - 1))) % RAINBOW.length;
+      this.word = game.pickWord(this.t.list, this);
+      this.progress = 0;
+      this.flash = 0.15;
+      if (game.locked === this) game.locked = null;
+    }
 
     summon(game) {
       this.summoned = true;
@@ -136,15 +158,21 @@
       this.hp--;
       this.progress = 0;
       if (this.hp <= 0) return true;
-      if (this.hp === 1) {
+      if (this.hp === 1 && this.kind === 'rainbow') {
+        this.splitting = true; // last life: bursts into 6 Word Color slimes (handled by the game)
+      } else if (this.hp === 1) {
         // last stand: charges the tower, word is a long string of numbers
         this.charging = true;
         this.hidden = false;
         this.state = 'walk';
         this.speed = this.t.chargeSpeed * this.mul;
-        let n = '';
-        for (let i = 0; i < 10; i++) n += Math.floor(Math.random() * 10);
-        this.word = n;
+        if (this.kind === 'rainbow') {
+          this.word = game.pickWord(this.t.list, this);
+        } else {
+          let n = '';
+          for (let i = 0; i < 10; i++) n += Math.floor(Math.random() * 10);
+          this.word = n;
+        }
       } else {
         this.word = game.pickWord(this.t.list, this);
         this.summon(game);
