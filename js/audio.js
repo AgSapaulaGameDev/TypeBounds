@@ -4,12 +4,24 @@
   const TD = (window.TD = window.TD || {});
   let ac = null, sfxBus = null, musicBus = null, noiseBuf = null;
 
-  const read = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v === '1'; } catch (e) { return d; } };
-  const write = (k, v) => { try { localStorage.setItem(k, v ? '1' : '0'); } catch (e) {} };
-  let sfxOn = read('td_sfx', true);
-  let musicOn = read('td_music', true);
+  // Volume levels 0-10 (0 = off), saved in localStorage. Level 8 = the original mix.
+  const MAX_LVL = 10, DEF_LVL = 8;
+  const readLvl = (k, oldKey) => {
+    try {
+      const v = localStorage.getItem(k);
+      if (v != null) return Math.max(0, Math.min(MAX_LVL, parseInt(v, 10) || 0));
+      if (localStorage.getItem(oldKey) === '0') return 0; // old on/off setting
+    } catch (e) {}
+    return DEF_LVL;
+  };
+  const writeLvl = (k, v) => { try { localStorage.setItem(k, String(v)); } catch (e) {} };
+  let sfxLvl = readLvl('td_sfx_vol', 'td_sfx');
+  let musicLvl = readLvl('td_music_vol', 'td_music');
+  let sfxOn = sfxLvl > 0, musicOn = musicLvl > 0;
 
-  const SFX_VOL = 0.22, MUSIC_VOL = 0.11;
+  const SFX_BASE = 0.22, MUSIC_BASE = 0.11;
+  const sfxGain = () => (SFX_BASE * sfxLvl) / DEF_LVL;
+  const musicGain = () => (MUSIC_BASE * musicLvl) / DEF_LVL;
 
   function ensure() {
     if (ac) return ac;
@@ -17,10 +29,10 @@
     if (!AC) return null;
     ac = new AC();
     sfxBus = ac.createGain();
-    sfxBus.gain.value = sfxOn ? SFX_VOL : 0;
+    sfxBus.gain.value = sfxGain();
     sfxBus.connect(ac.destination);
     musicBus = ac.createGain();
-    musicBus.gain.value = musicOn ? MUSIC_VOL : 0;
+    musicBus.gain.value = musicGain();
     musicBus.connect(ac.destination);
     noiseBuf = ac.createBuffer(1, ac.sampleRate * 0.5, ac.sampleRate);
     const ch = noiseBuf.getChannelData(0);
@@ -174,14 +186,19 @@
     get blocked() { return !ac || ac.state !== 'running'; },
     get sfxOn() { return sfxOn; },
     get musicOn() { return musicOn; },
-    setSfx(on) {
-      sfxOn = on; write('td_sfx', on);
-      if (sfxBus) sfxBus.gain.value = on ? SFX_VOL : 0;
+    MAX_LEVEL: MAX_LVL,
+    get sfxLevel() { return sfxLvl; },
+    get musicLevel() { return musicLvl; },
+    setSfxLevel(n) {
+      sfxLvl = Math.max(0, Math.min(MAX_LVL, n)); sfxOn = sfxLvl > 0;
+      writeLvl('td_sfx_vol', sfxLvl);
+      if (sfxBus) sfxBus.gain.value = sfxGain();
     },
-    setMusic(on) {
-      musicOn = on; write('td_music', on);
-      if (musicBus) { musicBus.gain.cancelScheduledValues(0); musicBus.gain.value = on ? MUSIC_VOL : 0; }
-      if (on) startMusic(); else stopMusic();
+    setMusicLevel(n) {
+      musicLvl = Math.max(0, Math.min(MAX_LVL, n)); musicOn = musicLvl > 0;
+      writeLvl('td_music_vol', musicLvl);
+      if (musicBus) { musicBus.gain.cancelScheduledValues(0); musicBus.gain.value = musicGain(); }
+      if (musicOn) startMusic(); else stopMusic();
     },
 
     hover() { tone(1320, 0.03, 'square', 0.08); tone(1760, 0.03, 'square', 0.06, 0, 0.025); },
@@ -205,7 +222,7 @@
         g.setValueAtTime(g.value, t);
         g.linearRampToValueAtTime(0.0001, t + 0.15);
         g.setValueAtTime(0.0001, t + 3.2);
-        g.linearRampToValueAtTime(MUSIC_VOL, t + 4.5);
+        g.linearRampToValueAtTime(musicGain(), t + 4.5);
       }
       voice(sfxBus, 110, t, 0.5, 'sine', 0.9, -80);                 // thud
       noiseHit(sfxBus, t, 0.9, 0.55, 'lowpass', 500);               // rumble

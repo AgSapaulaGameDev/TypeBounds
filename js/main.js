@@ -86,17 +86,31 @@
       { id: 'settings', label: 'SETTINGS', key: 's' },
       { id: 'quit', label: 'MAIN MENU', key: 'm' },
     ] },
-    settings: { x: 90, y: 58, w: 140, h: 16, gap: 20, items: () => [
-      { id: 'sfx', label: 'SFX ' + onOff(A.sfxOn) },
-      { id: 'music', label: 'MUSIC ' + onOff(A.musicOn) },
+    // MUSIC / SFX are volume sliders: label on top, [-] [##########] [+] below.
+    settings: { x: 90, y: 110, w: 140, h: 16, gap: 20, items: () => [
+      { id: 'music', slider: 'music', label: 'MUSIC', x: 80, y: 36, w: 160, h: 32 },
+      { id: 'sfx', slider: 'sfx', label: 'SFX', x: 80, y: 70, w: 160, h: 32 },
       ...(canFullscreen ? [{ id: 'fs', label: 'FULLSCREEN ' + onOff(!!document.fullscreenElement) }] : []),
       { id: 'back', label: 'BACK' },
     ] },
   };
   function buttons(name) {
     const m = MENUS[name];
-    return m.items().map((it, i) => Object.assign(it, { x: m.x, y: m.y + i * m.gap, w: m.w, h: m.h }));
+    let row = 0; // only plain buttons use the column layout
+    return m.items().map((it) => (it.slider ? it : Object.assign({ x: m.x, y: m.y + row++ * m.gap, w: m.w, h: m.h }, it)));
   }
+  // slider pieces: [-] box, segment bar, [+] box
+  const SEG = 10, SEG_W = 10, SEG_GAP = 2;
+  function sliderParts(b) {
+    const y = b.y + 16, h = 14;
+    return {
+      minus: { x: b.x, y, w: 14, h },
+      bar: { x: b.x + 20, y, w: SEG * (SEG_W + SEG_GAP), h },
+      plus: { x: b.x + b.w - 14, y, w: 14, h },
+    };
+  }
+  const levelOf = (id) => (id === 'music' ? A.musicLevel : A.sfxLevel);
+  const setLevel = (id, n) => (id === 'music' ? A.setMusicLevel(n) : A.setSfxLevel(n));
 
   const NAME_MAX = 10;
 
@@ -189,14 +203,29 @@
         case 'settings': this.openSettings(this.state); break;
         case 'resume': this.resume(); break;
         case 'quit': this.toMenu(); break;
-        case 'sfx': A.setSfx(!A.sfxOn); break;
-        case 'music': A.setMusic(!A.musicOn); break;
+        case 'sfx': case 'music': { // Enter = mute / unmute
+          const lv = levelOf(id);
+          if (lv > 0) { this.unmuted[id] = lv; setLevel(id, 0); } else setLevel(id, this.unmuted[id] || 8);
+          A.hover();
+          break;
+        }
         case 'fs':
           if (document.fullscreenElement) document.exitFullscreen();
           else document.documentElement.requestFullscreen().catch(() => {});
           break;
         case 'back': this.closeSettings(); break;
       }
+    },
+
+    unmuted: {},
+    onAdjust(dir) { this.adjust(dir); },
+    // Left/Right arrows (or -/+ clicks) on a volume slider
+    adjust(dir) {
+      if (this.state !== 'settings') return;
+      const b = buttons('settings')[this.sel];
+      if (!b || !b.slider) return;
+      setLevel(b.id, levelOf(b.id) + dir);
+      A.hover(); // doubles as a preview of the new SFX volume
     },
 
     confirmName() {
@@ -299,8 +328,17 @@
       A.unlock();
       const mn = this.menuName;
       if (mn) {
-        const b = buttons(mn).find((it) => inRect(x - OX, y, it));
-        if (b) this.activate(b.id);
+        const list = buttons(mn), px = x - OX;
+        const i = list.findIndex((it) => inRect(px, y, it));
+        const b = list[i];
+        if (b && b.slider) {
+          // only the -, + and bar parts do something; clicking the label just selects the row
+          this.sel = i;
+          const p = sliderParts(b);
+          if (inRect(px, y, p.minus)) this.adjust(-1);
+          else if (inRect(px, y, p.plus)) this.adjust(1);
+          else if (inRect(px, y, p.bar)) { setLevel(b.id, Math.floor((px - p.bar.x) / (SEG_W + SEG_GAP)) + 1); A.hover(); }
+        } else if (b) this.activate(b.id);
       } else if (this.state === 'board') this.toMenu();
     },
 
@@ -653,9 +691,44 @@
       ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1);
     },
 
+    drawSlider(b, sel) {
+      const p = sliderParts(b), lv = levelOf(b.id);
+      const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+      F.draw(ctx, b.label, b.x + b.w / 2, b.y + 2, sel ? C.gold : C.white, 2, 'center', C.ink);
+      if (lv === 0) F.draw(ctx, 'OFF', p.plus.x + p.plus.w, b.y + 5, C.red, 1, 'right', C.ink);
+      // bar
+      const bar = p.bar;
+      r(bar.x - 1, bar.y - 1, bar.w + 2, bar.h + 2, C.ink);
+      r(bar.x, bar.y, bar.w, bar.h, '#2a3148');
+      r(bar.x, bar.y + bar.h - 2, bar.w, 2, '#1e2436');
+      if (sel) { r(bar.x - 1, bar.y - 1, bar.w + 2, 1, C.gold); r(bar.x - 1, bar.y + bar.h, bar.w + 2, 1, C.gold); }
+      for (let i = 0; i < SEG; i++) {
+        const sx = bar.x + 1 + i * (SEG_W + SEG_GAP), sy = bar.y + 2;
+        if (i < lv) {
+          r(sx, sy, SEG_W, 10, '#f4a640');
+          r(sx, sy, SEG_W, 2, '#ffcd75');
+          r(sx, sy + 8, SEG_W, 2, '#c86a1e');
+        } else r(sx, sy + 4, SEG_W, 2, '#333c57');
+      }
+      // - / + boxes
+      for (const [box, sign] of [[p.minus, '-'], [p.plus, '+']]) {
+        r(box.x - 1, box.y - 1, box.w + 2, box.h + 2, C.ink);
+        r(box.x, box.y, box.w, box.h, '#f4a640');
+        r(box.x, box.y, box.w, 2, '#ffcd75');
+        r(box.x, box.y + box.h - 2, box.w, 2, '#c86a1e');
+        F.draw(ctx, sign, box.x + 4, box.y + 2, C.ink, 2, 'left');
+      }
+      if (sel) {
+        const bob = Math.floor(this.time * 4) % 2;
+        F.draw(ctx, '>', b.x - 9 - bob, bar.y + 2, C.gold, 2, 'left', C.ink);
+        F.draw(ctx, '<', b.x + b.w + 4 + bob, bar.y + 2, C.gold, 2, 'left', C.ink);
+      }
+    },
+
     drawButtons(list) {
       list.forEach((b, i) => {
         const sel = i === this.sel;
+        if (b.slider) { this.drawSlider(b, sel); return; }
         ctx.fillStyle = C.ink;
         ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
         ctx.fillStyle = sel ? '#3b2a12' : '#16202e';
@@ -708,11 +781,12 @@
     drawSettings() {
       this.dim(this.settingsFrom === 'paused' ? 0.55 : 0.45);
       const list = buttons('settings');
-      const h = 40 + list.length * 20;
-      this.panel(78, 30, 164, h);
-      F.draw(ctx, 'SETTINGS', W / 2, 37, C.gold, 2, 'center', C.ink);
+      const last = list[list.length - 1];
+      const h = last.y + last.h + 16 - 12;
+      this.panel(62, 12, 196, h);
+      F.draw(ctx, 'SETTINGS', W / 2, 19, C.gold, 2, 'center', C.ink);
       this.drawButtons(list);
-      F.draw(ctx, 'ENTER TOGGLES - ESC GOES BACK', W / 2, 30 + h - 10, C.faint, 1, 'center');
+      F.draw(ctx, 'LEFT/RIGHT: VOLUME  ENTER: MUTE  ESC: BACK', W / 2, 12 + h - 10, C.faint, 1, 'center');
     },
 
     drawName() {

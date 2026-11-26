@@ -12,6 +12,7 @@
         if (k === 'Escape' || k === 'Backspace') { e.preventDefault(); h.onCancel(k); return; }
         if (k === ' ') { e.preventDefault(); return; }
         if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); h.onNav(k === 'ArrowUp' ? -1 : 1); return; }
+        if (k === 'ArrowLeft' || k === 'ArrowRight') { e.preventDefault(); h.onAdjust(k === 'ArrowLeft' ? -1 : 1); return; }
         if (k.length === 1) {
           const ch = k.toLowerCase();
           if (/^[a-z0-9]$/.test(ch)) {

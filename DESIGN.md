@@ -43,7 +43,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 ## Pause and settings
 - Esc in game opens PAUSE: Resume, Settings, Main Menu (quits the run, no score saved). Esc again resumes. Losing window focus also pauses.
 - Backspace drops the current target (Esc no longer does). In the shop, Backspace deletes a letter.
-- SETTINGS (from main menu or pause): SFX on/off, Music on/off, Fullscreen on/off. Saved in the browser.
+- SETTINGS (from main menu or pause): MUSIC and SFX volume sliders (0-10, shown as [-] 10 orange segments [+]; click -, +, or a segment; Left/Right arrows; Enter mutes/unmutes), Fullscreen on/off. Saved in the browser.
 - Music: two looping chiptunes made in code. Menu = calm (Am-F-G-Em, 96 BPM). In game (playing, shop, paused) = battle track (Dm-Bb-C-A, 140 BPM, kick/snare/pumping bass). Game over goes back to the calm track. Audio starts on page load; if the browser blocks autoplay (most do until the first click/tap/key anywhere on the page), the menu shows "CLICK OR PRESS ANY KEY FOR SOUND".
 
 ## Main menu, name, leaderboard
