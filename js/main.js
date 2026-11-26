@@ -127,6 +127,7 @@
         this.nameErrT = 0;
       } else if (id === 'board') {
         this.state = 'board';
+        TD.Leaderboard.refresh();
       }
     },
 
@@ -299,9 +300,10 @@
       this.state = 'over';
       this.overAt = this.time;
       this.locked = null;
-      const r = TD.Leaderboard.add(this.playerName || 'PLAYER', this.score, this.waves.wave);
-      this.lastRank = r.rank;
-      this.lastId = r.id;
+      this.lastRank = null; // null = still saving
+      TD.Leaderboard.submit(this.playerName || 'PLAYER', this.score, this.waves.wave)
+        .then((rank) => { this.lastRank = rank; })
+        .catch(() => { this.lastRank = 0; });
       if (this.score > this.best) {
         this.best = this.score;
         this.newBest = true;
@@ -632,11 +634,14 @@
       F.draw(ctx, 'SCORE', cols.score, hy, '#566c86', 1, 'right');
       ctx.fillStyle = '#333c57'; ctx.fillRect(64, hy + 7, 192, 1);
 
-      const list = TD.Leaderboard.list();
-      if (!list.length) F.draw(ctx, 'NO SCORES YET - GO PLAY!', W / 2, 90, C.dim, 1, 'center');
+      const LB = TD.Leaderboard, list = LB.list();
+      if (!list.length) {
+        const msg = LB.status === 'loading' ? 'LOADING...' : 'NO SCORES YET - GO PLAY!';
+        F.draw(ctx, msg, W / 2, 90, C.dim, 1, 'center');
+      }
       list.forEach((e, i) => {
         const y = 50 + i * 10;
-        const mine = e.id === this.lastId;
+        const mine = LB.isMine(e);
         if (mine) { ctx.fillStyle = '#3b2a12'; ctx.fillRect(64, y - 2, 192, 9); }
         const col = mine ? C.gold : i === 0 ? '#e8d27a' : C.white;
         F.draw(ctx, String(i + 1), cols.rank, y, col);
@@ -644,7 +649,10 @@
         F.draw(ctx, String(e.wave), cols.wave, y, col, 1, 'right');
         F.draw(ctx, String(e.score), cols.score, y, col, 1, 'right');
       });
-      F.draw(ctx, 'SAVED ON THIS DEVICE', W / 2, 150, '#566c86', 1, 'center');
+      const st = LB.status === 'online' ? ['ONLINE - ALL PLAYERS', C.green]
+        : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', C.red]
+        : ['LOADING...', '#566c86'];
+      F.draw(ctx, st[0], W / 2, 150, st[1], 1, 'center');
       F.draw(ctx, 'ENTER, ESC OR CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
     },
 
@@ -669,7 +677,9 @@
         F.draw(ctx, k, 100, 63 + i * 9, C.dim);
         F.draw(ctx, v, 220, 63 + i * 9, C.white, 1, 'right');
       });
-      const note = this.lastRank ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '') : 'NOT IN THE TOP 10 THIS TIME';
+      const note = this.lastRank === null ? 'SAVING SCORE...'
+        : this.lastRank ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '')
+        : 'NOT IN THE TOP 10 THIS TIME';
       F.draw(ctx, note, W / 2, 135, this.lastRank ? C.gold : C.dim, 1, 'center', C.ink);
       if (this.time - this.overAt > 0.8) {
         if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'ENTER: PLAY AGAIN', W / 2, 148, C.white, 2, 'center', C.ink);
