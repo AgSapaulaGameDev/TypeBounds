@@ -67,9 +67,20 @@
     return { x: B.cx + dx * t, y: B.cy + dy * t };
   }
 
+  // Main menu buttons (screen coords)
+  const MENU = [
+    { id: 'play', label: 'PLAY', x: 100, y: 110, w: 120, h: 18 },
+    { id: 'board', label: 'LEADERBOARD', x: 100, y: 132, w: 120, h: 18 },
+  ];
+  const NAME_MAX = 10;
+  const inRect = (x, y, r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
+
   const game = {
-    state: 'loading', // loading | title | play | paused | over
+    state: 'loading', // loading | menu | name | board | play | paused | over
     time: 0, loadT: 0, loadStep: 0, loadReady: false,
+    menuSel: 0, playerName: '', nameErrT: 0, lastRank: 0, lastId: null,
+
+    get inGame() { return this.state === 'play' || this.state === 'paused' || this.state === 'over'; },
     gold: 0, armorLv: 0, wall: new TD.Barricade(),
     best: parseInt(store.get('td_best', '0'), 10) || 0,
     enemies: [], particles: [], bolts: [], floats: [],
@@ -121,7 +132,28 @@
 
     addGold(n) { this.gold += n; this.goldEarned += n; },
 
-    leaveLoading() { if (this.loadReady) this.state = 'title'; },
+    leaveLoading() { if (this.loadReady) this.toMenu(); },
+
+    toMenu() { this.state = 'menu'; this.locked = null; },
+
+    menuGo(id) {
+      A.lock();
+      if (id === 'play') {
+        this.state = 'name';
+        this.playerName = this.playerName || TD.Leaderboard.lastName();
+        this.nameErrT = 0;
+      } else if (id === 'board') {
+        this.state = 'board';
+      }
+    },
+
+    confirmName() {
+      const n = this.playerName.trim();
+      if (!n) { this.nameErrT = 1.2; A.typo(); return; }
+      this.playerName = n;
+      TD.Leaderboard.setName(n);
+      this.reset();
+    },
 
     updateLoading(dt) {
       this.loadT += dt;
@@ -147,6 +179,15 @@
     // ---- input ----
     onChar(ch) {
       if (this.state === 'loading') return this.leaveLoading();
+      if (this.state === 'menu') {
+        if (ch === 'p') this.menuGo('play');
+        else if (ch === 'l') this.menuGo('board');
+        return;
+      }
+      if (this.state === 'name') {
+        if (this.playerName.length < NAME_MAX) { this.playerName += ch.toUpperCase(); A.type(this.playerName.length); }
+        return;
+      }
       if (this.state !== 'play') return;
       if (this.phase === 'shop') return TD.Shop.onChar(this, ch);
       let e = this.locked;
@@ -164,6 +205,16 @@
 
     onCancel(key) {
       if (this.state === 'loading') return this.leaveLoading();
+      if (this.state === 'name') {
+        if (key === 'Backspace') this.playerName = this.playerName.slice(0, -1);
+        else this.toMenu();
+        return;
+      }
+      if (this.state === 'board') return this.toMenu();
+      if (this.state === 'over') {
+        if (key === 'Escape' && this.time - this.overAt > 0.8) this.toMenu();
+        return;
+      }
       if (this.state === 'play' && this.phase === 'shop') {
         if (key === 'Backspace') TD.Shop.back(); else TD.Shop.clear();
         return;
@@ -177,8 +228,32 @@
     onEnter() {
       if (this.state === 'loading') this.leaveLoading();
       else if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
-      else if (this.state === 'title') this.reset();
-      else if (this.state === 'over' && this.time - this.overAt > 0.8) this.reset();
+      else if (this.state === 'menu') this.menuGo(MENU[this.menuSel].id);
+      else if (this.state === 'name') this.confirmName();
+      else if (this.state === 'board') this.toMenu();
+      else if (this.state === 'over' && this.time - this.overAt > 0.8) this.reset(); // same name, play again
+      else if (this.state === 'paused') this.state = 'play';
+    },
+
+    onNav(dir) {
+      if (this.state !== 'menu') return;
+      this.menuSel = (this.menuSel + dir + MENU.length) % MENU.length;
+      A.type(1);
+    },
+
+    onHover(x, y) {
+      if (this.state !== 'menu') return;
+      const i = MENU.findIndex((b) => inRect(x, y, b));
+      if (i >= 0) this.menuSel = i;
+    },
+
+    onClick(x, y) {
+      A.unlock();
+      if (this.state === 'loading') return this.leaveLoading();
+      if (this.state === 'menu') {
+        const b = MENU.find((m) => inRect(x, y, m));
+        if (b) this.menuGo(b.id);
+      } else if (this.state === 'board') this.toMenu();
       else if (this.state === 'paused') this.state = 'play';
     },
 
@@ -251,6 +326,9 @@
       this.state = 'over';
       this.overAt = this.time;
       this.locked = null;
+      const r = TD.Leaderboard.add(this.playerName || 'PLAYER', this.score, this.waves.wave);
+      this.lastRank = r.rank;
+      this.lastId = r.id;
       if (this.score > this.best) {
         this.best = this.score;
         this.newBest = true;
@@ -370,26 +448,28 @@
       // depth-sorted sprites
       const items = [{ y: B.sortY, draw: () => this.drawCastle() }];
       for (const e of this.enemies) items.push({ y: e.y, draw: () => this.drawEnemy(e) });
-      if (this.state !== 'title') items.push(...this.wall.items(ctx));
+      if (this.inGame) items.push(...this.wall.items(ctx));
       items.sort((a, b) => a.y - b.y).forEach((i) => i.draw());
 
       this.drawBolts();
       for (const p of this.particles) { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size); }
 
-      if (this.state !== 'title') {
+      if (this.inGame) {
         for (const e of this.enemies) if (e !== this.locked) this.drawLabel(e);
         if (this.locked) { this.drawReticle(this.locked); this.drawLabel(this.locked); }
       }
       for (const f of this.floats) F.draw(ctx, f.text, f.x, f.y, f.color, 1, f.align, C.ink);
       ctx.restore();
 
-      if (this.state !== 'title') this.drawHUD();
+      if (this.inGame) this.drawHUD();
       if (this.typoFlash > 0) {
         ctx.fillStyle = 'rgba(239,125,87,' + (this.typoFlash * 3).toFixed(2) + ')';
         ctx.fillRect(0, 0, W, 2); ctx.fillRect(0, H - 2, W, 2); ctx.fillRect(0, 0, 2, H); ctx.fillRect(W - 2, 0, 2, H);
       }
       if (this.state === 'play') { if (this.phase === 'shop') TD.Shop.draw(ctx, this); else this.drawBanner(); }
-      else if (this.state === 'title') this.drawTitle();
+      else if (this.state === 'menu') this.drawMenu();
+      else if (this.state === 'name') this.drawName();
+      else if (this.state === 'board') this.drawBoard();
       else if (this.state === 'paused') this.drawPaused();
       else if (this.state === 'over') this.drawGameOver();
     },
@@ -520,17 +600,81 @@
       F.draw(ctx, this.bannerSub, W / 2, 55, C.dim, 1, 'center');
     },
 
-    drawTitle() {
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    drawMenu() {
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.fillRect(0, 0, W, H);
-      F.draw(ctx, 'TYPING DEFENSE', W / 2, 22, C.gold, 3, 'center', C.ink);
-      F.draw(ctx, 'PROTECT THE TOWER', W / 2, 44, C.dim, 1, 'center', C.ink);
-      this.panel(60, 112, 200, 32);
-      F.draw(ctx, 'TYPE A WORD TO ATTACK ITS MONSTER', W / 2, 117, C.white, 1, 'center');
-      F.draw(ctx, 'A TYPO BREAKS YOUR COMBO', W / 2, 125, C.white, 1, 'center');
-      F.draw(ctx, 'BACKSPACE OR ESC DROPS YOUR TARGET', W / 2, 133, C.white, 1, 'center');
-      if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ENTER TO START', W / 2, 152, C.gold, 2, 'center', C.ink);
-      if (this.best > 0) F.draw(ctx, 'BEST ' + this.best, W / 2, 170, C.dim, 1, 'center', C.ink);
+      F.draw(ctx, 'TYPING DEFENSE', W / 2, 20, C.gold, 3, 'center', C.ink);
+      F.draw(ctx, 'PROTECT THE TOWER', W / 2, 42, C.dim, 1, 'center', C.ink);
+
+      MENU.forEach((b, i) => {
+        const sel = i === this.menuSel;
+        ctx.fillStyle = C.ink;
+        ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+        ctx.fillStyle = sel ? '#3b2a12' : '#16202e';
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.fillStyle = sel ? C.gold : '#333c57';
+        ctx.fillRect(b.x, b.y, b.w, 1); ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1);
+        ctx.fillRect(b.x, b.y, 1, b.h); ctx.fillRect(b.x + b.w - 1, b.y, 1, b.h);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fillRect(b.x + 1, b.y + 1, b.w - 2, 1);
+        F.draw(ctx, b.label, b.x + b.w / 2, b.y + 4, sel ? C.gold : C.white, 2, 'center', C.ink);
+        if (sel) {
+          const bob = Math.floor(this.time * 4) % 2;
+          F.draw(ctx, '>', b.x - 8 - bob, b.y + 4, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '<', b.x + b.w + 3 + bob, b.y + 4, C.gold, 2, 'left', C.ink);
+        }
+      });
+
+      F.draw(ctx, 'ARROWS + ENTER OR CLICK', W / 2, 158, '#566c86', 1, 'center');
+      const top = TD.Leaderboard.top();
+      if (top) F.draw(ctx, 'TOP: ' + top.name + '  ' + top.score, W / 2, 168, C.dim, 1, 'center', C.ink);
+    },
+
+    drawName() {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      F.draw(ctx, 'WHO IS DEFENDING?', W / 2, 40, C.gold, 2, 'center', C.ink);
+      this.panel(60, 62, 200, 62);
+      F.draw(ctx, 'ENTER YOUR NAME', W / 2, 68, C.dim, 1, 'center');
+      // input box
+      const bx = 80, by = 78, bw = 160, bh = 18;
+      ctx.fillStyle = C.ink; ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = C.gold;
+      ctx.fillRect(bx, by, bw, 1); ctx.fillRect(bx, by + bh - 1, bw, 1); ctx.fillRect(bx, by, 1, bh); ctx.fillRect(bx + bw - 1, by, 1, bh);
+      const cursor = this.playerName.length < NAME_MAX && Math.floor(this.time * 3) % 2 === 0 ? '_' : ' ';
+      F.draw(ctx, this.playerName + cursor, W / 2, by + 4, C.white, 2, 'center');
+      F.draw(ctx, this.playerName.length + '/' + NAME_MAX, bx + bw - 3, by + bh + 3, '#566c86', 1, 'right');
+      if (this.nameErrT > 0) F.draw(ctx, 'TYPE A NAME FIRST', W / 2, 108, C.red, 1, 'center');
+      F.draw(ctx, 'ENTER TO START - ESC TO GO BACK', W / 2, 115, C.dim, 1, 'center');
+    },
+
+    drawBoard() {
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(0, 0, W, H);
+      this.panel(56, 14, 208, 152);
+      F.draw(ctx, 'LEADERBOARD', W / 2, 20, C.gold, 2, 'center', C.ink);
+      const cols = { rank: 70, name: 86, wave: 196, score: 250 };
+      const hy = 38;
+      F.draw(ctx, '#', cols.rank, hy, '#566c86');
+      F.draw(ctx, 'NAME', cols.name, hy, '#566c86');
+      F.draw(ctx, 'WAVE', cols.wave, hy, '#566c86', 1, 'right');
+      F.draw(ctx, 'SCORE', cols.score, hy, '#566c86', 1, 'right');
+      ctx.fillStyle = '#333c57'; ctx.fillRect(64, hy + 7, 192, 1);
+
+      const list = TD.Leaderboard.list();
+      if (!list.length) F.draw(ctx, 'NO SCORES YET - GO PLAY!', W / 2, 90, C.dim, 1, 'center');
+      list.forEach((e, i) => {
+        const y = 50 + i * 10;
+        const mine = e.id === this.lastId;
+        if (mine) { ctx.fillStyle = '#3b2a12'; ctx.fillRect(64, y - 2, 192, 9); }
+        const col = mine ? C.gold : i === 0 ? '#e8d27a' : C.white;
+        F.draw(ctx, String(i + 1), cols.rank, y, col);
+        F.draw(ctx, e.name, cols.name, y, col);
+        F.draw(ctx, String(e.wave), cols.wave, y, col, 1, 'right');
+        F.draw(ctx, String(e.score), cols.score, y, col, 1, 'right');
+      });
+      F.draw(ctx, 'SAVED ON THIS DEVICE', W / 2, 150, '#566c86', 1, 'center');
+      F.draw(ctx, 'ENTER, ESC OR CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
     },
 
     drawLoading() {
@@ -582,9 +726,12 @@
         F.draw(ctx, k, 100, 63 + i * 9, C.dim);
         F.draw(ctx, v, 220, 63 + i * 9, C.white, 1, 'right');
       });
-      if (this.newBest) F.draw(ctx, 'NEW BEST!', W / 2, 135, C.gold, 1, 'center', C.ink);
-      if (this.time - this.overAt > 0.8 && Math.floor(this.time * 2) % 2 === 0)
-        F.draw(ctx, 'PRESS ENTER TO RETRY', W / 2, 150, C.white, 2, 'center', C.ink);
+      const note = this.lastRank ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '') : 'NOT IN THE TOP 10 THIS TIME';
+      F.draw(ctx, note, W / 2, 135, this.lastRank ? C.gold : C.dim, 1, 'center', C.ink);
+      if (this.time - this.overAt > 0.8) {
+        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'ENTER: PLAY AGAIN', W / 2, 148, C.white, 2, 'center', C.ink);
+        F.draw(ctx, 'ESC: MAIN MENU', W / 2, 164, C.dim, 1, 'center', C.ink);
+      }
     },
   };
 
@@ -600,7 +747,8 @@
   // ---- loop ----
   let last = performance.now();
   function frame(now) {
-    const dt = Math.min(0.05, (now - last) / 1000);
+    // rAF's first timestamp can be slightly earlier than `last`, so never allow a negative dt.
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     game.update(dt);
     game.render();

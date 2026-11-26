@@ -37,6 +37,12 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 
 - Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
 
+## Main menu, name, leaderboard
+- Main menu: PLAY and LEADERBOARD. Arrows + Enter, mouse click, or press P / L.
+- PLAY asks for a name first (max 10 letters/digits, remembered for next time). Enter starts, Esc goes back.
+- Game over saves name, score and wave to the leaderboard and shows the rank. Enter = play again, Esc = main menu.
+- Leaderboard = top 10, saved in this browser only (localStorage). A shared online board would need a backend (e.g. Vercel KV / Supabase).
+
 ## Loading screen
 Shows on launch while the forest is generated: castle, segmented progress bar, step label, random tip, then "PRESS ANY KEY" (this also unlocks sound).
 
@@ -59,6 +65,7 @@ Shows on launch while the forest is generated: castle, segmented progress bar, s
 - `js/waves.js` wave spawning
 - `js/barricade.js` wall ring, HP levels, stake drawing
 - `js/shop.js` typed shop between waves
+- `js/leaderboard.js` local top-10 scores + last player name
 - `js/input.js` keyboard
 - `js/main.js` game state, update, render
 

@@ -2,7 +2,8 @@
 (function () {
   const TD = (window.TD = window.TD || {});
 
-  const RING = { cx: 160, cy: 88, rx: 50, ry: 40 };
+  // Centred on the castle + plaza group (castle spans y 67-104, plaza reaches y 119).
+  const RING = { cx: 160, cy: 95, rx: 58, ry: 42 };
   TD.RING = RING;
   TD.inRing = function (x, y) {
     const a = (x - RING.cx) / RING.rx, b = (y - RING.cy) / RING.ry;
@@ -10,7 +11,7 @@
   };
 
   const HP_BY_LEVEL = [0, 12, 20, 30, 42, 56];
-  const N = 28;
+  const N = 32;
   const posts = [];
   for (let i = 0; i < N; i++) {
     const a = (i / N) * Math.PI * 2;
