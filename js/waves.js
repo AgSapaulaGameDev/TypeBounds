@@ -18,6 +18,8 @@
       this.timer = this.boss ? 4 : 0.6;
       this.interval = Math.max(0.55, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1);
       this.tankChance = Math.min(0.45, 0.12 + 0.04 * n);
+      // Word Color slimes join normal waves after the first boss (wave 6+)
+      this.colorChance = n >= 6 ? Math.min(0.3, 0.15 + 0.02 * (n - 6)) : 0;
       this.speedMul = 1 + 0.04 * (n - 1);
     }
 
@@ -31,7 +33,9 @@
       if (this.timer <= 0) {
         this.timer = this.interval * (0.7 + Math.random() * 0.6);
         this.spawned++;
-        game.spawnEnemy(Math.random() < this.tankChance ? 'tank' : 'runner', this.speedMul);
+        const r = Math.random();
+        const kind = r < this.tankChance ? 'tank' : r < this.tankChance + this.colorChance ? 'color' : 'runner';
+        game.spawnEnemy(kind, this.speedMul);
       }
     }
 

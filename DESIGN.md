@@ -19,7 +19,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | Runner | 3 letters, fast | Built (step 1) |
 | Tank | 7–12 letters, slow, hits hard | Built (step 1) |
 | Mathematician (BOSS) | Boss waves 5, 10, 15... See below | Built (step 3) |
-| Word Color | type the written word | Wave 6 — step 3 |
+| Word Color | slime in a random ink; its word is a colour name drawn in a DIFFERENT colour — type the word. Joins normal waves with runners and tanks | ✅ Wave 6+ (15% → 30% of spawns) |
 | Ink Color | type the ink color; must look clearly different from Word Color | Wave TBD (not 9) — step 3 |
 | Boss | long phrase, fires 1-letter projectiles | Every 5th wave — step 4 |
 | Rainbow Boss | `red + blue` → `purple` | Every 10th wave — step 6 |
@@ -49,7 +49,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - One-wave buffs (frost) show under WAVE/LEFT in the HUD and run out when the wave is cleared.
 - Later cards (step 5): cannon workers, Keyboard Smash.
 
-- Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
+- Barricade = fence around the tower: posts joined by plank rails (2 rails at L1, 3 at L2; iron fence with gold bands from L3, gold spikes at L5). Sections fall apart as HP drops (fallen planks, broken stumps). Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
 
 ## Screen
 - Fills the whole browser window. The view is always 180 px tall; its width follows the window shape (320-640 px), so wide screens show more forest instead of black bars. Gameplay stays in the centre 320 px; enemies spawn from the visible edges.
@@ -87,7 +87,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - `js/audio.js` WebAudio bleeps
 - `js/enemies.js` enemy types + behaviour
 - `js/waves.js` wave spawning
-- `js/barricade.js` wall ring, HP levels, stake drawing
+- `js/barricade.js` fence ring, HP levels, post + rail drawing
 - `js/shop.js` typed shop between waves
 - `js/leaderboard.js` local top-10 scores + last player name
 - `js/input.js` keyboard
@@ -98,7 +98,7 @@ Note: separate files make editing easier. They do not stop copying — the brows
 ## Build order
 1. ✅ Map, base, Runner, Tank, typing + lock-on, HP, game over, basic waves
 2. ✅ Gold + shop (Armor, Repair, Barricade) + loading screen
-3. Mathematician, Word Color, Ink Color
+3. ✅ Mathematician, ✅ Word Color, Ink Color
 4. Boss + projectiles
 5. Cannons, Keyboard Smash
 6. Rainbow Boss, sound polish, title polish

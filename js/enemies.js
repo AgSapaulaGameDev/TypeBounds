@@ -9,6 +9,9 @@
       gore: ['#38b764', '#a7f070', '#257179', '#ffcd75'] },
     tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4, gold: 5,
       gore: ['#8b9bb4', '#566c86', '#c2c3c7', '#ef7d57'] },
+    // Word Color: word is a colour name drawn in a DIFFERENT ink colour; you type the word
+    color: { sprite: 'slime', speed: 15, dmg: 2, atkEvery: 1.2, list: 'colors', animFps: 6, gold: 3,
+      gore: ['#f4f4f4'] },
     // word = the answer, prefix = the question ("7+5=")
     minion: { sprite: 'minion', speed: 9, dmg: 1, atkEvery: 1.1, animFps: 8, gold: 1,
       gore: ['#5d275d', '#b13e53', '#ffcd75'] },
@@ -58,7 +61,8 @@
       }
     }
 
-    get frames() { return TD.Sprites[this.t.sprite]; }
+    get frames() { return this.ink ? TD.Sprites.slime(TD.Inks[this.ink]) : TD.Sprites[this.t.sprite]; }
+    get gore() { return this.ink ? [TD.Inks[this.ink], '#f4f4f4'] : this.t.gore; }
     labelText() { return this.hidden ? '???' : this.prefix + this.word; }
 
     update(dt, game) {

@@ -266,6 +266,7 @@
     spawnEnemy(kind, speedMul) {
       const p = edgePoint();
       const e = new TD.Enemy(kind, this.pickWord(TD.EnemyTypes[kind].list), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
+      if (kind === 'color') e.ink = pick(Object.keys(TD.Inks).filter((c) => c !== e.word)); // never its own colour
       this.enemies.push(e);
       this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
       return e;
@@ -442,7 +443,7 @@
       this.addGold(e.t.hitGold);
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       this.floats.push({ x: e.x, y: e.y - fh + 3, text: e.hp === 1 ? 'HE CHARGES!' : '-1 HP', color: C.red, life: 1.1, align: 'center' });
-      this.burst(e.x, e.y - fh / 2, e.t.gore, 18, 50, 80);
+      this.burst(e.x, e.y - fh / 2, e.gore, 18, 50, 80);
       e.flash = 0.2;
       this.shake = Math.max(this.shake, 3);
       A.kill();
@@ -467,7 +468,7 @@
       this.score += pts;
       const fh = e.frames[0].h;
       const big = e.kind === 'tank' || e.t.boss;
-      this.burst(e.x, e.y - fh / 2, e.t.gore, e.t.boss ? 60 : big ? 26 : 14, e.t.boss ? 80 : big ? 55 : 45, 80);
+      this.burst(e.x, e.y - fh / 2, e.gore, e.t.boss ? 60 : big ? 26 : 14, e.t.boss ? 80 : big ? 55 : 45, 80);
       if (e.t.boss) this.floats.push({ x: e.x, y: e.y - fh - 12, text: 'BOSS DEFEATED!', color: C.gold, life: 1.8, align: 'center' });
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       const gold = e.t.gold;
@@ -738,7 +739,7 @@
       else {
         if (e.prefix) { F.draw(ctx, e.prefix, tx, ty, C.dim); tx += F.advance(e.prefix); }
         if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
-        const restCol = locked && this.typoFlash > 0 ? C.red : C.white;
+        const restCol = locked && this.typoFlash > 0 ? C.red : e.ink ? TD.Inks[e.ink] : C.white;
         // minion answers stay secret: one _ per digit still to type
         const rest = e.prefix ? '_'.repeat(e.word.length - p) : e.word.slice(p);
         F.draw(ctx, rest, tx + F.advance(e.word.slice(0, p)), ty, restCol);

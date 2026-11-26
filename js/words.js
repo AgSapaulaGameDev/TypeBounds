@@ -19,5 +19,14 @@
       'undertow vanguard whirlwind zeppelin keyboard alphabet kingdom shoulder brimstone ' +
       'dragonfly executioner necromancer battlements thunderstorm candlelight scarecrow'
     ).split(' '),
+    // Word Color enemy: you type the colour WORD (it is drawn in a different ink colour)
+    colors: ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'white', 'brown', 'cyan', 'gray'],
+  };
+
+  // Ink colours (bright enough to read on the dark label plates). Yellow and orange are words
+  // only, never inks, so the gold "already typed" letters stay easy to tell apart.
+  TD.Inks = {
+    red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
+    white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2',
   };
 })();
