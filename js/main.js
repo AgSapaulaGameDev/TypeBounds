@@ -74,9 +74,8 @@
 
   // ---- menus (play-area coords) ----
   const canFullscreen = !!document.documentElement.requestFullscreen;
-  const onOff = (b) => (b ? 'ON' : 'OFF');
   const MENUS = {
-    main: { x: 100, y: 106, w: 120, h: 16, gap: 19, items: () => [
+    main: { x: 104, y: 114, w: 112, h: 14, gap: 17, items: () => [
       { id: 'play', label: 'PLAY', key: 'p' },
       { id: 'board', label: 'LEADERBOARD', key: 'l' },
       { id: 'settings', label: 'SETTINGS', key: 's' },
@@ -87,27 +86,35 @@
       { id: 'quit', label: 'MAIN MENU', key: 'm' },
     ] },
     // MUSIC / SFX are volume sliders: label on top, [-] [##########] [+] below.
-    settings: { x: 90, y: 110, w: 140, h: 16, gap: 20, items: () => [
-      { id: 'music', slider: 'music', label: 'MUSIC', x: 80, y: 36, w: 160, h: 32 },
-      { id: 'sfx', slider: 'sfx', label: 'SFX', x: 80, y: 70, w: 160, h: 32 },
-      ...(canFullscreen ? [{ id: 'fs', label: 'FULLSCREEN ' + onOff(!!document.fullscreenElement) }] : []),
-      { id: 'back', label: 'BACK' },
-    ] },
+    // Settings = compact rows: label on the left, control on the right. BACK is a normal button.
+    settings: { x: 120, y: 0, w: 80, h: 16, gap: 0, items: () => {
+      const rows = [
+        { id: 'music', slider: true, label: 'MUSIC' },
+        { id: 'sfx', slider: true, label: 'SFX' },
+        ...(canFullscreen ? [{ id: 'fs', toggle: true, label: 'FULLSCREEN', on: !!document.fullscreenElement }] : []),
+      ];
+      rows.forEach((r, i) => Object.assign(r, { x: 80, y: 60 + i * 17, w: 160, h: 14 }));
+      return [...rows, { id: 'back', label: 'BACK', x: 120, y: 64 + rows.length * 17, w: 80, h: 16 }];
+    } },
   };
   function buttons(name) {
     const m = MENUS[name];
     let row = 0; // only plain buttons use the column layout
-    return m.items().map((it) => (it.slider ? it : Object.assign({ x: m.x, y: m.y + row++ * m.gap, w: m.w, h: m.h }, it)));
+    return m.items().map((it) => (it.x != null ? it : Object.assign({ x: m.x, y: m.y + row++ * m.gap, w: m.w, h: m.h }, it)));
   }
-  // slider pieces: [-] box, segment bar, [+] box
-  const SEG = 10, SEG_W = 10, SEG_GAP = 2;
+  // slider pieces, right-aligned in the row: [-] [segments] [+]
+  const SEG = 10, SEG_W = 6, SEG_GAP = 1;
   function sliderParts(b) {
-    const y = b.y + 16, h = 14;
-    return {
-      minus: { x: b.x, y, w: 14, h },
-      bar: { x: b.x + 20, y, w: SEG * (SEG_W + SEG_GAP), h },
-      plus: { x: b.x + b.w - 14, y, w: 14, h },
-    };
+    const y = b.y + 2, h = 10;
+    const plus = { x: b.x + b.w - 4 - 10, y, w: 10, h };
+    const bw = SEG * (SEG_W + SEG_GAP) + 1;
+    const bar = { x: plus.x - 2 - bw, y, w: bw, h };
+    return { minus: { x: bar.x - 2 - 10, y, w: 10, h }, bar, plus };
+  }
+  // ON / OFF pill, right-aligned in the row
+  function toggleParts(b) {
+    const y = b.y + 2, x = b.x + b.w - 4 - 40;
+    return { on: { x, y, w: 20, h: 10 }, off: { x: x + 20, y, w: 20, h: 10 } };
   }
   const levelOf = (id) => (id === 'music' ? A.musicLevel : A.sfxLevel);
   const setLevel = (id, n) => (id === 'music' ? A.setMusicLevel(n) : A.setSfxLevel(n));
@@ -209,10 +216,7 @@
           A.hover();
           break;
         }
-        case 'fs':
-          if (document.fullscreenElement) document.exitFullscreen();
-          else document.documentElement.requestFullscreen().catch(() => {});
-          break;
+        case 'fs': this.setFullscreen(!document.fullscreenElement); break;
         case 'back': this.closeSettings(); break;
       }
     },
@@ -223,9 +227,17 @@
     adjust(dir) {
       if (this.state !== 'settings') return;
       const b = buttons('settings')[this.sel];
-      if (!b || !b.slider) return;
+      if (!b) return;
+      if (b.toggle) { this.setFullscreen(dir < 0); return; } // Left = ON, Right = OFF (as drawn)
+      if (!b.slider) return;
       setLevel(b.id, levelOf(b.id) + dir);
       A.hover(); // doubles as a preview of the new SFX volume
+    },
+    setFullscreen(on) {
+      if (on === !!document.fullscreenElement) return;
+      A.hover();
+      if (on) document.documentElement.requestFullscreen().catch(() => {});
+      else document.exitFullscreen();
     },
 
     confirmName() {
@@ -337,7 +349,13 @@
           const p = sliderParts(b);
           if (inRect(px, y, p.minus)) this.adjust(-1);
           else if (inRect(px, y, p.plus)) this.adjust(1);
-          else if (inRect(px, y, p.bar)) { setLevel(b.id, Math.floor((px - p.bar.x) / (SEG_W + SEG_GAP)) + 1); A.hover(); }
+          else if (inRect(px, y, p.bar)) { setLevel(b.id, Math.min(SEG, Math.floor((px - p.bar.x) / (SEG_W + SEG_GAP)) + 1)); A.hover(); }
+        } else if (b && b.toggle) {
+          this.sel = i;
+          const p = toggleParts(b);
+          if (inRect(px, y, p.on)) this.setFullscreen(true);
+          else if (inRect(px, y, p.off)) this.setFullscreen(false);
+          else this.setFullscreen(!document.fullscreenElement);
         } else if (b) this.activate(b.id);
       } else if (this.state === 'board') this.toMenu();
     },
@@ -691,44 +709,51 @@
       ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1);
     },
 
-    drawSlider(b, sel) {
-      const p = sliderParts(b), lv = levelOf(b.id);
+    // Settings row: label on the left, slider or ON/OFF pill on the right.
+    drawRow(b, sel) {
       const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
-      F.draw(ctx, b.label, b.x + b.w / 2, b.y + 2, sel ? C.gold : C.white, 2, 'center', C.ink);
-      if (lv === 0) F.draw(ctx, 'OFF', p.plus.x + p.plus.w, b.y + 5, C.red, 1, 'right', C.ink);
-      // bar
-      const bar = p.bar;
+      if (sel) {
+        r(b.x, b.y, b.w, b.h, 'rgba(255,205,117,0.08)');
+        r(b.x, b.y, 1, b.h, C.gold);
+        F.draw(ctx, '>', b.x - 6 - (Math.floor(this.time * 4) % 2), b.y + 5, C.gold, 1, 'left', C.ink);
+      }
+      F.draw(ctx, b.label, b.x + 5, b.y + 5, sel ? C.gold : C.white, 1, 'left', C.ink);
+
+      if (b.toggle) {
+        const p = toggleParts(b);
+        r(p.on.x - 1, p.on.y - 1, 42, 12, C.ink);
+        for (const [box, txt, active] of [[p.on, 'ON', b.on], [p.off, 'OFF', !b.on]]) {
+          r(box.x, box.y, box.w, box.h, active ? '#f4a640' : '#2a3148');
+          r(box.x, box.y, box.w, 1, active ? '#ffcd75' : '#3d4b6b');
+          r(box.x, box.y + box.h - 1, box.w, 1, active ? '#c86a1e' : '#1e2436');
+          F.draw(ctx, txt, box.x + box.w / 2, box.y + 3, active ? C.ink : C.faint, 1, 'center');
+        }
+        return;
+      }
+
+      const p = sliderParts(b), lv = levelOf(b.id), bar = p.bar;
       r(bar.x - 1, bar.y - 1, bar.w + 2, bar.h + 2, C.ink);
       r(bar.x, bar.y, bar.w, bar.h, '#2a3148');
-      r(bar.x, bar.y + bar.h - 2, bar.w, 2, '#1e2436');
-      if (sel) { r(bar.x - 1, bar.y - 1, bar.w + 2, 1, C.gold); r(bar.x - 1, bar.y + bar.h, bar.w + 2, 1, C.gold); }
       for (let i = 0; i < SEG; i++) {
         const sx = bar.x + 1 + i * (SEG_W + SEG_GAP), sy = bar.y + 2;
-        if (i < lv) {
-          r(sx, sy, SEG_W, 10, '#f4a640');
-          r(sx, sy, SEG_W, 2, '#ffcd75');
-          r(sx, sy + 8, SEG_W, 2, '#c86a1e');
-        } else r(sx, sy + 4, SEG_W, 2, '#333c57');
+        if (i < lv) { r(sx, sy, SEG_W, 6, '#f4a640'); r(sx, sy, SEG_W, 1, '#ffcd75'); r(sx, sy + 5, SEG_W, 1, '#c86a1e'); }
+        else r(sx, sy + 2, SEG_W, 2, '#333c57');
       }
-      // - / + boxes
       for (const [box, sign] of [[p.minus, '-'], [p.plus, '+']]) {
         r(box.x - 1, box.y - 1, box.w + 2, box.h + 2, C.ink);
         r(box.x, box.y, box.w, box.h, '#f4a640');
-        r(box.x, box.y, box.w, 2, '#ffcd75');
-        r(box.x, box.y + box.h - 2, box.w, 2, '#c86a1e');
-        F.draw(ctx, sign, box.x + 4, box.y + 2, C.ink, 2, 'left');
+        r(box.x, box.y, box.w, 1, '#ffcd75');
+        r(box.x, box.y + box.h - 1, box.w, 1, '#c86a1e');
+        F.draw(ctx, sign, box.x + 4, box.y + 3, C.ink, 1, 'left');
       }
-      if (sel) {
-        const bob = Math.floor(this.time * 4) % 2;
-        F.draw(ctx, '>', b.x - 9 - bob, bar.y + 2, C.gold, 2, 'left', C.ink);
-        F.draw(ctx, '<', b.x + b.w + 4 + bob, bar.y + 2, C.gold, 2, 'left', C.ink);
-      }
+      if (lv === 0) F.draw(ctx, 'OFF', p.minus.x - 4, b.y + 5, C.red, 1, 'right', C.ink);
     },
 
     drawButtons(list) {
       list.forEach((b, i) => {
         const sel = i === this.sel;
-        if (b.slider) { this.drawSlider(b, sel); return; }
+        if (b.slider || b.toggle) { this.drawRow(b, sel); return; }
+        const ty = b.y + Math.floor((b.h - 10) / 2);
         ctx.fillStyle = C.ink;
         ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
         ctx.fillStyle = sel ? '#3b2a12' : '#16202e';
@@ -738,11 +763,11 @@
         ctx.fillRect(b.x, b.y, 1, b.h); ctx.fillRect(b.x + b.w - 1, b.y, 1, b.h);
         ctx.fillStyle = 'rgba(255,255,255,0.08)';
         ctx.fillRect(b.x + 1, b.y + 1, b.w - 2, 1);
-        F.draw(ctx, b.label, b.x + b.w / 2, b.y + 3, sel ? C.gold : C.white, 2, 'center', C.ink);
+        F.draw(ctx, b.label, b.x + b.w / 2, ty, sel ? C.gold : C.white, 2, 'center', C.ink);
         if (sel) {
           const bob = Math.floor(this.time * 4) % 2;
-          F.draw(ctx, '>', b.x - 8 - bob, b.y + 3, C.gold, 2, 'left', C.ink);
-          F.draw(ctx, '<', b.x + b.w + 3 + bob, b.y + 3, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '>', b.x - 8 - bob, ty, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '<', b.x + b.w + 3 + bob, ty, C.gold, 2, 'left', C.ink);
         }
       });
     },
@@ -757,17 +782,25 @@
 
     drawMenu() {
       this.dim(0.35);
+      // the castle stands out: warm torch glow behind it, drawn again on top of the dim
+      const gx = B.cx, gy = B.drawY + 26;
+      for (const [rx, ry, a] of [[46, 32, 0.05], [36, 25, 0.06], [26, 18, 0.08]]) {
+        ctx.fillStyle = 'rgba(255,190,100,' + a + ')';
+        for (let dy = -ry; dy <= ry; dy += 2) {
+          const hw = Math.round(rx * Math.sqrt(1 - (dy / ry) * (dy / ry)));
+          ctx.fillRect(gx - hw, gy + dy, hw * 2, 2);
+        }
+      }
+      this.drawCastle();
       TD.Title.draw(ctx, W / 2, 14);
       F.draw(ctx, 'PROTECT THE TOWER', W / 2, 42, C.dim, 1, 'center', C.ink);
       this.drawButtons(buttons('main'));
 
       if (A.blocked) {
-        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 166, C.gold, 1, 'center', C.ink);
+        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 168, C.gold, 1, 'center', C.ink);
       } else {
-        F.draw(ctx, 'ARROWS + ENTER  /  CLICK  /  P L S', W / 2, 166, C.faint, 1, 'center');
+        F.draw(ctx, 'ARROWS + ENTER  /  CLICK  /  P L S', W / 2, 168, C.faint, 1, 'center');
       }
-      const top = TD.Leaderboard.top();
-      if (top) F.draw(ctx, 'TOP: ' + top.name + '  ' + top.score, W / 2, 174, C.dim, 1, 'center', C.ink);
     },
 
     drawPause() {
@@ -782,11 +815,11 @@
       this.dim(this.settingsFrom === 'paused' ? 0.55 : 0.45);
       const list = buttons('settings');
       const last = list[list.length - 1];
-      const h = last.y + last.h + 16 - 12;
-      this.panel(62, 12, 196, h);
-      F.draw(ctx, 'SETTINGS', W / 2, 19, C.gold, 2, 'center', C.ink);
+      const top = 30, h = last.y + last.h + 18 - top;
+      this.panel(66, top, 188, h);
+      F.draw(ctx, 'SETTINGS', W / 2, top + 8, C.gold, 2, 'center', C.ink);
       this.drawButtons(list);
-      F.draw(ctx, 'LEFT/RIGHT: VOLUME  ENTER: MUTE  ESC: BACK', W / 2, 12 + h - 10, C.faint, 1, 'center');
+      F.draw(ctx, 'ARROWS: CHOOSE / CHANGE   ESC: BACK', W / 2, top + h - 10, C.faint, 1, 'center');
     },
 
     drawName() {
