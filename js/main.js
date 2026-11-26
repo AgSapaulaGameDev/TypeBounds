@@ -507,7 +507,7 @@
       for (const p of this.particles) { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size); }
 
       if (this.inGame) {
-        for (const e of this.enemies) if (e !== this.locked) this.drawLabel(e);
+        if (this.state !== 'over') for (const e of this.enemies) if (e !== this.locked) this.drawLabel(e);
         if (this.locked) { this.drawReticle(this.locked); this.drawLabel(this.locked); }
       }
       for (const f of this.floats) F.draw(ctx, f.text, f.x, f.y, f.color, 1, f.align, C.ink);
@@ -635,7 +635,7 @@
       }
       F.draw(ctx, 'WAVE ' + this.waves.wave, VW - 4, 3, C.white, 1, 'right', C.ink);
       F.draw(ctx, 'LEFT ' + (this.waves.left + this.enemies.length), VW - 4, 10, C.dim, 1, 'right', C.ink);
-      F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
+      if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
 
       const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;
       ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 9);

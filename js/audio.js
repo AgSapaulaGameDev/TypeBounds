@@ -180,7 +180,7 @@
     },
     setMusic(on) {
       musicOn = on; write('td_music', on);
-      if (musicBus) musicBus.gain.value = on ? MUSIC_VOL : 0;
+      if (musicBus) { musicBus.gain.cancelScheduledValues(0); musicBus.gain.value = on ? MUSIC_VOL : 0; }
       if (on) startMusic(); else stopMusic();
     },
 
@@ -194,7 +194,29 @@
     hit() { tone(90, 0.22, 'triangle', 0.6, -40); noise(0.1, 0.3); },
     wave() { [523, 659, 784].forEach((f, i) => tone(f, 0.12, 'square', 0.22, 0, i * 0.1)); },
     clear() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.16, 'square', 0.22, 0, i * 0.09)); },
-    over() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.3, 'triangle', 0.4, 0, i * 0.2)); },  };
+    // Tower falls: big thud + crumbling rubble, then a slow sad fall of notes and a low final chord.
+    // The music fades out under it and comes back (calm menu song) a few seconds later.
+    over() {
+      if (!ac || !sfxOn) return;
+      const t = ac.currentTime;
+      if (musicOn && musicBus) {
+        const g = musicBus.gain;
+        g.cancelScheduledValues(t);
+        g.setValueAtTime(g.value, t);
+        g.linearRampToValueAtTime(0.0001, t + 0.15);
+        g.setValueAtTime(0.0001, t + 3.2);
+        g.linearRampToValueAtTime(MUSIC_VOL, t + 4.5);
+      }
+      voice(sfxBus, 110, t, 0.5, 'sine', 0.9, -80);                 // thud
+      noiseHit(sfxBus, t, 0.9, 0.55, 'lowpass', 500);               // rumble
+      for (let i = 0; i < 6; i++) noiseHit(sfxBus, t + 0.12 + i * 0.11, 0.08, 0.25, 'lowpass', 1400 - i * 150); // falling stones
+      [[587, 0.55], [523, 0.85], [466, 1.15], [440, 1.45]].forEach(([f, d]) => {
+        voice(sfxBus, f, t + d, 0.32, 'square', 0.14);
+        voice(sfxBus, f / 2, t + d, 0.32, 'triangle', 0.3);
+      });
+      [147, 175, 220].forEach((f) => voice(sfxBus, f, t + 1.8, 1.4, 'triangle', 0.28)); // D minor, held
+      voice(sfxBus, 294, t + 1.8, 1.4, 'square', 0.06, -12);        // slightly sagging top note
+    },  };
 
   // Try to start straight away on page load.
   TD.Audio.unlock();
