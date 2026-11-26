@@ -5,6 +5,8 @@ Pixel-art typing tower defense. Protect the tower in the center. Enemies walk in
 ## How to run
 Double-click `index.html`. No build step, no server. Scripts are classic `<script>` tags (not ES modules) so `file://` works.
 
+**Temporary debug panel:** add `?debug` to the URL (e.g. `index.html?debug`). A box at the bottom left jumps to any wave and gives +500 gold. Those runs never post to the leaderboard. Remove `js/debug.js` when done testing.
+
 ## Core rules
 - Typing the first letter of a word locks that enemy. Further keys go to the locked enemy.
 - **Typo:** combo resets to 0. The lock stays. No enemy takes damage until the correct next letter is typed.

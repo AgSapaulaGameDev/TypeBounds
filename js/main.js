@@ -560,7 +560,8 @@
       this.overAt = this.time;
       this.locked = null;
       this.lastRank = null; // null = still saving
-      TD.Leaderboard.submit(this.playerName || 'PLAYER', this.score, this.waves.wave)
+      if (this.debugRun) this.lastRank = 0; // debug-panel runs never post scores
+      else TD.Leaderboard.submit(this.playerName || 'PLAYER', this.score, this.waves.wave)
         .then((rank) => { this.lastRank = rank; })
         .catch(() => { this.lastRank = 0; });
       if (this.score > this.best) {
