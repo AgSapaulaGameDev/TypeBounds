@@ -38,10 +38,10 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 ### Rainbow Slime (boss)
 - Waves 10, 20, 30, ... Big crowned slime, 5 HP (boss HP bar). Enters and roams the same oval as the Mathematician.
 - Summons **Word Color slimes** (slower than normal ones, 60% speed): 3 on lives 5 and 4, 4 on lives 3 and 2. Same far-left / far-right spawn spots.
-- **Drop-tagged slimes (Ink rule)**: the first slime of every summon and ~35% of the rest have a gold drop tag. For those you type the **ink colour**, not the word ("GREEN" written in red = type RED). Inks for these are only red, blue, green, purple, pink, orange (no white: it looks like plain text). Once you start typing one, its label shows your letters + blanks. Wave banner says "DROP TAG = TYPE THE INK COLOUR!".
+- **INK-tagged slimes (Ink rule)**: the first slime of every summon and ~35% of the rest are marked: a gold **INK** badge on the label, a gold border around the label, and a pulsing gold ring on the ground under the slime. For those you type the **ink colour**, not the word ("GREEN" written in red = type RED). Inks for these are only red, blue, green, purple, pink, orange (no white: it looks like plain text). Once you start typing one, its label shows your letters + blanks. Wave banner says "INK TAG = TYPE THE INK COLOUR!".
 - While they live its word is hidden and its body shimmers through the rainbow. When they're dead it holds one colour and shows a **long colour word** (crimson, turquoise, aquamarine, periwinkle, ...) with the 5 s countdown.
 - **Any typo on its word**: it changes to a new colour and a new word, and you start over.
-- **Last life**: it bursts into **6 Word Color slimes** (3 at the far left, 3 at the far right) that rush the tower. At least 2 of the 6 are drop-tagged. Each time you kill one, all the others switch to new ink colours, so the answers of the tagged ones change (not the one you're mid-way through typing). Kill all 6 = BOSS DEFEATED (500 score, 25 gold).
+- **Last life**: it bursts into **6 Word Color slimes** (3 at the far left, 3 at the far right) that rush the tower. At least 2 of the 6 are INK-tagged. Each time you kill one, all the others switch to new ink colours, so the answers of the tagged ones change (not the one you're mid-way through typing). Kill all 6 = BOSS DEFEATED (500 score, 25 gold).
 
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.

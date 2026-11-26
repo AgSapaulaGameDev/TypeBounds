@@ -168,7 +168,7 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
-      if (this.waves.boss === 'rainbow') this.bannerSub = 'DROP TAG = TYPE THE INK COLOUR!';
+      if (this.waves.boss === 'rainbow') this.bannerSub = 'INK TAG = TYPE THE INK COLOUR!';
       A.wave();
     },
 
@@ -791,6 +791,15 @@
       const img = e.flash > 0 ? (left ? f.wl : f.wr) : left ? f.l : f.r;
       const x = Math.round(e.x - f.w / 2), y = Math.round(e.y - f.h) + (e.hop > 0 ? -2 : 0);
       ctx.globalAlpha = Math.min(1, e.age / 0.35);
+      if (e.inkRule) {
+        // ink-rule slime: pulsing gold ring on the ground around it
+        const on = Math.floor(this.time * 4) % 2, rx = f.w / 2 + 3 + on, ry = 3 + on;
+        ctx.fillStyle = C.gold;
+        for (let i = 0; i < 16; i++) {
+          const a = (i / 16) * Math.PI * 2;
+          ctx.fillRect(Math.round(e.x + Math.cos(a) * rx), Math.round(e.y - 1 + Math.sin(a) * ry), 1, 1);
+        }
+      }
       ctx.drawImage(img, x, y);
       ctx.globalAlpha = 1;
     },
@@ -821,10 +830,12 @@
       let tx = x + 2;
       if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
       else if (e.inkRule) {
-        // drop tag, then the decoy word in its ink; once you start typing, your letters + blanks
-        ctx.fillStyle = C.gold;
-        ctx.fillRect(tx + 1, ty, 1, 2); ctx.fillRect(tx, ty + 2, 3, 2); ctx.fillRect(tx + 1, ty + 4, 1, 1);
-        tx += 4;
+        // gold "INK" badge, then the decoy word in its ink; once you start typing, your letters + blanks
+        const bw = F.advance('INK') + 2;
+        ctx.fillStyle = C.gold; ctx.fillRect(x, y, bw + 1, 9);
+        F.draw(ctx, 'INK', x + 2, ty, C.ink);
+        tx = x + bw + 3;
+        if (!locked) { ctx.fillStyle = C.gold; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 8, w, 1); ctx.fillRect(x + w - 1, y, 1, 9); }
         if (p > 0) {
           F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
           F.draw(ctx, '_'.repeat(e.word.length - p), tx + F.advance(e.word.slice(0, p)), ty, locked && this.typoFlash > 0 ? C.red : C.dim);
