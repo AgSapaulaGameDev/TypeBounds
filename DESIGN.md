@@ -18,11 +18,20 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 |---|---|---|
 | Runner | 3 letters, fast | Built (step 1) |
 | Tank | 7–12 letters, slow, hits hard | Built (step 1) |
-| Mathematician | `7+5` → type `12` | Wave 4 — step 3 |
+| Mathematician (BOSS) | Boss waves 4, 8, 12... See below | Built (step 3) |
 | Word Color | type the written word | Wave 6 — step 3 |
 | Ink Color | type the ink color; must look clearly different from Word Color | Wave TBD (not 9) — step 3 |
 | Boss | long phrase, fires 1-letter projectiles | Every 5th wave — step 4 |
 | Rainbow Boss | `red + blue` → `purple` | Every 10th wave — step 6 |
+
+### Mathematician (boss)
+- Boss waves: every 4th wave (4, 8, 12, ...). Banner "BOSS WAVE n". A few normal enemies come too. Boss HP bar (5) at the bottom of the screen.
+- Roams around the field outside the barricade; never walks to the tower until its last life.
+- Summons 2-5 **math minions** (more on later waves). Minions walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits) to kill it. Answers start with different digits so lock-on is clear.
+- While any of its minions are alive, its word is hidden (`???`) and it cannot be targeted.
+- When all its minions are dead its long word shows, with a 5 s red countdown bar. Type the word = -1 HP and it summons again. If the countdown runs out it summons again anyway.
+- At 1 HP it **charges the tower** and its word becomes a 10-digit number. Reaching the tower it hits for 4.
+- Rewards: 5 gold per hit, 25 gold + 500 score on kill. Minions give 1 gold.
 
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.

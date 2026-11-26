@@ -1,4 +1,6 @@
-// Enemy types and behaviour. Enemies walk to the base, then attack it on a timer.
+// Enemy types and behaviour. Most enemies walk to the base, then attack it on a timer.
+// The Mathematician is a boss: it roams, summons math minions, and only shows its word
+// once all its minions are dead.
 (function () {
   const TD = (window.TD = window.TD || {});
 
@@ -7,7 +9,23 @@
       gore: ['#38b764', '#a7f070', '#257179', '#ffcd75'] },
     tank: { sprite: 'tank', speed: 7, dmg: 3, atkEvery: 1.6, list: 'long', animFps: 4, gold: 5,
       gore: ['#8b9bb4', '#566c86', '#c2c3c7', '#ef7d57'] },
+    // word = the answer, prefix = the question ("7+5=")
+    minion: { sprite: 'minion', speed: 14, dmg: 1, atkEvery: 1.1, animFps: 8, gold: 1,
+      gore: ['#5d275d', '#b13e53', '#ffcd75'] },
+    math: { sprite: 'math', name: 'MATHEMATICIAN', boss: true, speed: 9, chargeSpeed: 20, dmg: 4, atkEvery: 1.5,
+      list: 'long', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
+      gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
   };
+
+  // where the boss wanders: on screen, but well outside the barricade ring
+  function roamPoint() {
+    for (let i = 0; i < 40; i++) {
+      const x = 40 + Math.random() * 240, y = 40 + Math.random() * 110;
+      const dx = (x - TD.BASE.cx) / 85, dy = (y - TD.BASE.cy) / 60;
+      if (dx * dx + dy * dy > 1) return { x, y };
+    }
+    return { x: 60, y: 60 };
+  }
 
   let nextId = 1;
 
@@ -17,9 +35,12 @@
       this.kind = kind;
       this.t = TD.EnemyTypes[kind];
       this.word = word;
+      this.prefix = '';      // shown before the typed part (math minion question)
+      this.hidden = false;   // true = word not shown / cannot be targeted
       this.progress = 0;     // letters typed correctly
       this.x = x;            // feet position
       this.y = y;
+      this.mul = speedMul;
       this.speed = this.t.speed * speedMul;
       this.state = 'walk';   // walk | attack
       this.atkTimer = 0.4;
@@ -30,9 +51,17 @@
       this.shake = 0;        // label shake on typo
       this.face = 1;
       this.lx = 0; this.ly = null; this.lw = 0; // label layout
+      if (this.t.boss) {
+        this.hp = this.t.maxHp;
+        this.hidden = true;  // starts hidden: it summons minions first
+        this.cd = 1.5;       // first summon shortly after it arrives
+        this.charging = false;
+        this.dest = roamPoint();
+      }
     }
 
     get frames() { return TD.Sprites[this.t.sprite]; }
+    labelText() { return this.hidden ? '???' : this.prefix + this.word; }
 
     update(dt, game) {
       this.age += dt;
@@ -40,7 +69,11 @@
       if (this.flash > 0) this.flash -= dt;
       if (this.hop > 0) this.hop -= dt;
       if (this.shake > 0) this.shake -= dt;
+      if (this.t.boss && !this.charging) return this.roam(dt, game);
+      this.walkAttack(dt, game);
+    }
 
+    walkAttack(dt, game) {
       if (this.state === 'walk') {
         const dx = TD.BASE.cx - this.x, dy = TD.BASE.cy - this.y;
         const d = Math.hypot(dx, dy) || 1;
@@ -62,6 +95,53 @@
           else game.damageBase(this.t.dmg, this);
         }
       }
+    }
+
+    // Boss: wander around. While any of its minions live, its word is hidden.
+    // Once they are all dead the word shows and a 5 s countdown runs; at 0 it summons again.
+    roam(dt, game) {
+      const dx = this.dest.x - this.x, dy = this.dest.y - this.y, d = Math.hypot(dx, dy);
+      if (d < 2) this.dest = roamPoint();
+      else {
+        if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
+        this.x += (dx / d) * this.speed * dt;
+        this.y += (dy / d) * this.speed * dt;
+      }
+      const minionsAlive = game.enemies.some((m) => m.owner === this);
+      if (minionsAlive) return;
+      if (this.summoned && this.hidden) { this.hidden = false; this.progress = 0; this.cd = this.t.summonEvery; }
+      this.cd -= dt;
+      if (this.cd <= 0) this.summon(game);
+    }
+
+    summon(game) {
+      this.summoned = true;
+      if (game.locked === this) game.locked = null;
+      this.progress = 0;
+      this.hidden = true;
+      this.hop = 0.3;
+      game.spawnMinions(this);
+    }
+
+    // Called when the boss's word is typed. Returns true if the boss died.
+    bossHit(game) {
+      this.hp--;
+      this.progress = 0;
+      if (this.hp <= 0) return true;
+      if (this.hp === 1) {
+        // last stand: charges the tower, word is a long string of numbers
+        this.charging = true;
+        this.hidden = false;
+        this.state = 'walk';
+        this.speed = this.t.chargeSpeed * this.mul;
+        let n = '';
+        for (let i = 0; i < 10; i++) n += Math.floor(Math.random() * 10);
+        this.word = n;
+      } else {
+        this.word = game.pickWord(this.t.list, this);
+        this.summon(game);
+      }
+      return false;
     }
   }
 

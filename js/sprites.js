@@ -92,6 +92,37 @@
   const tankA = tankTop.concat(['...kssk..kssk...', '...kssk..kssk...', '..kdddk..kdddk..', '..kkkkk..kkkkk..']);
   const tankB = tankTop.concat(['...kssk..kssk...', '..kssk....kssk..', '.kdddk....kdddk.', '.kkkkk....kkkkk.']);
 
+  // ---- Mathematician (boss): scholar in a mortarboard, glasses and beard ----
+  const MATH_PAL = { k: '#1a1c2c', d: '#29366f', b: '#3b5dc9', s: '#e8b796', w: '#f4f4f4', y: '#ffcd75' };
+  const mathTop = [
+    '....kkkkkkkk....',
+    '..kkddddddddkk..',
+    '.kddddddddddddk.',
+    '..kkkkkkkkkkkky.',
+    '....kssssssk..y.',
+    '....kwwswwsk..y.',
+    '....kssssssk....',
+    '....kwwwwwwk....',
+    '...kbkwwwwkbk...',
+    '..kbbbkwwkbbbk..',
+    '.kbbbbbkkbbbbbk.',
+    'kssbbbbybbbbbssk',
+    'kssbbbbybbbbbssk',
+    '.kkbbbbybbbbbkk.',
+    '..kbbbbbbbbbbk..',
+    '..kddddddddddk..',
+    '..kbbbbbbbbbbk..',
+    '..kddddddddddk..',
+  ];
+  const mathA = mathTop.concat(['...kddk..kddk...', '...kkk....kkk...']);
+  const mathB = mathTop.concat(['....kddkkddk....', '....kkk..kkk....']);
+
+  // ---- Math minion: little purple number-imp ----
+  const MINION_PAL = { k: '#1a1c2c', p: '#5d275d', y: '#ffcd75' };
+  const minionTop = ['..kkkk..', '.kppppk.', 'kpyppypk', 'kppppppk', 'kpkkkkpk', '.kppppk.'];
+  const minionA = minionTop.concat(['.kp..pk.', '.kk..kk.']);
+  const minionB = minionTop.concat(['..kppk..', '..kkkk..']);
+
   // ---- Barricade stakes (5x8), anchored bottom-centre ----
   const POST_ROWS = ['..k..', '.klk.', '.kwk.', '.kwk.', '.krk.', '.kwk.', '.kwk.', '.kdk.'];
   const POST_BROKEN = ['.....', '.....', '.....', '.....', '.k.k.', '.kwk.', '.kwk.', '.kdk.'];
@@ -299,6 +330,8 @@
   TD.Sprites = {
     runner: [frameSet(runnerA, RUNNER_PAL), frameSet(runnerB, RUNNER_PAL)],
     tank: [frameSet(tankA, TANK_PAL), frameSet(tankB, TANK_PAL)],
+    math: [frameSet(mathA, MATH_PAL), frameSet(mathB, MATH_PAL)],
+    minion: [frameSet(minionA, MINION_PAL), frameSet(minionB, MINION_PAL)],
     castle: buildCastle(),
     postWood: postSet(POST_ROWS, WOOD_PAL),
     postIron: postSet(POST_ROWS, IRON_PAL),

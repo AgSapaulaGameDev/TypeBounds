@@ -167,6 +167,7 @@
       this.banner = 2.2;
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
+      if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
       A.wave();
     },
 
@@ -250,18 +251,60 @@
       this.reset();
     },
 
-    spawnEnemy(kind, speedMul) {
-      const list = TD.Words[TD.EnemyTypes[kind].list];
-      // Prefer words whose first letter is not already on screen, so lock-on is never ambiguous.
-      const usedFirst = new Set(this.enemies.map((e) => e.word[0]));
-      const usedWord = new Set(this.enemies.map((e) => e.word));
+    // Prefer words whose first letter is not already on screen, so lock-on is never ambiguous.
+    pickWord(listName, self) {
+      const list = TD.Words[listName];
+      const others = this.enemies.filter((e) => e !== self);
+      const usedFirst = new Set(others.map((e) => e.word[0]));
+      const usedWord = new Set(others.map((e) => e.word));
       let pool = list.filter((w) => !usedFirst.has(w[0]));
       if (!pool.length) pool = list.filter((w) => !usedWord.has(w));
       if (!pool.length) pool = list;
+      return pick(pool);
+    },
+
+    spawnEnemy(kind, speedMul) {
       const p = edgePoint();
-      const e = new TD.Enemy(kind, pick(pool), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
+      const e = new TD.Enemy(kind, this.pickWord(TD.EnemyTypes[kind].list), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
       this.enemies.push(e);
       this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
+      return e;
+    },
+
+    spawnBoss(kind, speedMul) {
+      const e = this.spawnEnemy(kind, speedMul);
+      this.floats.push({ x: e.x, y: e.y - 26, text: e.t.name + '!', color: C.red, life: 1.6, align: 'center' });
+      A.wave();
+    },
+
+    // Mathematician summons: each minion carries a sum; its "word" is the answer.
+    // Answers start with a digit no other enemy on screen starts with.
+    spawnMinions(boss) {
+      const n = Math.min(5, 2 + Math.floor(this.waves.wave / 4));
+      const mul = this.waves.speedMul * (this.buffs.frost ? 0.8 : 1);
+      for (let i = 0; i < n; i++) {
+        const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
+        let q, ans;
+        for (let tries = 0; tries < 40; tries++) {
+          const big = this.waves.wave >= 8 ? 20 : 12;
+          if (Math.random() < 0.5) {
+            const a = 1 + Math.floor(Math.random() * big), b = 1 + Math.floor(Math.random() * big);
+            q = a + '+' + b; ans = String(a + b);
+          } else {
+            const a = 4 + Math.floor(Math.random() * (big + 6)), b = 1 + Math.floor(Math.random() * (a - 1));
+            q = a + '-' + b; ans = String(a - b);
+          }
+          if (!used.has(ans[0])) break;
+        }
+        const a = (i / n) * Math.PI * 2 + Math.random();
+        const x = clamp(boss.x + Math.cos(a) * 14, -OX + 6, W + OX - 6), y = clamp(boss.y + Math.sin(a) * 10, 24, H - 16);
+        const m = new TD.Enemy('minion', ans, x, y, mul);
+        m.prefix = q + '=';
+        m.owner = boss;
+        this.enemies.push(m);
+        this.burst(x, y - 4, m.t.gore, 8, 25, 0);
+      }
+      A.lock();
     },
 
     // ---- input ----
@@ -280,7 +323,7 @@
       if (this.phase === 'shop') return TD.Shop.onChar(this, ch);
       let e = this.locked;
       if (!e) {
-        const cands = this.enemies.filter((en) => en.word[0] === ch);
+        const cands = this.enemies.filter((en) => !en.hidden && en.word[0] === ch);
         if (!cands.length) return this.miss(null);
         cands.sort((a, b) => distToBase(a) - distToBase(b));
         e = this.locked = cands[0];
@@ -374,7 +417,24 @@
       const fh = e.frames[0].h;
       this.bolts.push({ x0: B.boltX, y0: B.boltY, x1: e.x, y1: e.y - fh / 2, t: 0, dur: 0.08 });
       A.type(e.progress);
-      if (e.progress >= e.word.length) this.kill(e);
+      if (e.progress < e.word.length) return;
+      if (e.t.boss) this.hitBoss(e);
+      else this.kill(e);
+    },
+
+    hitBoss(e) {
+      if (this.locked === e) this.locked = null;
+      const pts = Math.round(e.word.length * 10 * this.mult);
+      this.score += pts;
+      const fh = e.frames[0].h;
+      if (e.bossHit(this)) return this.kill(e);
+      this.addGold(e.t.hitGold);
+      this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
+      this.floats.push({ x: e.x, y: e.y - fh + 3, text: e.hp === 1 ? 'HE CHARGES!' : '-1 HP', color: C.red, life: 1.1, align: 'center' });
+      this.burst(e.x, e.y - fh / 2, e.t.gore, 18, 50, 80);
+      e.flash = 0.2;
+      this.shake = Math.max(this.shake, 3);
+      A.kill();
     },
 
     miss(e) {
@@ -392,16 +452,19 @@
       this.enemies.splice(this.enemies.indexOf(e), 1);
       if (this.locked === e) this.locked = null;
       this.kills++;
-      const pts = Math.round(e.word.length * 10 * this.mult);
+      const pts = Math.round((e.word.length + e.prefix.length) * 10 * this.mult) + (e.t.boss ? 500 : 0);
       this.score += pts;
       const fh = e.frames[0].h;
-      this.burst(e.x, e.y - fh / 2, e.t.gore, e.kind === 'tank' ? 26 : 14, e.kind === 'tank' ? 55 : 45, 80);
+      const big = e.kind === 'tank' || e.t.boss;
+      this.burst(e.x, e.y - fh / 2, e.t.gore, e.t.boss ? 60 : big ? 26 : 14, e.t.boss ? 80 : big ? 55 : 45, 80);
+      if (e.t.boss) this.floats.push({ x: e.x, y: e.y - fh - 12, text: 'BOSS DEFEATED!', color: C.gold, life: 1.8, align: 'center' });
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       const gold = e.t.gold;
       this.addGold(gold);
       this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + gold + 'G', color: C.coin, life: 0.9, align: 'center' });
-      this.shake = Math.max(this.shake, e.kind === 'tank' ? 3 : 1.5);
+      this.shake = Math.max(this.shake, e.t.boss ? 6 : e.kind === 'tank' ? 3 : 1.5);
       A.kill();
+      if (e.t.boss) A.clear();
     },
 
     damageBase(dmg, e) {
@@ -512,7 +575,7 @@
     layoutLabels(dt) {
       const xMin = -OX + 1, xMax = W + OX - 1;
       const Ls = this.enemies.map((e) => {
-        const w = F.width(e.word) + 4, h = 9;
+        const w = F.width(e.labelText()) + 4, h = 9;
         return { e, w, h, x: clamp(Math.round(e.x - w / 2), xMin, xMax - w), y: clamp(e.y + 2, 14, H - h - 1) };
       });
       Ls.sort((a, b) => a.y - b.y);
@@ -658,10 +721,22 @@
         ctx.fillStyle = C.gold;
         ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 8, w, 1); ctx.fillRect(x, y, 1, 9); ctx.fillRect(x + w - 1, y, 1, 9);
       }
-      const p = e.progress, tx = x + 2, ty = y + 2;
-      if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
-      const restCol = locked && this.typoFlash > 0 ? C.red : C.white;
-      F.draw(ctx, e.word.slice(p), tx + F.advance(e.word.slice(0, p)), ty, restCol);
+      const p = e.progress, ty = y + 2;
+      let tx = x + 2;
+      if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
+      else {
+        if (e.prefix) { F.draw(ctx, e.prefix, tx, ty, C.dim); tx += F.advance(e.prefix); }
+        if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
+        const restCol = locked && this.typoFlash > 0 ? C.red : C.white;
+        // minion answers stay secret: one _ per digit still to type
+        const rest = e.prefix ? '_'.repeat(e.word.length - p) : e.word.slice(p);
+        F.draw(ctx, rest, tx + F.advance(e.word.slice(0, p)), ty, restCol);
+      }
+      // boss: countdown until it summons again
+      if (e.t.boss && !e.hidden && !e.charging) {
+        ctx.fillStyle = C.ink; ctx.fillRect(x, y + 9, w, 2);
+        ctx.fillStyle = C.red; ctx.fillRect(x, y + 9, Math.ceil(w * Math.max(0, e.cd) / e.t.summonEvery), 2);
+      }
       ctx.globalAlpha = 1;
     },
 
@@ -699,6 +774,19 @@
         active.forEach(([, txt, col], i) => F.draw(ctx, txt, VW - 4, 17 + i * 7, col, 1, 'right', C.ink));
       }
       if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
+
+      // boss health bar, bottom centre
+      const boss = this.enemies.find((e) => e.t.boss);
+      if (boss) {
+        const segs = boss.t.maxHp, sw = 14, bw = segs * (sw + 1) - 1, bx = mid - Math.floor(bw / 2), by = H - 9;
+        F.draw(ctx, boss.t.name, mid, by - 8, C.red, 1, 'center', C.ink);
+        ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
+        for (let i = 0; i < segs; i++) {
+          ctx.fillStyle = i < boss.hp ? (boss.hp === 1 ? C.red : '#b13e53') : '#333c57';
+          ctx.fillRect(bx + i * (sw + 1), by, sw, 4);
+          if (i < boss.hp) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(bx + i * (sw + 1), by, sw, 1); }
+        }
+      }
 
       const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;
       ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 9);
