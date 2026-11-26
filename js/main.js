@@ -168,6 +168,7 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
+      if (this.waves.boss === 'rainbow') this.bannerSub = 'DROP TAG = TYPE THE INK COLOUR!';
       A.wave();
     },
 
@@ -272,6 +273,41 @@
       return e;
     },
 
+    // Word Color slime for the Rainbow Slime fight. inkRule = drop-tagged: shows a decoy colour
+    // word drawn in an ink, and you must type the INK colour instead of the word.
+    spawnSlime(x, y, mul, owner, inkRule) {
+      let m;
+      if (inkRule) {
+        const used = new Set(this.enemies.filter((e) => !e.hidden).map((e) => e.word[0]));
+        let pool = TD.ClearInks.filter((c) => !used.has(c[0]));
+        if (!pool.length) pool = TD.ClearInks;
+        const ink = pick(pool);
+        m = new TD.Enemy('color', ink, x, y, mul);
+        m.inkRule = true;
+        m.ink = ink;
+        m.shown = pick(TD.Words.colors.filter((c) => c !== ink));
+      } else {
+        m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul);
+        m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
+      }
+      m.owner = owner;
+      this.enemies.push(m);
+      return m;
+    },
+
+    // re-ink one slime; for ink-rule slimes the answer changes with it (not while you're typing it)
+    reInk(m) {
+      if (m.inkRule) {
+        if (m.progress) return;
+        const used = new Set(this.enemies.filter((e) => e !== m && !e.hidden).map((e) => e.word[0]));
+        const opts = TD.ClearInks.filter((c) => c !== m.ink);
+        const fresh = opts.filter((c) => !used.has(c[0])); // keep first letters unique when possible
+        m.ink = m.word = pick(fresh.length ? fresh : opts);
+        if (m.shown === m.ink) m.shown = pick(TD.Words.colors.filter((c) => c !== m.ink));
+      } else m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word && col !== m.ink));
+      m.flash = 0.1;
+    },
+
     // Bosses enter from the far left or right edge, on the side they will roam.
     spawnBoss(kind, speedMul) {
       const e = this.spawnEnemy(kind, speedMul);
@@ -298,10 +334,8 @@
         const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 30, H - 14);
         if (boss.t.minion === 'color') {
           // Rainbow Slime: Word Color slimes
-          const m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul * 0.6); // slower than normal slimes
-          m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
-          m.owner = boss;
-          this.enemies.push(m);
+          // slower than normal slimes; the first one (and ~35% of the rest) are drop-tagged ink-rule slimes
+          const m = this.spawnSlime(x, y, mul * 0.6, boss, i === 0 || Math.random() < 0.35);
           this.burst(x, y - 4, m.gore, 8, 25, 0);
           continue;
         }
@@ -477,10 +511,7 @@
         const y = clamp(B.cy + (k - 1) * 34, 30, H - 14);
         // slime splash where each one lands
         this.burst(x, y - 4, e.gore, 10, 30, 0);
-        const m = new TD.Enemy('color', this.pickWord('colors'), x, y, mul);
-        m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word));
-        m.owner = e;
-        this.enemies.push(m);
+        this.spawnSlime(x, y, mul, e, i < 2 || Math.random() < 0.35); // at least 2 drop-tagged
       }
       A.kill();
     },
@@ -503,7 +534,7 @@
       if (e.owner && e.owner === this.splitFrom) {
         const sibs = this.enemies.filter((m) => m.owner === e.owner);
         // every split slime killed: the others swap to new ink colours; last one = boss defeated
-        for (const m of sibs) { m.ink = pick(Object.keys(TD.Inks).filter((col) => col !== m.word && col !== m.ink)); m.flash = 0.1; }
+        for (const m of sibs) this.reInk(m);
         if (!sibs.length) {
           const b = this.splitFrom;
           this.splitFrom = null;
@@ -789,7 +820,16 @@
       const p = e.progress, ty = y + 2;
       let tx = x + 2;
       if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
-      else {
+      else if (e.inkRule) {
+        // drop tag, then the decoy word in its ink; once you start typing, your letters + blanks
+        ctx.fillStyle = C.gold;
+        ctx.fillRect(tx + 1, ty, 1, 2); ctx.fillRect(tx, ty + 2, 3, 2); ctx.fillRect(tx + 1, ty + 4, 1, 1);
+        tx += 4;
+        if (p > 0) {
+          F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
+          F.draw(ctx, '_'.repeat(e.word.length - p), tx + F.advance(e.word.slice(0, p)), ty, locked && this.typoFlash > 0 ? C.red : C.dim);
+        } else F.draw(ctx, e.shown, tx, ty, locked && this.typoFlash > 0 ? C.red : TD.Inks[e.ink]);
+      } else {
         if (e.prefix) { F.draw(ctx, e.prefix, tx, ty, C.dim); tx += F.advance(e.prefix); }
         if (p > 0) F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
         const restCol = locked && this.typoFlash > 0 ? C.red : e.ink ? TD.Inks[e.ink] : C.white;

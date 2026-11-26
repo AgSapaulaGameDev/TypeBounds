@@ -73,7 +73,12 @@
       return this.ink ? TD.Sprites.slime(TD.Inks[this.ink]) : TD.Sprites[this.t.sprite];
     }
     get gore() { return this.ink ? [TD.Inks[this.ink], '#f4f4f4'] : this.t.gore; }
-    labelText() { return this.hidden ? '???' : this.prefix + this.word; }
+    // ink-rule slimes (drop tag): the label shows a decoy colour word, but the answer is the ink
+    labelText() {
+      if (this.hidden) return '???';
+      if (this.inkRule) return ' ' + (this.progress ? this.word : this.shown);
+      return this.prefix + this.word;
+    }
 
     update(dt, game) {
       this.age += dt;

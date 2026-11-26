@@ -28,8 +28,10 @@
   // Rainbow Slime boss words: long colour names
   TD.Words.longColors = ['crimson', 'scarlet', 'magenta', 'lavender', 'turquoise', 'aquamarine', 'violet', 'indigo',
     'maroon', 'emerald', 'amber', 'sapphire', 'burgundy', 'tangerine', 'periwinkle', 'chocolate', 'olive', 'navy', 'fuchsia', 'golden'];
+  // inks used for "type the ink" slimes: only colours nobody argues about
+  TD.ClearInks = ['red', 'blue', 'green', 'purple', 'pink', 'orange']; // no white: it looks like plain label text
   TD.Inks = {
     red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
-    white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2',
+    white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2', orange: '#f77622',
   };
 })();
