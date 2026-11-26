@@ -153,7 +153,7 @@
         correct: 0, typos: 0, waveTypos: 0, locked: null,
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
-        buffs: {}, // one-wave shop buffs: frost, bounty, focus
+        buffs: {}, // one-wave shop buffs: frost
       });
       this.waves = new TD.WaveManager();
       this.state = 'play';
@@ -163,7 +163,6 @@
     startWave(n) {
       this.waves.start(n);
       this.waveTypos = 0;
-      if (this.buffs.focus) { this.combo = Math.max(this.combo, 20); this.buffs.focus = false; }
       this.phase = 'banner';
       this.banner = 2.2;
       this.bannerText = 'WAVE ' + n;
@@ -398,7 +397,7 @@
       const fh = e.frames[0].h;
       this.burst(e.x, e.y - fh / 2, e.t.gore, e.kind === 'tank' ? 26 : 14, e.kind === 'tank' ? 55 : 45, 80);
       this.floats.push({ x: e.x, y: e.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
-      const gold = e.t.gold * (this.buffs.bounty ? 2 : 1);
+      const gold = e.t.gold;
       this.addGold(gold);
       this.floats.push({ x: e.x, y: e.y - fh + 3, text: '+' + gold + 'G', color: C.coin, life: 0.9, align: 'center' });
       this.shake = Math.max(this.shake, e.kind === 'tank' ? 3 : 1.5);
@@ -696,7 +695,7 @@
       F.draw(ctx, 'WAVE ' + this.waves.wave, VW - 4, 3, C.white, 1, 'right', C.ink);
       F.draw(ctx, 'LEFT ' + (this.waves.left + this.enemies.length), VW - 4, 10, C.dim, 1, 'right', C.ink);
       if (this.phase !== 'shop') {
-        const active = [['frost', 'FROST', '#73eff7'], ['bounty', 'BOUNTY 2X', C.coin], ['focus', 'FOCUS', C.red]].filter((b) => this.buffs[b[0]]);
+        const active = [['frost', 'FROST', '#73eff7']].filter((b) => this.buffs[b[0]]);
         active.forEach(([, txt, col], i) => F.draw(ctx, txt, VW - 4, 17 + i * 7, col, 1, 'right', C.ink));
       }
       if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');

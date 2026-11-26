@@ -21,10 +21,6 @@
       '.owo.owo.owo', '.owo.owo.owo', '.owo.owo.owo', 'oooooooooooo', 'oddddddddddo', 'oooooooooooo'],
     frost: ['.....cc.....', '...c.cc.c...', '....cccc....', '.c...cc...c.', '..c..cc..c..', 'ccccchhccccc',
       'ccccchhccccc', '..c..cc..c..', '.c...cc...c.', '....cccc....', '...c.cc.c...', '.....cc.....'],
-    bounty: ['...oooooo...', '..oyyyyyyo..', '.oyhyyyyyyo.', 'oyhyyogyyyyo', 'oyhyoooyyygo', 'oyhyoyyyyygo',
-      'oyyyyoooyygo', 'oyyyyyyoyygo', 'oyyyoooyyygo', '.oyyyyoyyyo.', '..oggggggo..', '...oooooo...'],
-    focus: ['....rrrr....', '..rr....rr..', '.r..kkkk..r.', '.r.k....k.r.', 'r..k.yy.k..r', 'r.k.yhhy.k.r',
-      'r.k.yhhy.k.r', 'r..k.yy.k..r', '.r.k....k.r.', '.r..kkkk..r.', '..rr....rr..', '....rrrr....'],
   };
   const iconCache = {};
   function icon(name) {
@@ -66,28 +62,14 @@
     },
     {
       word: 'frost',
-      info: () => ['ENEMIES 20%', 'SLOWER NEXT WAVE'],
+      info: () => ['ENEMIES 20%', 'SLOWER 1 WAVE'],
       cost: () => 25,
       avail: (g) => !g.buffs.frost,
       buy: (g) => { g.buffs.frost = true; },
     },
-    {
-      word: 'bounty',
-      info: () => ['2X KILL GOLD', 'NEXT WAVE'],
-      cost: () => 30,
-      avail: (g) => !g.buffs.bounty,
-      buy: (g) => { g.buffs.bounty = true; },
-    },
-    {
-      word: 'focus',
-      info: () => ['START NEXT WAVE', 'WITH 20 COMBO'],
-      cost: () => 20,
-      avail: (g) => !g.buffs.focus,
-      buy: (g) => { g.buffs.focus = true; },
-    },
   ];
 
-  const CARD_W = 86, CARD_H = 96, GAP = 7, CARD_Y = 30;
+  const CARD_W = 74, CARD_H = 74, GAP = 8, CARD_Y = 34;
   const cardX = (i) => Math.round(160 - (3 * CARD_W + 2 * GAP) / 2) + i * (CARD_W + GAP);
   const SPIN = 0.75, STAGGER = 0.38, TICK = 0.07; // card i stops at SPIN + i * STAGGER seconds
 
@@ -203,14 +185,14 @@
       for (const [bx, by] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) r(bx, by, 2, 2, '#46506e');
 
       // title (the word you type)
-      this.drawWord(ctx, it.word, x + w / 2, y + 6, 2, card.sold ? COL.faint : COL.white, !card.sold && !rolling);
+      this.drawWord(ctx, it.word, x + w / 2, y + 5, 1, card.sold ? COL.faint : COL.white, !card.sold && !rolling);
       // icon box
-      const ix = x + 6, iy = y + 21, iw = w - 12, ih = 34;
+      const ix = x + 5, iy = y + 13, iw = w - 10, ih = 28;
       r(ix, iy, iw, ih, '#0a0d14');
       const bob = rolling ? Math.round(((this.t / TICK) % 1) * 8) - 4 : 0;
       ctx.save();
       ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip();
-      ctx.drawImage(icon(it.word), Math.round(ix + iw / 2 - 12), iy + 5 + bob, 24, 24);
+      ctx.drawImage(icon(it.word), Math.round(ix + iw / 2 - 12), iy + 2 + bob, 24, 24);
       ctx.restore();
       if (rolling) { r(ix, iy + 4, iw, 1, 'rgba(255,255,255,0.08)'); r(ix, iy + ih - 5, iw, 1, 'rgba(255,255,255,0.08)'); }
       // land flash
@@ -218,26 +200,26 @@
       if (since >= 0 && since < 0.15) r(x + 1, y + 1, w - 2, h - 2, 'rgba(255,255,255,' + (0.35 * (1 - since / 0.15)).toFixed(2) + ')');
 
       if (rolling) {
-        F.draw(ctx, '? ? ?', x + w / 2, y + 62, COL.faint, 1, 'center');
+        F.draw(ctx, '? ? ?', x + w / 2, y + 47, COL.faint, 1, 'center');
         return;
       }
       const lines = it.info(g);
-      lines.forEach((ln, li) => F.draw(ctx, ln, x + w / 2, y + 61 + li * 8, COL.dim, 1, 'center'));
+      lines.forEach((ln, li) => F.draw(ctx, ln, x + w / 2, y + 45 + li * 8, COL.dim, 1, 'center'));
       const c = it.cost(g), can = it.avail(g) && g.gold >= c;
-      F.draw(ctx, c + 'G', x + w / 2, y + h - 11, card.sold ? COL.faint : can ? COL.coin : COL.red, 1, 'center', COL.ink);
+      F.draw(ctx, c + 'G', x + w / 2, y + h - 10, card.sold ? COL.faint : can ? COL.coin : COL.red, 1, 'center', COL.ink);
 
       if (card.sold) {
         r(x + 1, y + 1, w - 2, h - 2, 'rgba(10,13,20,0.55)');
         const sy = iy + 11;
-        r(x + 8, sy - 3, w - 16, 16, COL.ink);
-        r(x + 9, sy - 2, w - 18, 14, '#2a4a24');
-        F.draw(ctx, 'SOLD', x + w / 2, sy, COL.green, 2, 'center', COL.ink);
+        r(x + 12, sy - 3, w - 24, 12, COL.ink);
+        r(x + 13, sy - 2, w - 26, 10, '#2a4a24');
+        F.draw(ctx, 'SOLD', x + w / 2, sy, COL.green, 1, 'center', COL.ink);
       }
     },
 
     draw(ctx, g) {
       g.dim(0.55);
-      F.draw(ctx, this.spinning ? 'SPINNING...' : 'TYPE A CARD TO BUY IT', 160, 21, COL.gold, 1, 'center', COL.ink);
+      F.draw(ctx, this.spinning ? 'SPINNING...' : 'TYPE A CARD TO BUY IT', 160, 25, COL.gold, 1, 'center', COL.ink);
       for (let i = 0; i < 3; i++) this.drawCard(ctx, g, i);
 
       const by = CARD_Y + CARD_H + 6;
@@ -249,7 +231,7 @@
       if (this.msgT > 0) F.draw(ctx, this.msg, 160, by + 10, this.msgCol, 1, 'center', COL.ink);
 
       // the two always-there words
-      const ry = by + 20;
+      const ry = by + 19;
       const rc = this.rerollCost();
       const rw = F.width('REROLL') + 4 + F.width(rc + 'G');
       this.drawWord(ctx, 'reroll', x0 + F.width('REROLL') / 2, ry, 1, COL.white);

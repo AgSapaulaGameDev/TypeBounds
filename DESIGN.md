@@ -36,10 +36,8 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | `repair` | +10 HP and fully rebuild the wall | 20 |
 | `barricade` | Build / upgrade the wall. HP 12 → 20 → 30 → 42 → 56. Iron look from level 3 | 40 + 35 × level |
 | `frost` | Enemies 20% slower next wave | 25 |
-| `bounty` | 2× gold from kills next wave | 30 |
-| `focus` | Start next wave with 20 combo (×1.5) | 20 |
 
-- One-wave buffs (frost, bounty, focus) show under WAVE/LEFT in the HUD and run out when the wave is cleared.
+- One-wave buffs (frost) show under WAVE/LEFT in the HUD and run out when the wave is cleared.
 - Later cards (step 5): cannon workers, Keyboard Smash.
 
 - Barricade = ring of stakes around the tower. Enemies stop at the ring and attack it. When its HP hits 0 it breaks and they walk on to the tower. It stays broken until repaired.
