@@ -138,7 +138,7 @@
   const NAME_MAX = 10;
 
   const game = {
-    state: 'menu', // menu | name | board | settings | play | paused | over
+    state: 'menu', // menu | name | board | settings | play | paused | spam | over
     time: 0,
     sel: 0, settingsFrom: 'menu',
     playerName: '', nameErrT: 0, lastRank: 0,
@@ -152,10 +152,10 @@
 
     // A run is on screen (playing, paused, its settings, or its game-over screen).
     get inGame() {
-      return this.state === 'play' || this.state === 'paused' || this.state === 'over' ||
+      return this.state === 'play' || this.state === 'paused' || this.state === 'spam' || this.state === 'over' ||
         (this.state === 'settings' && this.settingsFrom === 'paused');
     },
-    get frozen() { return this.state === 'paused' || (this.state === 'settings' && this.settingsFrom === 'paused'); },
+    get frozen() { return this.state === 'paused' || this.state === 'spam' || (this.state === 'settings' && this.settingsFrom === 'paused'); },
     get menuName() {
       return this.state === 'menu' ? 'main' : this.state === 'paused' ? 'pause' : this.state === 'settings' ? 'settings' : null;
     },
@@ -177,6 +177,13 @@
     },
 
     startWave(n) {
+      // snapshot for "No Spamming!": a keyboard smash restarts the wave from exactly here
+      this.waveStart = {
+        hp: this.hp, maxHp: this.maxHp, gold: this.gold, goldEarned: this.goldEarned, score: this.score,
+        armorLv: this.armorLv, kills: this.kills, correct: this.correct, typos: this.typos, bestCombo: this.bestCombo,
+        wall: { level: this.wall.level, max: this.wall.max, hp: this.wall.hp }, buffs: { ...this.buffs },
+      };
+      this.missTimes = [];
       this.waves.start(n);
       this.waveTypos = 0;
       this.phase = 'banner';
@@ -465,6 +472,7 @@
       const mn = this.menuName;
       if (mn) { const b = buttons(mn)[this.sel]; if (b) this.activate(b.id); return; }
       if (this.state === 'play' && this.phase === 'shop') TD.Shop.startNext(this);
+      else if (this.state === 'spam' && this.time - this.spamAt > 1.5) this.retryWave();
       else if (this.state === 'name') this.confirmName();
       else if (this.state === 'board') this.toMenu();
       else if (this.state === 'over' && this.time - this.overAt > 0.8) this.reset(); // same name, play again
@@ -572,7 +580,35 @@
       A.kill();
     },
 
+    // Keyboard smash = 6+ wrong keys within 1.5 s during a fight
+    checkSpam() {
+      if (this.state !== 'play' || this.phase !== 'fight') return false;
+      this.missTimes = (this.missTimes || []).filter((t) => this.time - t < 1.5);
+      this.missTimes.push(this.time);
+      if (this.missTimes.length < 6) return false;
+      this.state = 'spam';
+      this.spamAt = this.time;
+      this.locked = null;
+      A.typo(); A.typo();
+      return true;
+    },
+
+    // after "No Spamming!": put everything back as it was when the wave began and play it again
+    retryWave() {
+      const s = this.waveStart, n = this.waves.wave;
+      Object.assign(this, {
+        hp: s.hp, maxHp: s.maxHp, gold: s.gold, goldEarned: s.goldEarned, score: s.score, armorLv: s.armorLv,
+        kills: s.kills, correct: s.correct, typos: s.typos, bestCombo: s.bestCombo, buffs: { ...s.buffs },
+        combo: 0, enemies: [], bolts: [], floats: [], particles: [], locked: null, splitFrom: null,
+      });
+      Object.assign(this.wall, s.wall, { flash: 0 });
+      this.state = 'play';
+      this.startWave(n);
+      this.bannerSub = 'NO SPAMMING THIS TIME!';
+    },
+
     miss(e) {
+      if (this.checkSpam()) return;
       this.typos++;
       this.waveTypos++;
       if (this.combo >= 5) this.floats.push({ x: 4 - OX, y: 25, text: 'COMBO LOST', color: C.red, life: 1, align: 'left' });
@@ -802,6 +838,7 @@
       else if (this.state === 'name') this.drawName();
       else if (this.state === 'board') this.drawBoard();
       else if (this.state === 'paused') this.drawPause();
+      else if (this.state === 'spam') this.drawSpam();
       else if (this.state === 'settings') this.drawSettings();
       else if (this.state === 'over') this.drawGameOver();
       ctx.restore();
@@ -1066,6 +1103,18 @@
       } else {
         F.draw(ctx, 'ARROWS + ENTER  /  CLICK', W / 2, 168, C.faint, 1, 'center');
       }
+    },
+
+    drawSpam() {
+      this.dim(0.65);
+      this.panel(70, 40, 180, 96);
+      F.draw(ctx, 'NO SPAMMING!', W / 2, 50, C.red, 2, 'center', C.ink);
+      F.draw(ctx, 'KEYBOARD SMASH DETECTED', W / 2, 72, C.white, 1, 'center');
+      F.draw(ctx, 'TYPE THE WORDS - DONT MASH KEYS', W / 2, 82, C.dim, 1, 'center');
+      F.draw(ctx, 'WAVE ' + this.waves.wave + ' STARTS OVER', W / 2, 98, C.gold, 1, 'center');
+      const ready = this.time - this.spamAt > 1.5;
+      if (ready && Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ENTER TO TRY AGAIN', W / 2, 118, C.white, 1, 'center');
+      else if (!ready) F.draw(ctx, '...', W / 2, 118, C.faint, 1, 'center');
     },
 
     drawPause() {

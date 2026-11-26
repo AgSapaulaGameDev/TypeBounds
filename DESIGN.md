@@ -58,6 +58,11 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - **Last life**: it bursts into **4 medium slimes** (2 far left, 2 far right), a bit slower than normal slimes (speed 12 vs 15). Their words are tertiary colours typed as one word: REDORANGE, YELLOWORANGE, YELLOWGREEN, BLUEGREEN, BLUEVIOLET, REDVIOLET. Each is drawn in a different tertiary ink; killing one re-inks the others. Kill all 4 = BOSS DEFEATED (500 score, 25 gold).
 - Words that start the same (BLUEGREEN / BLUEVIOLET): if your next letter fits another enemy's word better, the lock moves to that one (no typo). Works for every enemy.
 
+## No Spamming
+- **6 wrong keys within 1.5 s** during a fight = keyboard smash. Correct letters never count, so a fast typist who slips once or twice is safe.
+- The game freezes and shows a **NO SPAMMING!** window ("KEYBOARD SMASH DETECTED / WAVE n STARTS OVER").
+- After 1.5 s, **Enter** restarts the wave: HP, gold, score, armour, barricade and shop buffs go back to exactly what they were when the wave began. Banner says "NO SPAMMING THIS TIME!".
+
 ## Gold and shop (step 2 — built)
 - Gold: Runner 2, Tank 5. Wave clear +5 + 2×wave. PERFECT wave +10 more.
 - Shop opens after every wave as **3 random upgrade cards** that spin like a slot machine and land one by one (Enter skips the spin). Only items you can use right now are offered (e.g. no `repair` when nothing is damaged).
