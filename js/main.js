@@ -75,7 +75,7 @@
   // ---- menus (play-area coords) ----
   const canFullscreen = !!document.documentElement.requestFullscreen;
   const MENUS = {
-    main: { x: 104, y: 114, w: 112, h: 14, gap: 17, items: () => [
+    main: { x: 104, y: 113, w: 112, h: 15, gap: 17, items: () => [
       { id: 'play', label: 'PLAY', key: 'p' },
       { id: 'board', label: 'LEADERBOARD', key: 'l' },
       { id: 'settings', label: 'SETTINGS', key: 's' },
@@ -799,7 +799,7 @@
       if (A.blocked) {
         if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 168, C.gold, 1, 'center', C.ink);
       } else {
-        F.draw(ctx, 'ARROWS + ENTER  /  CLICK  /  P L S', W / 2, 168, C.faint, 1, 'center');
+        F.draw(ctx, 'ARROWS + ENTER  /  CLICK', W / 2, 168, C.faint, 1, 'center');
       }
     },
 
