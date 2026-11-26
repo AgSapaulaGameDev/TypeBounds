@@ -23,7 +23,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | 3-4 | Maths | Chalkboard tank + **maths imps** (the Mathematician's minions: `7+5=__`, type the answer). Banner: "MATHS IMPS: TYPE THE ANSWER!" |
 | 5 | Maths | Mathematician boss |
 | 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
-| 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour) |
+| 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour). Easier mix: ~40% fewer enemies (13 instead of 22 on wave 8), spawns 1.4x further apart, eyedropper slimes at 75% speed |
 | 10 | Colour | Rainbow Slime boss |
 
 Runner and Tank below are **archived** (code and sprites kept, not spawned) for later use.

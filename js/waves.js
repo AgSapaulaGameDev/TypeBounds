@@ -22,6 +22,8 @@
       // Themes repeat every 10 waves: 1-2 Calculator + Chalkboard, 3-4 Chalkboard + maths imps, 5 Mathematician,
       // 6-7 colour (Word Color slime + tank colour slime), 8-9 tank colour slime + eyedropper slime, 10 Rainbow Slime
       const pos = ((n - 1) % 10) + 1;
+      // eyedropper waves (8-9) make you think, so they bring ~40% fewer enemies, spaced further apart
+      if (pos >= 8 && !this.boss) { this.total = Math.round(this.total * 0.6); this.interval *= 1.4; }
       [this.light, this.heavy] = pos <= 2 ? ['mfast', 'mtank'] : pos <= 4 ? ['minion', 'mtank'] : pos <= 7 ? ['color', 'ctank'] : ['cdrop', 'ctank'];
       this.speedMul = 1 + 0.04 * (n - 1);
     }

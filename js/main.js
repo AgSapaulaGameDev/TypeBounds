@@ -297,7 +297,7 @@
       }
       if (kind === 'cdrop') {
         // eyedropper slime on a normal wave: type its ink colour
-        const m = this.spawnSlime(p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1), null, true);
+        const m = this.spawnSlime(p.x, p.y, speedMul * 0.75 * (this.buffs.frost ? 0.8 : 1), null, true); // a bit slower
         this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
         return m;
       }
