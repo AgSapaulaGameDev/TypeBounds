@@ -17,14 +17,13 @@
       gore: ['#3b5dc9', '#29366f', '#f4f4f4', '#ffcd75'] },
   };
 
-  // where the boss wanders: near the edges of the field, far from the tower
-  function roamPoint() {
-    for (let i = 0; i < 60; i++) {
-      const x = 22 + Math.random() * 276, y = 34 + Math.random() * 128;
-      const dx = (x - TD.BASE.cx) / 112, dy = (y - TD.BASE.cy) / 64;
-      if (dx * dx + dy * dy > 1) return { x, y };
-    }
-    return { x: 30, y: 40 };
+  // where the boss wanders: only the far left or far right of the field (never above/below the
+  // tower, where there is too little room), at least ~95 px from the tower. It stays on its side.
+  function roamPoint(side) {
+    const s = side || (Math.random() < 0.5 ? -1 : 1);
+    const x = TD.BASE.cx + s * (95 + Math.random() * 45);
+    const y = 40 + Math.random() * 105;
+    return { x, y, side: s };
   }
 
   let nextId = 1;
@@ -101,12 +100,14 @@
     // Once they are all dead the word shows and a 5 s countdown runs; at 0 it summons again.
     roam(dt, game) {
       const dx = this.dest.x - this.x, dy = this.dest.y - this.y, d = Math.hypot(dx, dy);
-      if (d < 2) this.dest = roamPoint();
+      if (d < 2) this.dest = roamPoint(this.dest.side);
       else {
         if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
         this.x += (dx / d) * this.speed * dt;
         this.y += (dy / d) * this.speed * dt;
       }
+      // no summoning / word until it has walked out to its side of the field
+      if (Math.abs(this.x - TD.BASE.cx) < 90) return;
       const minionsAlive = game.enemies.some((m) => m.owner === this);
       if (minionsAlive) return;
       if (this.summoned && this.hidden) { this.hidden = false; this.progress = 0; this.cd = this.t.summonEvery; }
