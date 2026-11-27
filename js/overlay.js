@@ -198,7 +198,7 @@
 
   // ---- screens ----
   const screens = {}, buttons = [];
-  const scr = (name) => (screens[name] = el('div', 'scr', root));
+  const scr = (name) => { const e = (screens[name] = el('div', 'scr', root)); e.dataset.s = name; return e; };
   // leftIc: icon palette -> big icon pinned to the left edge, label centred (pause style)
   function button(s, id, theme, X, Y, W, H, label, ic, size, leftIc) {
     const wrap = el('div', 'btn', s, at(X, Y, W, H));
@@ -429,7 +429,7 @@
       for (const b of buttons) {
         if (!screens[s].contains(b.wrap)) continue;
         const on = b.id === selId;
-        if (b.sel !== on) { b.sel = on; b.wrap.classList.toggle('sel', on); drawButton(b.cv, THEME[b.theme], on && s !== 'menu'); }
+        if (b.sel !== on) { b.sel = on; b.wrap.classList.toggle('sel', on); drawButton(b.cv, THEME[b.theme], on && s !== 'menu' && s !== 'over'); /* game over: hover-only */ }
       }
 
       if (s === 'menu') {
