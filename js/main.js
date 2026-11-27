@@ -93,10 +93,18 @@
   // ---- menus (play-area coords) ----
   const canFullscreen = !!document.documentElement.requestFullscreen;
   const MENUS = {
+    // with a save: CONTINUE on top and PLAY becomes NEW GAME. ACCOUNT sits in the bottom-left corner.
     main: { x: 104, y: 113, w: 112, h: 15, gap: 17, items: () => [
-      { id: 'play', label: 'PLAY', key: 'p' },
+      ...(TD.Save.has() ? [{ id: 'continue', label: 'CONTINUE', key: 'c' }] : []),
+      { id: 'play', label: TD.Save.has() ? 'NEW GAME' : 'PLAY', key: TD.Save.has() ? 'n' : 'p' },
       { id: 'board', label: 'LEADERBOARD', key: 'l' },
       { id: 'settings', label: 'SETTINGS', key: 's' },
+      { id: 'account', label: TD.Account.user ? TD.Account.user.name : 'LOG IN', key: 'a', x: 3, y: 162, w: 78, h: 15 },
+    ] },
+    // NEW GAME while a save exists: are you sure?
+    confirm: { x: 0, y: 0, w: 0, h: 0, gap: 0, items: () => [
+      { id: 'cfyes', label: 'START NEW', key: 'y', x: 86, y: 101, w: 72, h: 20 },
+      { id: 'cfno', label: 'KEEP SAVE', key: 'n', x: 162, y: 101, w: 72, h: 20 },
     ] },
     pause: { x: 100, y: 66, w: 120, h: 16, gap: 20, items: () => [
       { id: 'resume', label: 'RESUME', key: 'r' },
@@ -150,7 +158,7 @@
     state: 'menu', // menu | name | board | settings | play | paused | spam | over
     time: 0,
     sel: 0, settingsFrom: 'menu',
-    playerName: '', nameErrT: 0, lastRank: 0,
+    playerName: '', nameErrT: 0, nameErr: '', nameChecking: false, lastRank: 0, debugRun: false,
     gold: 0, armorLv: 0, wall: new TD.Barricade(), buffs: {},
     best: parseInt(store.get('td_best', '0'), 10) || 0,
     enemies: [], particles: [], bolts: [], floats: [], throws: [],
@@ -167,12 +175,14 @@
     get frozen() { return this.state === 'paused' || this.state === 'spam' || (this.state === 'settings' && this.settingsFrom === 'paused'); },
     get menuName() {
       return this.state === 'menu' ? 'main' : this.state === 'paused' ? 'pause' : this.state === 'settings' ? 'settings'
-        : this.state === 'over' ? 'over' : null;
+        : this.state === 'over' ? 'over' : this.state === 'confirm' ? 'confirm' : null;
     },
 
     get mult() { return Math.min(3, 1 + Math.floor(this.combo / 10) * 0.25); },
 
-    reset() {
+    // opts.debug: debug-panel run (never saved or posted). opts.save: a save to continue from.
+    reset(opts) {
+      opts = opts || {};
       Object.assign(this, {
         enemies: [], particles: [], bolts: [], floats: [],
         hp: 20, maxHp: 20, score: 0, combo: 0, bestCombo: 0, kills: 0,
@@ -182,9 +192,37 @@
         buffs: {}, // one-wave shop buffs: frost
         tipsSeen: {}, // tip cards already shown this run
       });
+      this.debugRun = !!opts.debug;
+      const d = opts.save;
+      if (d) { // CONTINUE: everything as it was at the start of the saved wave
+        const s = d.s;
+        Object.assign(this, {
+          hp: s.hp, maxHp: s.maxHp, gold: s.gold, goldEarned: s.goldEarned, score: s.score, armorLv: s.armorLv,
+          kills: s.kills, correct: s.correct, typos: s.typos, bestCombo: s.bestCombo,
+          buffs: Object.assign({}, s.buffs || {}), tipsSeen: Object.assign({}, d.tipsSeen || {}),
+        });
+        Object.assign(this.wall, { level: s.wall.level, max: s.wall.max, hp: s.wall.hp });
+      }
       this.waves = new TD.WaveManager();
       this.state = 'play';
-      this.startWave(1);
+      this.startWave(d ? d.wave : 1);
+      if (d && this.bannerSub === 'GET READY') this.bannerSub = 'WELCOME BACK!';
+    },
+
+    continueRun() {
+      const d = TD.Save.current();
+      if (!d) return;
+      this.playerName = d.name;
+      this.reset({ save: d });
+    },
+
+    // PLAY / NEW GAME: an account plays under its own name; a guest picks one
+    newGame() {
+      const u = TD.Account.user;
+      if (u) { this.playerName = u.name; this.reset(); return; }
+      this.state = 'name';
+      this.playerName = this.playerName || TD.Leaderboard.lastName();
+      this.nameErrT = 0;
     },
 
     startWave(n) {
@@ -212,6 +250,7 @@
       if (TD.Tips[n] && !this.tipsSeen[n]) { this.tipsSeen[n] = true; this.phase = 'tips'; this.tipsAt = this.time; }
       if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
       if (this.waves.boss === 'goose') this.bannerSub = 'GOLDEN EGGS ARE YOUR AMMO!';
+      if (!this.debugRun) TD.Save.write(this); // CONTINUE comes back to the start of this wave
       A.wave();
     },
 
@@ -235,7 +274,7 @@
     addGold(n) { this.gold += n; this.goldEarned += n; },
 
     // ---- screens ----
-    toMenu() { this.state = 'menu'; this.sel = 0; this.locked = null; this.enemies = []; this.throws = []; this.particles = []; this.floats = []; this.bolts = []; },
+    toMenu() { this.state = 'menu'; this.sel = 0; this.nameChecking = false; this.locked = null; this.enemies = []; this.throws = []; this.particles = []; this.floats = []; this.bolts = []; },
     pause() { if (this.state === 'play') { this.state = 'paused'; this.sel = 0; A.lock(); } },
     resume() { this.state = 'play'; },
     openSettings(from) { this.settingsFrom = from; this.state = 'settings'; this.sel = 0; },
@@ -249,11 +288,14 @@
       if (this.state === 'over' && this.time - this.overAt < 0.8) return; // don't skip game over by accident
       A.lock();
       switch (id) {
+        case 'continue': this.continueRun(); break;
         case 'play':
-          this.state = 'name';
-          this.playerName = this.playerName || TD.Leaderboard.lastName();
-          this.nameErrT = 0;
+          if (TD.Save.has()) { this.state = 'confirm'; this.sel = 1; } // default: KEEP SAVE
+          else this.newGame();
           break;
+        case 'cfyes': TD.Save.clear(); this.newGame(); break;
+        case 'cfno': this.toMenu(); break;
+        case 'account': this.state = 'account'; break;
         case 'board': this.state = 'board'; TD.Leaderboard.refresh(); break;
         case 'settings': this.openSettings(this.state); break;
         case 'resume': this.resume(); break;
@@ -290,9 +332,16 @@
       else document.exitFullscreen();
     },
 
-    confirmName() {
+    // guests: a name that belongs to an account can't be used (offline: not checked, allowed)
+    async confirmName() {
       const n = this.playerName.trim();
-      if (!n) { this.nameErrT = 1.2; A.typo(); return; }
+      if (!n) { this.nameErr = ''; this.nameErrT = 1.2; A.typo(); return; }
+      if (this.nameChecking) return;
+      this.nameChecking = true;
+      const taken = await TD.Account.nameTaken(n);
+      if (!this.nameChecking || this.state !== 'name') return; // left the screen meanwhile
+      this.nameChecking = false;
+      if (taken) { this.nameErr = 'NAME TAKEN - PICK ANOTHER OR LOG IN'; this.nameErrT = 2.5; A.typo(); return; }
       this.playerName = n;
       TD.Leaderboard.setName(n);
       this.reset();
@@ -480,6 +529,8 @@
           else this.toMenu();
           return;
         case 'board': return this.toMenu();
+        case 'confirm': return this.toMenu();
+        case 'account': if (key === 'Escape') this.toMenu(); return;
         case 'settings': return this.closeSettings();
         case 'paused': return this.resume();
         case 'over':
@@ -500,6 +551,7 @@
       else if (this.state === 'play' && this.phase === 'tips' && this.time - this.tipsAt > 0.4) this.phase = 'banner';
       else if (this.state === 'spam' && this.time - this.spamAt > 1.5) this.retryWave();
       else if (this.state === 'name') this.confirmName();
+      else if (this.state === 'account' && TD.Overlay && TD.Overlay.accountEnter) TD.Overlay.accountEnter();
       else if (this.state === 'board') this.toMenu();
       else if (this.state === 'over' && this.time - this.overAt > 0.8) this.reset(); // same name, play again
     },
@@ -845,6 +897,7 @@
       this.overAt = this.time;
       this.locked = null;
       this.lastRank = null; // null = still saving
+      if (!this.debugRun) TD.Save.clear(); // the run is over: no CONTINUE for it
       if (this.debugRun) this.lastRank = 0; // debug-panel runs never post scores
       else TD.Leaderboard.submit(this.playerName || 'PLAYER', this.score, this.waves.wave)
         .then((rank) => { this.lastRank = rank; })
@@ -1013,6 +1066,7 @@
       }
       else if (this.state === 'menu') this.drawMenu();
       else if (this.state === 'name') this.drawName();
+      else if (this.state === 'confirm' || this.state === 'account') this.dim(0.55); // HTML screens (js/overlay.js)
       else if (this.state === 'board') this.drawBoard();
       else if (this.state === 'paused') this.drawPause();
       else if (this.state === 'spam') this.drawSpam();

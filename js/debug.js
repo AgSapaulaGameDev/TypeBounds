@@ -15,8 +15,7 @@
   go.onclick = () => {
     const g = TD.game, n = Math.max(1, parseInt(input.value, 10) || 1);
     if (!g.playerName) g.playerName = 'DEBUG';
-    g.reset();
-    g.debugRun = true;
+    g.reset({ debug: true }); // debug runs never save (your real save is safe) and never post scores
     g.startWave(n);
     go.blur();
   };

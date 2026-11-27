@@ -133,6 +133,13 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Main menu (canvas fallback only): castle gets a warm glow and is drawn above the dim; buttons sit below it.
 - Music: two looping chiptunes made in code. Menu = calm (Am-F-G-Em, 96 BPM). In game (playing, shop, paused) = battle track (Dm-Bb-C-A, 140 BPM, kick/snare/pumping bass). Game over goes back to the calm track. Audio starts on page load; if the browser blocks autoplay (most do until the first click/tap/key anywhere on the page), the menu shows "CLICK OR PRESS ANY KEY FOR SOUND".
 
+## Save / continue and accounts (js/save.js, js/account.js, supabase/accounts.sql)
+- **Save**: written at the start of every wave (the same snapshot "No Spamming" uses: HP, gold, score, armor, wall, buffs, stats, tip cards seen). CONTINUE puts you at the start of that wave ("WELCOME BACK!"). Game over deletes it. Debug runs never save. A save with the wrong version number or broken values is ignored (never crashes the menu).
+- **Menu**: with a save, CONTINUE - WAVE N (gold) on top and PLAY becomes NEW GAME, which asks "NEW GAME?" (START NEW / KEEP SAVE, default KEEP SAVE). ACCOUNT pill bottom-left: LOG IN, or your name with a crown.
+- **Guest**: plays right away; save stays in this browser only. Picks a name on the name screen; a name that belongs to an account is refused (NAME TAKEN). Guest scores go on the leaderboard.
+- **Account**: username + password (Supabase Auth; the username becomes a hidden email name@typebounds.vercel.app, "Confirm email" must be OFF). Logged in: PLAY skips the name screen, the save is also kept online (any device), and only that account can post scores under its name (enforced by the database trigger). Leaderboard shows a crown after account names. Logging in with no online save moves this browser's guest run to the account.
+- **Forgotten password**: no email reset; the dev resets it by hand (SQL helper at the bottom of supabase/accounts.sql).
+
 ## Main menu, name, leaderboard
 - Main menu: TYPEBOUNDS logo (chunky gold pixel letters), PLAY, LEADERBOARD, SETTINGS. Arrows + Enter, mouse click, or press P / L / S.
 - PLAY asks for a name first (max 10 letters/digits, remembered for next time). Enter starts, Esc goes back.

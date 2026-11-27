@@ -158,3 +158,35 @@
   font-size: 6.5px; font-weight: 500; letter-spacing: 1px; color: #f3e2c0; text-shadow: 1px 1px 0 #140508;
 }
 #ui .wb-sub.gold { color: #ffcd4a; }
+
+/* name entry: "checking name..." while the game asks the leaderboard */
+#ui .nm-err.wait { color: #cdbca6; }
+
+/* NEW GAME? confirm */
+/* weight 500 everywhere here: Pixelify bold makes C look like O */
+#ui .cf-text, #ui .cf-sub, #ui .ac-note, #ui .ac-lab, #ui .ac-msg, #ui .ac-hint, #ui .nm-err { font-weight: 500; }
+#ui .cf-text { left: 0; right: 0; top: 70px; text-align: center; font-size: 6.5px; letter-spacing: .5px; color: #cdbca6; text-shadow: 1px 1px 0 #140508; }
+#ui .cf-sub { left: 0; right: 0; top: 82px; text-align: center; font-size: 8px; letter-spacing: .6px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; }
+
+/* account screen */
+#ui .ac-view { inset: 0; }
+#ui .ac-view > * { position: absolute; }
+#ui .ac-view.busy .xbtn { opacity: .5; }
+#ui .ac-note { left: 0; right: 0; text-align: center; font-size: 6.5px; letter-spacing: .6px; color: #cdbca6; text-shadow: 1px 1px 0 #140508; }
+#ui .ac-lab { font-size: 7.5px; letter-spacing: .8px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; }
+#ui .ac-in {
+  position: absolute; left: 4px; right: 4px; top: 2px; height: 12px; padding: 0; margin: 0;
+  background: transparent; border: none; outline: none; box-shadow: none;
+  font-family: 'Pixelify Sans', monospace; font-weight: 500; font-size: 9px; letter-spacing: 1px;
+  color: #fff4dc; caret-color: #ffcd4a; text-shadow: 1px 1px 0 #000;
+  pointer-events: auto; user-select: text;
+}
+#ui .ac-box:focus-within .art { filter: brightness(1.25); }
+#ui .ac-who { left: 0; right: 0; top: 60px; text-align: center; font-size: 15px; letter-spacing: 1.5px; color: #ffcd4a; text-shadow: 0 2px 0 #b8283a, 1px 3px 0 #2a0a10; }
+#ui .ac-msg { left: 0; right: 0; top: 97px; text-align: center; font-size: 6.5px; letter-spacing: .5px; text-shadow: 1px 1px 0 #140508; }
+#ui .ac-msg.err { color: #ff5a4a; } #ui .ac-msg.ok { color: #a7f070; } #ui .ac-msg.wait { color: #cdbca6; }
+#ui .ac-hint { left: 0; right: 0; top: 158px; text-align: center; font-size: 5.5px; letter-spacing: .5px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
+
+/* leaderboard: crown after names that belong to an account */
+#ui .lb-row .nm .lb-crown { display: inline-block; vertical-align: 1px; margin-left: 3px; }
+#ui .scr[data-s="account"] .rib-txt { font-weight: 500; }

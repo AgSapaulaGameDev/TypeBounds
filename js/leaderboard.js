@@ -1,13 +1,12 @@
 // Leaderboard: shared online board (Supabase) with a local fallback.
 // The publishable key is meant to be public. Supabase row-level security only lets
 // players READ scores and ADD new ones; nobody can edit or delete. Never put a secret key here.
+// Names that belong to an account can only be posted by that account (supabase/accounts.sql).
 (function () {
   const TD = (window.TD = window.TD || {});
 
-  const SUPABASE_URL = 'https://jkveiazgyacnocvctkig.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_U671HnqTCfxlTTFhMi35vw_i7RyQ_t2';
-  const API = SUPABASE_URL + '/rest/v1/scores';
-  const HEADERS = { apikey: SUPABASE_KEY };
+  // requests go through TD.Account.rest (js/account.js): same project, publishable key only.
+  // A logged-in player's score is sent as that account, so the database can protect its name.
   const TOP = 10;
 
   const LOCAL_KEY = 'td_scores', QUEUE_KEY = 'td_score_queue', NAME_KEY = 'td_name';
@@ -37,26 +36,34 @@
     ls.set(LOCAL_KEY, bestPerName(list).slice(0, TOP));
   }
 
-  function withTimeout(promise, ms) {
-    return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
-  }
-
+  // user_id marks names that belong to an account (crown on the board). If the database
+  // doesn't have that column yet (accounts SQL not run), ask without it.
   async function fetchTop() {
     // Fetch extra rows so older duplicate rows (from before the database kept one row per
     // name) can't push real players out of the top 10.
-    const url = API + '?select=name,score,wave&order=score.desc,wave.desc&limit=200';
-    const res = await withTimeout(fetch(url, { headers: HEADERS }), 8000);
+    const q = '&order=score.desc,wave.desc&limit=200';
+    let res = await TD.Account.rest('scores?select=name,score,wave,user_id' + q, { anon: true });
+    if (res.status === 400) res = await TD.Account.rest('scores?select=name,score,wave' + q, { anon: true });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    return bestPerName(await res.json()).slice(0, TOP);
+    const rows = (await res.json()).map((r) => ({ name: r.name, score: r.score, wave: r.wave, reg: !!r.user_id }));
+    return bestPerName(rows).slice(0, TOP);
   }
 
+  // a 4xx (except auth / rate limits) will never succeed: don't keep retrying it
+  const permanent = (err) => err.status >= 400 && err.status < 500 && ![401, 408, 429].includes(err.status);
+
   async function postScore(e) {
-    const res = await withTimeout(fetch(API, {
-      method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json', Prefer: 'return=minimal' }, HEADERS),
+    const u = TD.Account.user;
+    if (e.uid && (!u || u.id !== e.uid)) return; // that account isn't logged in here any more: drop it
+    const res = await TD.Account.rest('scores', {
+      method: 'POST', anon: !e.uid, headers: { Prefer: 'return=minimal' },
       body: JSON.stringify({ name: e.name, score: e.score, wave: e.wave }),
-    }), 8000);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    });
+    if (res.ok) return;
+    const err = new Error('HTTP ' + res.status);
+    err.status = res.status;
+    try { err.body = await res.text(); } catch (x) { err.body = ''; }
+    throw err;
   }
 
   // Scores that failed to send (offline) are kept and retried on the next refresh.
@@ -64,7 +71,7 @@
     const q = ls.get(QUEUE_KEY, []);
     if (!Array.isArray(q) || !q.length) return;
     const left = [];
-    for (const e of q) { try { await postScore(e); } catch (err) { left.push(e); } }
+    for (const e of q) { try { await postScore(e); } catch (err) { if (!permanent(err)) left.push(e); } }
     ls.set(QUEUE_KEY, left);
   }
 
@@ -94,15 +101,21 @@
     // Save a finished run. The board keeps one row per name (their best run).
     // Resolves to that name's rank (1-10), or 0 if the name is not in the top 10.
     async submit(name, score, wave) {
+      const u = TD.Account.user;
       const entry = { name, score, wave };
+      if (u && u.name === name) entry.uid = u.id;
       this.mine = { name, score };
-      saveLocal(entry);
+      this.rejected = null;
+      saveLocal({ name, score, wave });
       try {
         await flushQueue();
         await postScore(entry);
       } catch (err) {
-        const q = ls.get(QUEUE_KEY, []);
-        ls.set(QUEUE_KEY, (Array.isArray(q) ? q : []).concat([entry]));
+        if (permanent(err)) this.rejected = /NAME_TAKEN/.test(err.body || '') ? 'taken' : 'bad';
+        else {
+          const q = ls.get(QUEUE_KEY, []);
+          ls.set(QUEUE_KEY, (Array.isArray(q) ? q : []).concat([entry]));
+        }
       }
       this.status = 'idle';
       await this.refresh();

@@ -237,9 +237,11 @@
     // logo: pixel-art copy of the reference (200 x 81 png, 1 art pixel = 1 game pixel like every other sprite)
     const logo = el('img', 'logo', s, at(60, 2, 200, 81));
     logo.src = 'img/logo.png?v=55'; logo.alt = 'TypeBounds - Protect the Tower'; logo.draggable = false;
+    button(s, 'continue', 'gold', 95, 86, 131, 22, 'CONTINUE', null, 10);
     button(s, 'play', 'gold', 95, 90, 131, 23, 'PLAY', null, 12.5);
     button(s, 'board', 'crimson', 95, 117, 131, 20, 'LEADERBOARD', null, 10);
     button(s, 'settings', 'crimson', 95, 141, 131, 20, 'SETTINGS', null, 10);
+    button(s, 'account', 'crimson', 3, 162, 78, 15, 'LOG IN', 'crown', 7.5);
     for (const side of ['L', 'R']) {
       const ch = el('div', 'chev', s); ch.dataset.side = side;
       sprite('chev' + side, { main: '#ffcd4a', shade: '#d98a1c', ol: '#2a1404' }, ch);
@@ -339,7 +341,155 @@
     const n = g.playerName || '', cur = n.length < 10 && Math.floor(g.time * 3) % 2 === 0 ? '_' : ' ';
     setText(nameUI.text, n + cur);
     setText(nameUI.count, n.length + '/10');
-    nameUI.err.style.visibility = g.nameErrT > 0 ? 'visible' : 'hidden';
+    setText(nameUI.err, g.nameChecking ? 'CHECKING NAME...' : g.nameErr || 'TYPE A NAME FIRST');
+    nameUI.err.classList.toggle('wait', !!g.nameChecking);
+    nameUI.err.style.visibility = g.nameChecking || g.nameErrT > 0 ? 'visible' : 'hidden';
+  }
+
+  // one-off buttons (not part of a game menu): drawn once, clicks handled by id below
+  function xbtn(s, id, theme, X, Y, W, H, label, ic, size) {
+    const b = button(s, id, theme, X, Y, W, H, label, ic, size);
+    buttons.pop();
+    drawButton(b.cv, THEME[theme], false);
+    b.wrap.classList.add('xbtn');
+    return b;
+  }
+  // gold-framed dark text box (name entry, account fields)
+  function drawField(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    step(x, '#140a04', 0, 0, w, h, 2);
+    step(x, '#e0a640', 1, 1, w - 2, h - 2, 1);
+    R(x, '#ffe27a', 2, 1, w - 4, 1);
+    step(x, '#120408', 2, 2, w - 4, h - 4, 1);
+    R(x, '#1e0a12', 3, 2, w - 6, 2);
+  }
+
+  // NEW GAME while a save exists: "are you sure?"
+  const cf = {};
+  {
+    const s = scr('confirm');
+    panel(s, 66, 52, 188, 78, true);
+    ribbon(s, 94, 38, 132, 26, 'NEW GAME?', null, null, 12);
+    cf.text = el('div', 'cf-text', s);
+    cf.sub = el('div', 'cf-sub', s);
+    button(s, 'cfyes', 'crimson', 86, 101, 72, 20, 'START NEW', null, 8);
+    button(s, 'cfno', 'gold', 162, 101, 72, 20, 'KEEP SAVE', null, 8);
+  }
+
+  // ACCOUNT: log in / sign up (logged out) or who you are + log out (logged in)
+  const acct = { busy: false, view: null };
+  {
+    const s = scr('account');
+    panel(s, 58, 30, 204, 124, true);
+    ribbon(s, 96, 16, 128, 27, 'ACCOUNT', 'crown', 'crown', 12);
+    const out = (acct.out = el('div', 'ac-view', s));
+    el('div', 'ac-note', out, { top: '46px' }).textContent = 'SAVE ONLINE AND PROTECT YOUR NAME';
+    const field = (label, Y, type) => {
+      el('div', 'ac-lab', out, { left: '72px', top: Y + 5 + 'px' }).textContent = label;
+      const box = el('div', 'ac-box', out, at(124, Y, 124, 17));
+      drawField(art(124, 17, box));
+      const inp = el('input', 'ac-in', box);
+      Object.assign(inp, { type, maxLength: type === 'password' ? 64 : 10, spellcheck: false, autocomplete: type === 'password' ? 'current-password' : 'username' });
+      inp.setAttribute('autocapitalize', 'characters');
+      return inp;
+    };
+    acct.name = field('NAME', 57, 'text');
+    acct.pw = field('PASSWORD', 77, 'password');
+    xbtn(out, 'aclogin', 'gold', 72, 108, 84, 20, 'LOG IN', 'play', 9);
+    xbtn(out, 'acsignup', 'crimson', 164, 108, 84, 20, 'SIGN UP', null, 9);
+    xbtn(out, 'acback', 'crimson', 120, 132, 80, 16, 'BACK', 'back', 8);
+    const inn = (acct.in = el('div', 'ac-view', s));
+    el('div', 'ac-note', inn, { top: '50px' }).textContent = 'LOGGED IN AS';
+    acct.who = el('div', 'ac-who', inn);
+    el('div', 'ac-note', inn, { top: '83px' }).textContent = 'YOUR SAVE AND NAME ARE KEPT ONLINE';
+    xbtn(inn, 'aclogout', 'crimson', 72, 108, 84, 20, 'LOG OUT', null, 9);
+    xbtn(inn, 'acback', 'gold', 164, 108, 84, 20, 'BACK', 'back', 9);
+    acct.msg = el('div', 'ac-msg', s);
+    el('div', 'ac-hint', s).textContent = 'NO ACCOUNT NEEDED TO PLAY  -  FORGOT YOUR PASSWORD? ASK THE DEV';
+
+    acct.name.addEventListener('input', () => {
+      const v = acct.name.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+      if (v !== acct.name.value) acct.name.value = v;
+    });
+    // typing in the boxes stays in the boxes (the game doesn't see it); Enter = LOG IN, Esc = back
+    for (const inp of [acct.name, acct.pw]) inp.addEventListener('keydown', (ev) => {
+      ev.stopPropagation();
+      if (ev.key === 'Enter') { ev.preventDefault(); accountDo('login'); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); TD.game.toMenu(); }
+    });
+  }
+  function acctMsg(t, cls) { acct.msg.textContent = t; acct.msg.className = 'ac-msg ' + (cls || ''); }
+  async function accountDo(kind) {
+    if (acct.busy) return;
+    const A = TD.Account, g = TD.game;
+    acct.busy = true;
+    acctMsg('PLEASE WAIT...', 'wait');
+    try {
+      if (kind === 'logout') {
+        await A.logOut();
+        TD.Save.forgetAccount();
+        g.playerName = '';
+        acctMsg('LOGGED OUT - YOUR SAVE IS STILL ONLINE', 'ok');
+      } else {
+        const u = kind === 'signup' ? await A.signUp(acct.name.value, acct.pw.value) : await A.logIn(acct.name.value, acct.pw.value);
+        acct.pw.value = '';
+        await TD.Save.sync(true); // fetch your online save (or move this browser's guest run to your account)
+        g.playerName = u.name;
+        TD.Leaderboard.setName(u.name);
+        acctMsg((kind === 'signup' ? 'ACCOUNT MADE! ' : '') + 'WELCOME, ' + u.name + '!', 'ok');
+      }
+      TD.Audio.lock();
+    } catch (e) {
+      acctMsg(e instanceof A.AccountError ? e.message : 'SOMETHING WENT WRONG - TRY AGAIN', 'err');
+      TD.Audio.typo();
+    } finally { acct.busy = false; }
+  }
+  function syncAccount(entered) {
+    const u = TD.Account.user, view = u ? 'in' : 'out';
+    if (entered) {
+      acctMsg('');
+      acct.pw.value = '';
+      if (!u) { if (!acct.name.value) acct.name.value = TD.Leaderboard.lastName() || ''; setTimeout(() => acct.name.focus(), 0); }
+    }
+    if (acct.view !== view) {
+      acct.view = view;
+      acct.out.style.display = u ? 'none' : '';
+      acct.in.style.display = u ? '' : 'none';
+    }
+    if (u) setText(acct.who, u.name);
+    acct.out.classList.toggle('busy', acct.busy);
+    acct.in.classList.toggle('busy', acct.busy);
+  }
+
+  // main menu layout: with a save, CONTINUE goes on top and PLAY becomes a smaller NEW GAME
+  const MENU_LAYOUT = {
+    save: { continue: [95, 86, 131, 22, 'gold', 10], play: [95, 111, 131, 18, 'crimson', 9.5], board: [95, 132, 131, 18, 'crimson', 9.5], settings: [95, 153, 131, 18, 'crimson', 9.5] },
+    none: { play: [95, 90, 131, 23, 'gold', 12.5], board: [95, 117, 131, 20, 'crimson', 10], settings: [95, 141, 131, 20, 'crimson', 10] },
+  };
+  let menuKey = '';
+  function placeBtn(b, X, Y, W, H, theme, size, label) {
+    Object.assign(b.wrap.style, at(X, Y, W, H));
+    b.cv.width = W; b.cv.height = H; Object.assign(b.cv.style, { width: W + 'px', height: H + 'px' });
+    b.theme = theme; b.sel = null; // redrawn by the sync loop
+    const t = THEME[theme], lab = b.wrap.querySelector('.lbl');
+    Object.assign(lab.style, { fontSize: size + 'px', color: t.tx, textShadow: '0 1px 0 ' + t.ts });
+    if (label != null) lab.lastChild.textContent = label;
+  }
+  function layoutMenu() {
+    const d = TD.Save.current(), u = TD.Account.user;
+    const key = (d ? d.wave : 0) + '|' + (u ? u.name : '');
+    if (key === menuKey) return;
+    menuKey = key;
+    const L = MENU_LAYOUT[d ? 'save' : 'none'], byId = {};
+    for (const b of buttons) if (screens.menu.contains(b.wrap)) byId[b.id] = b;
+    byId.continue.wrap.style.display = d ? '' : 'none';
+    for (const id in L) {
+      const [X, Y, W, H, th, sz] = L[id];
+      placeBtn(byId[id], X, Y, W, H, th, sz, id === 'continue' ? 'CONTINUE - WAVE ' + d.wave : id === 'play' ? (d ? 'NEW GAME' : 'PLAY') : null);
+    }
+    const ab = byId.account, ic = ab.wrap.querySelector('.lbl .ic');
+    ab.wrap.querySelector('.lbl').lastChild.textContent = u ? u.name : 'LOG IN';
+    if (ic) ic.style.display = u ? '' : 'none';
   }
 
   // TIP CARDS (before a wave with new enemies): built per wave by syncTips
@@ -427,7 +577,7 @@
     button(s, 'quit', 'crimson', 164, 147, 88, 23, 'MAIN MENU', 'home', 9);
   }
 
-  const SCREEN_MENU = { menu: 'main', settings: 'settings', paused: 'pause', over: 'over' };
+  const SCREEN_MENU = { menu: 'main', settings: 'settings', paused: 'pause', over: 'over', confirm: 'confirm' };
   const indexOf = (g, id) => {
     const mn = SCREEN_MENU[g.state];
     return mn ? TD.menuButtons(mn).findIndex((b) => b.id === id) : -1;
@@ -447,6 +597,14 @@
     TD.Audio.unlock();
     if (ev.target.closest('[data-id="namego"]')) { ev.preventDefault(); if (g.state === 'name') g.confirmName(); return; }
     if (ev.target.closest('[data-id="nameback"]')) { ev.preventDefault(); if (g.state === 'name') g.toMenu(); return; }
+    const ab = ev.target.closest('[data-id^="ac"]');
+    if (ab && g.state === 'account') {
+      ev.preventDefault();
+      const id = ab.dataset.id;
+      if (id === 'acback') g.toMenu();
+      else accountDo(id === 'aclogin' ? 'login' : id === 'acsignup' ? 'signup' : 'logout');
+      return;
+    }
     if (ev.target.closest('.tipgo')) { // same as Enter on a tip card
       ev.preventDefault();
       if (g.state === 'play' && g.phase === 'tips' && g.time - g.tipsAt > 0.4) { g.phase = 'banner'; TD.Audio.hover(); }
@@ -481,13 +639,14 @@
   const setText = (e, t) => { t = String(t); if (e.textContent !== t) e.textContent = t; };
   function syncBoard() {
     const LB = TD.Leaderboard, list = LB.list();
-    const key = LB.status + '|' + list.map((e) => e.name + ':' + e.wave + ':' + e.score + ':' + (LB.isMine(e) ? 1 : 0)).join(',');
+    const key = LB.status + '|' + list.map((e) => e.name + ':' + e.wave + ':' + e.score + ':' + (LB.isMine(e) ? 1 : 0) + (e.reg ? 'r' : '')).join(',');
     if (key === board.key) return;
     board.key = key;
     board.rows.textContent = '';
     list.forEach((e, i) => {
       const r = el('div', 'lb-row' + (i === 0 ? ' first' : '') + (LB.isMine(e) ? ' mine' : ''), board.rows, { top: i * 10 + 'px' });
       for (const [c, t] of [['n', i + 1], ['nm', e.name], ['w', e.wave], ['sc', e.score]]) el('span', c, r).textContent = String(t);
+      if (e.reg) sprite('crown', GOLD_IC, r.querySelector('.nm'), 'lb-crown'); // name belongs to an account
     });
     board.msg.textContent = list.length ? '' : LB.status === 'loading' ? 'LOADING...' : 'NO SCORES YET - GO PLAY!';
     const st = LB.status === 'online' ? ['', 'on'] : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', 'off'] : ['LOADING...', 'wait'];
@@ -711,6 +870,8 @@
   };
 
   TD.Overlay = {
+    // Enter on the account screen when the text boxes don't have focus
+    accountEnter() { if (TD.Account.user) TD.game.toMenu(); else accountDo('login'); },
     sync(g) {
       const c = document.getElementById('game'), r = c.getBoundingClientRect(), v = TD.view;
       const u = r.width / v.VW;
@@ -725,12 +886,22 @@
       const key = g.state === 'play' && g.phase === 'tips' && TD.Tips[g.waves.wave] ? 'tips' : g.state;
       const s = screens[key] ? key : null;
       if (s !== 'tips') tips.wave = null; // rebuild next time a card shows
+      let entered = false;
       if (s !== lastState) {
         for (const k in screens) screens[k].classList.toggle('on', k === s);
+        if (lastState === 'account') { acct.pw.value = ''; if (root.contains(document.activeElement)) document.activeElement.blur(); }
+        entered = true;
         lastState = s;
       }
       if (!s) return;
       if (s === 'board') return syncBoard();
+      if (s === 'account') return syncAccount(entered);
+      if (s === 'menu') layoutMenu();
+      if (s === 'confirm') {
+        const d = TD.Save.current();
+        setText(cf.text, 'START OVER? YOUR SAVED RUN WILL BE LOST:');
+        setText(cf.sub, d ? 'WAVE ' + d.wave + '  -  SCORE ' + d.s.score + '  -  ' + d.name : '');
+      }
       if (s === 'tips') return syncTips(g);
       if (s === 'name') return syncName(g);
       const list = TD.menuButtons(SCREEN_MENU[s]);
@@ -778,6 +949,7 @@
         setText(vals.gold, g.goldEarned); setText(vals.acc, acc + '%'); setText(vals.best, g.best);
         const LB = TD.Leaderboard;
         setText(rankEl, g.lastRank === null ? 'SAVING SCORE...'
+          : LB.rejected === 'taken' && !g.debugRun ? 'THAT NAME BELONGS TO AN ACCOUNT - NOT POSTED'
           : !g.lastRank ? (g.debugRun ? 'DEBUG RUN - NOT POSTED' : 'NOT IN THE TOP 10 THIS TIME')
           : LB.improved ? 'RANK #' + g.lastRank + ' ON THE LEADERBOARD' + (g.newBest ? ' - NEW BEST!' : '')
           : 'YOUR BEST ' + LB.bestScore + ' STAYS AT RANK #' + g.lastRank);
