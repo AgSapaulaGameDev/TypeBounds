@@ -199,7 +199,7 @@
       const mine = game.enemies.filter((m) => m.owner === this);
       if (mine.length >= 3 + this.anger) return;
       const hasGold = mine.some((m) => m.kind === 'gegg');
-      const golden = this.hp > 1 && !hasGold && (this.layN % 3 === 2 || Math.random() < 0.3);
+      const golden = this.hp > 1 && !hasGold && this.layN % 4 === 3; // every 4th egg is golden, the rest are white
       this.layN++;
       this.hop = 0.2;
       game.layEgg(this, golden);

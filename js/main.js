@@ -696,7 +696,7 @@
       const x = clamp(g.x - g.face * 6, 10, W - 10), y = clamp(g.y, 30, H - 12);
       const e = new TD.Enemy(golden ? 'gegg' : 'egg', this.pickWord(golden ? 'goldWords' : 'eggWords'), x, y, this.waves.speedMul);
       e.owner = g;
-      e.life = e.lifeMax = golden ? 4 : 6; // golden: snatched back after 4 s; white: hatches after 6 s
+      e.life = e.lifeMax = 4; // golden: snatched back after 4 s; white: hatches after 4 s
       this.enemies.push(e);
       this.burst(x, y - 3, golden ? e.t.gore : ['#f4f4f4', '#c2c3c7'], golden ? 10 : 5, 20, 40);
       if (golden) this.floats.push({ x, y: y - 14, text: 'GOLDEN EGG!', color: C.gold, life: 1, align: 'center' });
@@ -1058,7 +1058,7 @@
       if (e.kind === 'egg' || e.kind === 'gegg') {
         fi = 0;
         if (e.drop > 0) oy = -Math.round(e.drop * 120); // falling from the flying goose
-        else if (e.kind === 'egg' && e.life < 2) { fi = 1; ox = Math.round(Math.sin(this.time * 30) * (e.life < 1 ? 1 : 0.6)); } // about to hatch: cracked, wobbling
+        else if (e.kind === 'egg' && e.life < 1.5) { fi = 1; ox = Math.round(Math.sin(this.time * 30) * (e.life < 0.7 ? 1 : 0.6)); } // about to hatch: cracked, wobbling
       }
       const f = fs[fi], left = e.face < 0;
       const img = e.flash > 0 ? (left ? f.wl : f.wr) : left ? f.l : f.r;
