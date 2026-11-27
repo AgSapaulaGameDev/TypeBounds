@@ -34,11 +34,11 @@
     x.fillRect(X, Y + r, W, H - r * 2);
   }
   // fill a shape by how deep each pixel sits inside it (0 = edge): outlines and borders for free
-  function shape(x, w, h, inside, colorAt) {
+  function shape(x, w, h, inside, colorAt, maxK) {
     for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
       if (!inside(px, py)) continue;
       let n = 0;
-      for (let k = 1; k <= 3; k++) {
+      for (let k = 1; k <= (maxK || 3); k++) {
         let ok = true;
         for (let dy = -k; dy <= k && ok; dy++) for (let dx = -k; dx <= k; dx++) if (!inside(px + dx, py + dy)) { ok = false; break; }
         if (!ok) break;
@@ -114,7 +114,28 @@
   }
 
   // ---- panel, ribbon, pennant ----
-  function drawPanel(c, maroon) { // maroon: dark red fill (pause, leaderboard)
+  // pause / leaderboard frame: gold border with chunky stair-notched corners and an inner echo step
+  function drawNotchPanel(c) {
+    const x = c.getContext('2d'), w = c.width - 1, h = c.height - 2; // room for the drop shadow
+    const corner = (px, py) => [Math.min(px, w - 1 - px), Math.min(py, h - 1 - py)];
+    const inside = (px, py) => {
+      if (px < 0 || py < 0 || px >= w || py >= h) return false;
+      const [dx, dy] = corner(px, py);
+      return !(dx < 9 && dy < 9 && Math.floor(dx / 3) + Math.floor(dy / 3) < 2);
+    };
+    shape(x, w + 1, h + 2, (px, py) => inside(px - 1, py - 2), () => 'rgba(0,0,0,.5)', 0);
+    shape(x, w, h, inside, (n, px, py) => {
+      const [dx, dy] = corner(px, py);
+      if (n >= 3 && dx < 13 && dy < 13 && Math.floor(dx / 3) + Math.floor(dy / 3) === 3) return '#e0a640'; // echo step
+      if (n === 0) return '#140a04';
+      if (n === 1) return (px < w / 2 && dx === 1) || (py < h / 2 && dy === 1) ? '#ffe27a' : '#c98a2a';
+      if (n === 2) return '#e0a640';
+      if (n === 3) return '#3a1408';
+      return py < 6 ? '#36141e' : '#2a0f16';
+    }, 4);
+  }
+  function drawPanel(c, maroon) { // maroon: notched dark red frame (pause, leaderboard)
+    if (maroon) return drawNotchPanel(c);
     const x = c.getContext('2d'), w = c.width, h = c.height;
     step(x, 'rgba(0,0,0,.5)', 1, 2, w - 1, h - 2, 3);
     step(x, '#140a04', 0, 0, w - 1, h - 1, 3);
@@ -171,9 +192,9 @@
     const t = THEME[theme];
     const lab = el('span', 'lbl', wrap, { fontSize: (size || 9) + 'px', color: t.tx, textShadow: '0 1px 0 ' + t.ts });
     if (ic && leftIc) {
-      const c = sprite(ic, leftIc, wrap, 'lic', 1.5);
-      Object.assign(c.style, { position: 'absolute', left: '10px', top: (H - 1 - parseFloat(c.style.height)) / 2 + 'px' });
-      lab.style.paddingLeft = '16px'; // centre the label in the space right of the icon
+      const c = sprite(ic, leftIc, wrap, 'lic', 1.25);
+      Object.assign(c.style, { position: 'absolute', left: '11px', top: (H - 1 - parseFloat(c.style.height)) / 2 + 'px' });
+      lab.style.paddingLeft = '12px'; // centre the label in the space right of the icon
     } else if (ic) sprite(ic, t.ic, lab, '', H >= 22 ? 1.25 : 1);
     lab.appendChild(document.createTextNode(label));
     const b = { wrap, cv, theme, sel: null, id };
