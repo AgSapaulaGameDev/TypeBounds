@@ -536,13 +536,15 @@
     R(x, '#b07a45', 1, 1, Math.ceil((w - 2) * ratio), h - 2);
     R(x, '#d8a066', 1, 1, Math.ceil((w - 2) * ratio), 1);
   }
-  const H_IC = { trophy: GOLD_IC, coin: GOLD_IC, swords: { main: '#ffcd4a', hi: '#e8eef4', shade: '#8a5a2a', ol: '#140a04' },
-    skull: { main: '#f3e2c0', ol: '#140a04' }, heart: { main: '#ff3a5a', hi: '#ffb0c0', ol: '#3a0a10' } };
+  // HUD icons have no outline so they fit inside the 10px rows of the boxes
+  const H_IC = { trophy: { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0' }, coin: { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0' },
+    swords: { main: '#ffcd4a', hi: '#e8eef4', shade: '#8a5a2a' }, skull: { main: '#f3e2c0' },
+    heart: { main: '#c0182e', hi: '#f0607a', ol: '#2a0508' } };
   function hudBox(css, rows) {
     const b = el('div', 'hbox', hud, css);
-    drawHudBox(art(62, 23, b));
+    drawHudBox(art(62, 25, b));
     return rows.map(([ic, cls], i) => {
-      const r = el('div', 'hrow ' + (cls || ''), b, { top: (3 + i * 9) + 'px' });
+      const r = el('div', 'hrow ' + (cls || ''), b, { top: (3 + i * 9.5) + 'px' });
       sprite(ic, H_IC[ic], el('div', 'hic', r));
       return el('span', '', r);
     });
@@ -564,7 +566,7 @@
   HUD.wallCv = art(70, 4, HUD.wall);
   HUD.last = {};
   function syncHud(g, r, u, v) {
-    const show = g.inGame;
+    const show = g.inGame && !(g.state === 'play' && g.phase === 'tips'); // tip cards get the screen to themselves
     hud.style.display = show ? '' : 'none';
     if (!show) return;
     const t = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + u + ')';

@@ -134,13 +134,13 @@
 #hud .art { position: absolute; left: 0; top: 0; }
 #hud .ic { position: static; flex: none; }
 #hud > div { position: absolute; }
-#hud .hbox { width: 62px; height: 23px; }
-#hud .hrow { position: absolute; left: 4px; right: 4px; height: 9px; display: flex; align-items: center; gap: 3px; font-size: 6.5px; letter-spacing: .4px; color: #fff4dc; text-shadow: 1px 1px 0 #140508; white-space: nowrap; }
+#hud .hbox { width: 62px; height: 25px; }
+#hud .hrow { position: absolute; left: 4px; right: 4px; height: 10px; display: flex; align-items: center; gap: 3px; font-size: 6.5px; letter-spacing: .4px; color: #fff4dc; text-shadow: 1px 1px 0 #140508; white-space: nowrap; }
 #hud .hrow.gold { color: #ffcd4a; }
 #hud .hic { width: 11px; display: flex; justify-content: center; }
-#hud .hcombo { left: 5px; top: 27px; font-size: 6px; letter-spacing: .4px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; }
-#hud .hfrost { right: 5px; top: 27px; font-size: 6px; color: #73eff7; text-shadow: 1px 1px 0 #140508; }
+#hud .hcombo { left: 5px; top: 29px; font-size: 6px; letter-spacing: .4px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; }
+#hud .hfrost { right: 5px; top: 29px; font-size: 6px; color: #73eff7; text-shadow: 1px 1px 0 #140508; }
 #hud .hesc { right: 4px; bottom: 2px; font-size: 5.5px; font-weight: 500; letter-spacing: .4px; color: #566c86; }
 #hud .hbar { top: 3px; width: 96px; height: 15px; }
-#hud .hhp { position: absolute; inset: 0 0 1px; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 7.5px; letter-spacing: .5px; color: #fff4dc; text-shadow: 1px 1px 0 #0a2a10; }
+#hud .hhp { position: absolute; inset: 0 0 3px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 7.5px; letter-spacing: .5px; color: #fff4dc; text-shadow: 1px 1px 0 #0a2a10; }
 #hud .hwall { top: 20px; width: 70px; height: 4px; }
