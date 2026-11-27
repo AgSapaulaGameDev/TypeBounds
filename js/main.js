@@ -770,13 +770,13 @@
         if (g.mode !== 'drop') return;
         g.finalHits++;
         if (g.finalHits < 3) { this.floats.push({ x: g.x, y: g.y - fh - 4, text: g.finalHits + '/3', color: C.gold, life: 0.9, align: 'center' }); return; }
-        // all 3 hit: the goose is done. Its eggs and chicks go with it.
-        for (const o of this.enemies.filter((m) => m.owner === g)) {
-          this.enemies.splice(this.enemies.indexOf(o), 1);
-          this.burst(o.x, o.y - 3, o.t.gore, 6, 25, 60);
-        }
-        g.hp = 0;
-        return this.kill(g);
+        return this.killGoose(g); // all 3 hit
+      }
+      if (g.hp <= 1) {
+        // a normal golden egg thrown just as it reached its last life: only the final 3 can finish it
+        this.addGold(g.t.hitGold);
+        this.floats.push({ x: g.x, y: g.y - fh + 3, text: 'ONLY THE FINAL 3 CAN FINISH IT!', color: C.gold, life: 1.4, align: 'center' });
+        return;
       }
       g.hp--;
       g.anger++; // angrier: faster, lays more eggs
@@ -785,7 +785,28 @@
       this.score += pts;
       this.floats.push({ x: g.x, y: g.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
       this.floats.push({ x: g.x, y: g.y - fh + 3, text: g.hp === 1 ? 'LAST LIFE!' : 'HONK! -1 HP', color: C.red, life: 1.1, align: 'center' });
-      if (g.hp === 1) g.finalCd = 2.5;
+      if (g.hp === 1) {
+        g.finalCd = 2.5;
+        // last life: any normal golden egg still lying around is snatched back
+        for (const o of this.enemies.filter((m) => m.owner === g && m.kind === 'gegg' && !m.final)) {
+          this.enemies.splice(this.enemies.indexOf(o), 1);
+          if (this.locked === o) this.locked = null;
+          this.burst(o.x, o.y - 3, o.t.gore, 8, 30, 0);
+          this.floats.push({ x: o.x, y: o.y - 14, text: 'SNATCHED!', color: C.red, life: 1, align: 'center' });
+        }
+      }
+    },
+
+    // the goose is beaten: its eggs and chicks go with it
+    killGoose(g) {
+      if (!this.enemies.includes(g)) return;
+      for (const o of this.enemies.filter((m) => m.owner === g)) {
+        this.enemies.splice(this.enemies.indexOf(o), 1);
+        if (this.locked === o) this.locked = null;
+        this.burst(o.x, o.y - 3, o.t.gore, 6, 25, 60);
+      }
+      g.hp = 0;
+      this.kill(g);
     },
 
     damageBase(dmg, e) {

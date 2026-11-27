@@ -164,6 +164,7 @@
     // Golden Goose: runs fast round the tower zig-zagging and laying eggs. On its last life it flies up
     // and drops 3 golden eggs; type all 3 before they vanish or it lands and tries again.
     gooseUpdate(dt, game) {
+      if (this.hp <= 0) return game.killGoose(this); // safety net: a goose at 0 HP always dies
       const sp = this.t.speed * this.mul * (1 + 0.10 * this.anger);
       const fly = (tx, ty, v) => {
         const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
