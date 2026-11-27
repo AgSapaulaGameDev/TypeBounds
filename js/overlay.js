@@ -80,6 +80,7 @@
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
+    key: ['.###.........', '#*..#########', '#...#++++++++', '.###.....#.#.', '.........#.#.'],
     heart: ['.##.##.', '#*#####', '#*#####', '#######', '.#####.', '..###..', '...#...'],
     swords: ['*.......*', '.*.....*.', '..*...*..', '...*.*...', '....*....', '...#.#...', '..#...#..', '+#.....#+', '+.......+'],
     dropper: ['.....##', '....###', '...###.', '..#*#..', '.#*#...', '#*#....', '#......'],
@@ -128,6 +129,29 @@
     R(x, t.hi, ix + 1, iy, iw - 2, 1); // top highlight
     R(x, t.sh, ix + 1, iy + ih - 1, iw - 2, 1); // bottom shade
     for (const [px, py] of [[ix + 1, iy + 1], [ix + iw - 2, iy + 1], [ix + 1, iy + ih - 2], [ix + iw - 2, iy + ih - 2]]) R(x, t.rv, px, py, 1, 1); // rivets
+  }
+
+  // ACCOUNT pill (main menu, bottom-left): octagon ends, gold trim, maroon inside
+  function drawPill(c, t, sel) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    x.clearRect(0, 0, w, h);
+    const oct = (col, X, Y, W, H, cut) => {
+      x.fillStyle = col;
+      for (let i = 0; i < H; i++) {
+        const k = Math.max(0, cut - i, cut - (H - 1 - i));
+        x.fillRect(X + k, Y + i, W - k * 2, 1);
+      }
+    };
+    oct('rgba(0,0,0,.55)', 0, 1, w, h - 1, 4);          // drop shadow
+    oct(sel ? '#fff1b0' : '#1e0a06', 0, 0, w, h - 1, 4); // outline (bright when selected)
+    oct('#e0a640', 1, 1, w - 2, h - 3, 3);               // gold trim
+    R(x, '#ffd36a', 5, 1, w - 10, 1);                    // trim highlight
+    oct('#4e1220', 2, 2, w - 4, h - 5, 3);               // dark inner edge
+    oct('#8e2639', 3, 3, w - 6, h - 7, 2);               // maroon face
+    R(x, '#a93248', 5, 3, w - 10, 3);                    // top band
+    R(x, '#c4495c', 5, 3, w - 10, 1);
+    R(x, '#721c2e', 5, h - 7, w - 10, 2);                // bottom band
+    for (const px of [1, w - 2]) R(x, '#ffd36a', px, Math.floor((h - 1) / 2) - 1, 1, 3); // gold studs on the pointed ends
   }
 
   // ---- panel, ribbon, pennant ----
@@ -241,7 +265,15 @@
     button(s, 'play', 'gold', 95, 90, 131, 23, 'PLAY', null, 12.5);
     button(s, 'board', 'crimson', 95, 117, 131, 20, 'LEADERBOARD', null, 10);
     button(s, 'settings', 'crimson', 95, 141, 131, 20, 'SETTINGS', null, 10);
-    button(s, 'account', 'crimson', 3, 162, 78, 15, 'LOG IN', 'crown', 7.5);
+    { // ACCOUNT pill: key + LOG IN, or crown + your name when logged in
+      const wrap = el('div', 'btn pill', s, at(3, 160, 80, 17));
+      wrap.dataset.id = 'account';
+      const cv = art(80, 17, wrap);
+      const key = sprite('key', GOLD_IC, wrap, 'pic'), crown = sprite('crown', GOLD_IC, wrap, 'pic');
+      const lab = el('span', 'lbl', wrap, { fontSize: '8px', color: '#fbe9d0', textShadow: '0 1px 0 #2a0a10', paddingLeft: '15px' });
+      lab.appendChild(document.createTextNode('LOG IN'));
+      buttons.push({ wrap, cv, theme: 'crimson', sel: null, id: 'account', pill: true, key, crown, lab });
+    }
     for (const side of ['L', 'R']) {
       const ch = el('div', 'chev', s); ch.dataset.side = side;
       sprite('chev' + side, { main: '#ffcd4a', shade: '#d98a1c', ol: '#2a1404' }, ch);
@@ -487,9 +519,10 @@
       const [X, Y, W, H, th, sz] = L[id];
       placeBtn(byId[id], X, Y, W, H, th, sz, id === 'continue' ? 'CONTINUE - WAVE ' + d.wave : id === 'play' ? (d ? 'NEW GAME' : 'PLAY') : null);
     }
-    const ab = byId.account, ic = ab.wrap.querySelector('.lbl .ic');
-    ab.wrap.querySelector('.lbl').lastChild.textContent = u ? u.name : 'LOG IN';
-    if (ic) ic.style.display = u ? '' : 'none';
+    const ab = byId.account;
+    ab.lab.lastChild.textContent = u ? u.name : 'LOG IN';
+    ab.key.style.display = u ? 'none' : '';
+    ab.crown.style.display = u ? '' : 'none';
   }
 
   // TIP CARDS (before a wave with new enemies): built per wave by syncTips
@@ -909,7 +942,7 @@
       for (const b of buttons) {
         if (!screens[s].contains(b.wrap)) continue;
         const on = b.id === selId;
-        if (b.sel !== on) { b.sel = on; b.wrap.classList.toggle('sel', on); drawButton(b.cv, THEME[b.theme], on && s !== 'menu' && s !== 'over'); /* game over: hover-only */ }
+        if (b.sel !== on) { b.sel = on; b.wrap.classList.toggle('sel', on); (b.pill ? drawPill : drawButton)(b.cv, THEME[b.theme], on && s !== 'menu' && s !== 'over'); /* game over: hover-only */ }
       }
 
       if (s === 'menu') {

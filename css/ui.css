@@ -190,3 +190,6 @@
 /* leaderboard: crown after names that belong to an account */
 #ui .lb-row .nm .lb-crown { display: inline-block; vertical-align: 1px; margin-left: 3px; }
 #ui .scr[data-s="account"] .rib-txt { font-weight: 500; }
+/* ACCOUNT pill: icon on the left, label centred in the rest */
+#ui .pill .pic { position: absolute; left: 7px; top: 4px; }
+#ui .pill.sel .lbl { color: #ffe066 !important; }

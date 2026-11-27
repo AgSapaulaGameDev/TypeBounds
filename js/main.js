@@ -99,7 +99,7 @@
       { id: 'play', label: TD.Save.has() ? 'NEW GAME' : 'PLAY', key: TD.Save.has() ? 'n' : 'p' },
       { id: 'board', label: 'LEADERBOARD', key: 'l' },
       { id: 'settings', label: 'SETTINGS', key: 's' },
-      { id: 'account', label: TD.Account.user ? TD.Account.user.name : 'LOG IN', key: 'a', x: 3, y: 162, w: 78, h: 15 },
+      { id: 'account', label: TD.Account.user ? TD.Account.user.name : 'LOG IN', key: 'a', x: 3, y: 160, w: 80, h: 17 },
     ] },
     // NEW GAME while a save exists: are you sure?
     confirm: { x: 0, y: 0, w: 0, h: 0, gap: 0, items: () => [
