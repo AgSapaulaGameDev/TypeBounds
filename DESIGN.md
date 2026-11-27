@@ -65,6 +65,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with folded tails and icons.
 - Buttons: chamfered, gold (main action), crimson (secondary), green (resume), brown (restart), with icons (play, restart, gear, home, back arrow).
 - Main menu: hanging crimson pennants with crowns; the logo is img/logo.png (200 x 81 pixel-art copy of the logo reference: background cut out, each pixel the dominant colour of its cell from a 40-colour palette, subtitle redrawn in the game font and crown/window touched up by hand; 1 art pixel = 1 game pixel) with the tower, brick mound, ribbons, crown shield, TYPEBOUNDS title and PROTECT THE TOWER plaque all in the image; PLAY (gold) / LEADERBOARD / SETTINGS below, chevrons beside the selected button. The world castle and its stone plaza are hidden behind the menu (plaza-free background copy).
+- Website icon: the TB crest (tower, trees, gold shield, maroon tile). img/favicon.ico (16-64) and icon-32.png are smooth downscales so TB stays readable in tabs; icon-64.png and apple-touch-icon.png (90 px art doubled to 180) are pixel-art copies.
 - Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle.
 - Pause and leaderboard panels: gold frame with chunky stair-notched corners (3-px steps) and an inner echo step.
 - Pause: maroon panel, gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
