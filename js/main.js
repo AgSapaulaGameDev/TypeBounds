@@ -610,6 +610,8 @@
       this.state = 'spam';
       this.spamAt = this.time;
       this.locked = null;
+      this.typoFlash = 0; // no red frame or COMBO LOST / +score floats behind the No Spamming window
+      this.floats = [];
       A.typo(); A.typo();
       return true;
     },
@@ -849,9 +851,15 @@
 
       // HUD pinned to the real screen corners
       if (this.inGame) this.drawHUD();
-      if (this.typoFlash > 0) {
-        ctx.fillStyle = 'rgba(239,125,87,' + (this.typoFlash * 3).toFixed(2) + ')';
-        ctx.fillRect(0, 0, VW, 2); ctx.fillRect(0, H - 2, VW, 2); ctx.fillRect(0, 0, 2, H); ctx.fillRect(VW - 2, 0, 2, H);
+      if (this.typoFlash > 0 && this.state === 'play') {
+        // wrong key: red frame round the screen, 2 px solid + 1 px soft edge, sides never overlap at the corners
+        const a = Math.min(1, this.typoFlash * 4);
+        const band = (inset, th, alpha) => {
+          ctx.fillStyle = 'rgba(224,64,72,' + alpha.toFixed(2) + ')';
+          ctx.fillRect(inset, inset, VW - inset * 2, th); ctx.fillRect(inset, H - inset - th, VW - inset * 2, th);
+          ctx.fillRect(inset, inset + th, th, H - (inset + th) * 2); ctx.fillRect(VW - inset - th, inset + th, th, H - (inset + th) * 2);
+        };
+        band(0, 2, 0.85 * a); band(2, 1, 0.35 * a);
       }
 
       // overlays, laid out in play-area coords
@@ -1178,6 +1186,19 @@
 
     drawSpam() {
       this.dim(0.65);
+      if (TD.Art) { // royal-red window with a ribbon title, same art as the HTML menus
+        ctx.drawImage(TD.Art.get('panel', 185, 88), 68, 38);
+        ctx.drawImage(TD.Art.get('ribbon', 140, 24), 90, 27);
+        F.draw(ctx, 'NO SPAMMING!', W / 2, 31, '#fff4dc', 2, 'center', '#2a0a10');
+        F.draw(ctx, 'KEYBOARD SMASH DETECTED', W / 2, 62, '#ff6a5a', 1, 'center', '#140508');
+        F.draw(ctx, 'TYPE THE WORDS - DONT MASH KEYS', W / 2, 72, '#d9b98a', 1, 'center', '#140508');
+        ctx.drawImage(TD.Art.get('plaque', 104, 13), 108, 84);
+        F.draw(ctx, 'WAVE ' + this.waves.wave + ' STARTS OVER', W / 2, 88, '#ffcd4a', 1, 'center', '#140508');
+        const ready = this.time - this.spamAt > 1.5;
+        if (ready && Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'PRESS ENTER TO TRY AGAIN', W / 2, 108, '#fff4dc', 1, 'center', '#140508');
+        else if (!ready) F.draw(ctx, '...', W / 2, 108, '#a0806c', 1, 'center');
+        return;
+      }
       this.panel(70, 40, 180, 96);
       F.draw(ctx, 'NO SPAMMING!', W / 2, 50, C.red, 2, 'center', C.ink);
       F.draw(ctx, 'KEYBOARD SMASH DETECTED', W / 2, 72, C.white, 1, 'center');
