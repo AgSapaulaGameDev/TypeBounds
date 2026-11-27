@@ -195,7 +195,7 @@
       }
       this.layCd -= dt;
       if (this.layCd > 0) return;
-      this.layCd = Math.max(1.0, 2.3 - 0.3 * this.anger);
+      this.layCd = Math.max(1.0, 2.0 - 0.25 * this.anger); // 2 s, 1.75, 1.5, 1.25, 1 s
       const mine = game.enemies.filter((m) => m.owner === this);
       if (mine.length >= 3 + this.anger) return;
       const hasGold = mine.some((m) => m.kind === 'gegg');

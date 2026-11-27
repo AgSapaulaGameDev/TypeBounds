@@ -652,6 +652,10 @@
         e.shell = 1; e.hidden = true;
         if (this.locked === e) this.locked = null;
       }
+      if (e && e.kind === 'egg') { // typo on a white egg: it cracks 1 s closer to hatching
+        e.life -= 1; e.flash = 0.1;
+        this.floats.push({ x: e.x, y: e.y - 14, text: '-1S', color: C.red, life: 0.7, align: 'center' });
+      }
       A.typo();
     },
 

@@ -95,9 +95,9 @@
       { name: 'THE GOLDEN GOOSE', sprite: () => S().goose[0], lines: [
         'NO WORD. IT RUNS AROUND LAYING EGGS.',
         [['GOLDEN EGG: ', GOLD], ['TYPE IT = THROW IT AT THE GOOSE.', WHITE]],
-        [['WHITE EGG: ', WHITE], ['HATCHES A CHICK THAT STEALS 5 GOLD.', DIM]],
+        [['WHITE EGG: ', WHITE], ['HATCHES A CHICK. EACH TYPO: -1 S.', DIM]],
         [['LAST LIFE: ', RED], ['IT DROPS 3 GOLDEN EGGS. TYPE ALL 3!', WHITE]],
       ] },
-    ], foot: 'EACH HIT MAKES IT ANGRIER AND FASTER' },
+    ], foot: 'CHICKS STEAL 5 GOLD. HITS MAKE IT ANGRIER' },
   };
 })();
