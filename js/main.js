@@ -176,7 +176,7 @@
       Object.assign(this, {
         enemies: [], particles: [], bolts: [], floats: [],
         hp: 20, maxHp: 20, score: 0, combo: 0, bestCombo: 0, kills: 0,
-        correct: 0, typos: 0, waveTypos: 0, locked: null, splitFrom: null,
+        correct: 0, typos: 0, waveTypos: 0, locked: null, splitFrom: null, throws: [],
         shake: 0, baseFlash: 0, typoFlash: 0, newBest: false,
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
         buffs: {}, // one-wave shop buffs: frost
@@ -202,13 +202,16 @@
       this.bannerText = 'WAVE ' + n;
       this.bannerSub = n === 1 ? 'TYPE THE WORDS!' : 'GET READY';
       if (this.waves.boss) { this.bannerText = 'BOSS WAVE ' + n; this.bannerSub = 'THE ' + TD.EnemyTypes[this.waves.boss].name + ' APPROACHES'; }
-      const pos = ((n - 1) % 10) + 1; // theme hints on the first wave of each new enemy mix
+      const pos = TD.wavePos(n); // theme hints on the first wave of each new enemy mix
       if (pos === 3) this.bannerSub = 'MATHS IMPS: TYPE THE ANSWER!';
       if (pos === 6) this.bannerSub = 'COLOUR SLIMES: TYPE THE WORD!';
       if (pos === 8) this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
+      if (pos === 11) this.bannerSub = 'ANIMALS: RABBITS HOP FAST!';
+      if (pos === 13) this.bannerSub = 'CHAMELEONS: TYPE THEM WHILE YOU CAN SEE THEM!';
       // first time a wave brings new enemies: show their tip card until Enter
       if (TD.Tips[n] && !this.tipsSeen[n]) { this.tipsSeen[n] = true; this.phase = 'tips'; this.tipsAt = this.time; }
       if (this.waves.boss === 'rainbow') this.bannerSub = 'EYEDROPPER = TYPE THE INK COLOUR!';
+      if (this.waves.boss === 'goose') this.bannerSub = 'GOLDEN EGGS ARE YOUR AMMO!';
       A.wave();
     },
 
@@ -324,7 +327,8 @@
         this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
         return m;
       }
-      const e = new TD.Enemy(kind, this.pickWord(TD.EnemyTypes[kind].list), p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
+      const list = TD.EnemyTypes[kind].list;
+      const e = new TD.Enemy(kind, list ? this.pickWord(list) : '', p.x, p.y, speedMul * (this.buffs.frost ? 0.8 : 1));
       if (kind === 'color' || kind === 'ctank') e.ink = pick(Object.keys(TD.Inks).filter((c) => c !== e.word)); // never its own colour
       this.enemies.push(e);
       this.burst(p.x, p.y - 4, ['#1a1c2c', '#333c57', '#566c86'], 8, 20, 0);
@@ -444,8 +448,11 @@
       if (this.phase === 'shop') return TD.Shop.onChar(this, ch);
       if (this.phase === 'tips') return;
       let e = this.locked;
+      if (e && e.hidden) return; // locked tortoise is hiding in its shell: keys do nothing until it comes out
       if (!e) {
         const cands = this.enemies.filter((en) => !en.hidden && en.word[0] === ch);
+        // a camouflaged chameleon can't be locked onto, but aiming at it isn't a typo either
+        if (!cands.length && this.enemies.some((en) => en.camo && en.hidden && en.word[0] === ch)) return;
         if (!cands.length) return this.miss(null);
         cands.sort((a, b) => distToBase(a) - distToBase(b));
         e = this.locked = cands[0];
@@ -622,7 +629,7 @@
       Object.assign(this, {
         hp: s.hp, maxHp: s.maxHp, gold: s.gold, goldEarned: s.goldEarned, score: s.score, armorLv: s.armorLv,
         kills: s.kills, correct: s.correct, typos: s.typos, bestCombo: s.bestCombo, buffs: { ...s.buffs },
-        combo: 0, enemies: [], bolts: [], floats: [], particles: [], locked: null, splitFrom: null,
+        combo: 0, enemies: [], bolts: [], floats: [], particles: [], locked: null, splitFrom: null, throws: [],
       });
       Object.assign(this.wall, s.wall, { flash: 0 });
       this.state = 'play';
@@ -639,6 +646,7 @@
       this.typoFlash = 0.2;
       this.shake = Math.max(this.shake, 1.5);
       if (e) e.shake = 0.25;
+      if (e && e.kind === 'tortoise') { e.shell = 1; e.hidden = true; } // pulls into its shell, word hidden ~1 s
       A.typo();
     },
 
@@ -675,6 +683,104 @@
       this.shake = Math.max(this.shake, e.t.boss ? 6 : e.kind === 'tank' || e.t.heavy ? 3 : 1.5);
       A.kill();
       if (e.t.boss) A.clear();
+      if (e.kind === 'gegg' && e.owner) this.throws.push({ x0: B.boltX, y0: B.boltY, t: 0, dur: 0.5, goose: e.owner, final: e.final });
+    },
+
+    // ---- Golden Goose ----
+    layEgg(g, golden) {
+      const x = clamp(g.x - g.face * 6, 10, W - 10), y = clamp(g.y, 30, H - 12);
+      const e = new TD.Enemy(golden ? 'gegg' : 'egg', this.pickWord(golden ? 'goldWords' : 'eggWords'), x, y, this.waves.speedMul);
+      e.owner = g;
+      e.life = e.lifeMax = golden ? 4 : 6; // golden: snatched back after 4 s; white: hatches after 6 s
+      this.enemies.push(e);
+      this.burst(x, y - 3, golden ? e.t.gore : ['#f4f4f4', '#c2c3c7'], golden ? 10 : 5, 20, 40);
+      if (golden) this.floats.push({ x, y: y - 14, text: 'GOLDEN EGG!', color: C.gold, life: 1, align: 'center' });
+      A.lock();
+    },
+
+    // last life: 3 golden eggs fall at once, spread round the field
+    dropFinalEggs(g) {
+      const spots = [[B.cx - 95, 60], [B.cx + 95, 60], [B.cx, 150]].sort(() => Math.random() - 0.5);
+      for (const [x, y] of spots) {
+        const e = new TD.Enemy('gegg', this.pickWord('goldWords'), x + rand(-10, 10), y + rand(-8, 8), this.waves.speedMul);
+        e.owner = g; e.final = true; e.drop = 0.5;
+        e.life = e.lifeMax = 7;
+        this.enemies.push(e);
+      }
+      g.finalHits = 0;
+      this.floats.push({ x: g.x, y: g.y - 26, text: 'TYPE ALL 3!', color: C.gold, life: 1.6, align: 'center' });
+      A.wave();
+    },
+
+    eggExpire(e) {
+      if (e.kind === 'egg') {
+        // hatches: same word (and typed letters), now a fast chick running at the tower
+        e.kind = 'chick'; e.t = TD.EnemyTypes.chick; e.speed = e.t.speed * e.mul * (this.buffs.frost ? 0.8 : 1);
+        e.life = null; e.state = 'walk'; e.flash = 0.15;
+        this.burst(e.x, e.y - 3, ['#f4f4f4', '#c2c3c7'], 10, 30, 80);
+        this.floats.push({ x: e.x, y: e.y - 14, text: 'HATCHED!', color: C.red, life: 0.9, align: 'center' });
+        return;
+      }
+      // golden egg not typed in time: the goose snatches it back
+      this.enemies.splice(this.enemies.indexOf(e), 1);
+      if (this.locked === e) this.locked = null;
+      this.burst(e.x, e.y - 3, e.t.gore, 10, 30, 0);
+      this.floats.push({ x: e.x, y: e.y - 14, text: 'SNATCHED!', color: C.red, life: 1, align: 'center' });
+      const g = e.owner;
+      if (e.final && g && g.mode === 'drop') {
+        // missed one of the final 3: the rest vanish too and the goose lands to try again
+        for (const o of this.enemies.filter((m) => m.final && m.owner === g)) {
+          this.enemies.splice(this.enemies.indexOf(o), 1);
+          if (this.locked === o) this.locked = null;
+          this.burst(o.x, o.y - 3, o.t.gore, 8, 30, 0);
+        }
+        g.mode = 'down';
+        this.floats.push({ x: g.x, y: g.y - 26, text: 'MISSED! IT LANDS', color: C.red, life: 1.6, align: 'center' });
+      }
+    },
+
+    // a chick reached the tower (or wall): one peck, and the goose steals 5 gold
+    chickHit(c) {
+      this.enemies.splice(this.enemies.indexOf(c), 1);
+      if (this.locked === c) this.locked = null;
+      if (c.target === 'wall') this.damageWall(c.t.dmg, c); else this.damageBase(c.t.dmg, c);
+      this.burst(c.x, c.y - 3, c.t.gore, 8, 30, 80);
+      const steal = Math.min(5, this.gold);
+      if (steal > 0) {
+        this.gold -= steal;
+        const g = c.owner && this.enemies.includes(c.owner) ? c.owner : c;
+        this.floats.push({ x: g.x, y: g.y - 26, text: 'GOOSE STOLE ' + steal + 'G', color: C.red, life: 1.4, align: 'center' });
+      }
+    },
+
+    // a thrown golden egg hits the goose
+    gooseHit(g, final) {
+      if (!this.enemies.includes(g)) return;
+      const fh = g.frames[0].h;
+      this.burst(g.x, g.y - fh / 2, g.t.gore, 18, 50, 80);
+      g.flash = 0.2;
+      this.shake = Math.max(this.shake, 3);
+      A.kill();
+      if (final) {
+        if (g.mode !== 'drop') return;
+        g.finalHits++;
+        if (g.finalHits < 3) { this.floats.push({ x: g.x, y: g.y - fh - 4, text: g.finalHits + '/3', color: C.gold, life: 0.9, align: 'center' }); return; }
+        // all 3 hit: the goose is done. Its eggs and chicks go with it.
+        for (const o of this.enemies.filter((m) => m.owner === g)) {
+          this.enemies.splice(this.enemies.indexOf(o), 1);
+          this.burst(o.x, o.y - 3, o.t.gore, 6, 25, 60);
+        }
+        g.hp = 0;
+        return this.kill(g);
+      }
+      g.hp--;
+      g.anger++; // angrier: faster, lays more eggs
+      this.addGold(g.t.hitGold);
+      const pts = Math.round(100 * this.mult);
+      this.score += pts;
+      this.floats.push({ x: g.x, y: g.y - fh - 4, text: '+' + pts, color: C.gold, life: 0.9, align: 'center' });
+      this.floats.push({ x: g.x, y: g.y - fh + 3, text: g.hp === 1 ? 'LAST LIFE!' : 'HONK! -1 HP', color: C.red, life: 1.1, align: 'center' });
+      if (g.hp === 1) g.finalCd = 2.5;
     },
 
     damageBase(dmg, e) {
@@ -757,8 +863,10 @@
         if (this.banner <= 0) { this.phase = 'shop'; TD.Shop.open(this); }
       }
 
-      for (const e of this.enemies) e.update(dt, this);
+      for (const e of this.enemies.slice()) if (this.enemies.includes(e)) e.update(dt, this);
       if (this.state !== 'play') return;
+      for (const t of this.throws) { t.t += dt; if (t.t >= t.dur) this.gooseHit(t.goose, t.final); }
+      this.throws = this.throws.filter((t) => t.t < t.dur);
       this.layoutLabels(dt);
 
       // smoke when the tower is badly hurt
@@ -786,7 +894,7 @@
     // Place word plates under enemies and push overlapping plates apart vertically.
     layoutLabels(dt) {
       const xMin = -OX + 1, xMax = W + OX - 1;
-      const Ls = this.enemies.map((e) => {
+      const Ls = this.enemies.filter((e) => !e.t.noLabel).map((e) => {
         const w = F.width(e.labelText()) + 4, h = 9;
         return { e, w, h, x: clamp(Math.round(e.x - w / 2), xMin, xMax - w), y: clamp(e.y + 2, 14, H - h - 1) };
       });
@@ -840,6 +948,7 @@
       items.sort((a, b) => a.y - b.y).forEach((i) => i.draw());
 
       this.drawBolts();
+      this.drawThrows();
       for (const p of this.particles) { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size); }
 
       if (this.inGame) {
@@ -915,11 +1024,39 @@
 
     drawEnemy(e) {
       const fs = e.frames;
-      const fi = e.state === 'walk' ? Math.floor(e.anim * e.t.animFps) % fs.length : 0;
+      let fi = e.state === 'walk' ? Math.floor(e.anim * e.t.animFps) % 2 : 0;
+      let ox = 0, oy = e.hop > 0 ? -2 : 0;
+      if (e.kind === 'rabbit') { fi = e.air ? 1 : 0; oy = -Math.round(e.lift); }
+      if (e.kind === 'tortoise' && e.shell > 0) { fi = 2; ox = e.shell > 0.8 ? Math.round(Math.sin(e.shell * 60)) : 0; }
+      if (e.kind === 'goose' && e.mode !== 'walk') fi = 2;
+      if (e.kind === 'egg' || e.kind === 'gegg') {
+        fi = 0;
+        if (e.drop > 0) oy = -Math.round(e.drop * 120); // falling from the flying goose
+        else if (e.kind === 'egg' && e.life < 2) { fi = 1; ox = Math.round(Math.sin(this.time * 30) * (e.life < 1 ? 1 : 0.6)); } // about to hatch: cracked, wobbling
+      }
       const f = fs[fi], left = e.face < 0;
       const img = e.flash > 0 ? (left ? f.wl : f.wr) : left ? f.l : f.r;
-      const x = Math.round(e.x - f.w / 2), y = Math.round(e.y - f.h) + (e.hop > 0 ? -2 : 0);
+      const x = Math.round(e.x - f.w / 2) + ox, y = Math.round(e.y - f.h) + oy;
       ctx.globalAlpha = Math.min(1, e.age / 0.35);
+      if (e.kind === 'gegg') {
+        // golden glow ring that pulses
+        const on = Math.floor(this.time * 5) % 2, rx = 6 + on, ry = 2 + on;
+        ctx.fillStyle = on ? C.gold : '#f9a31b';
+        for (let i = 0; i < 14; i++) {
+          const a = (i / 14) * Math.PI * 2;
+          ctx.fillRect(Math.round(e.x + Math.cos(a) * rx), Math.round(e.y - 1 + Math.sin(a) * ry), 1, 1);
+        }
+        if (Math.floor(this.time * 3 + e.id) % 3 === 0) { ctx.fillStyle = '#fff4a3'; ctx.fillRect(x + 4, y + 1, 1, 1); }
+      }
+      if (e.kind === 'chameleon' && e.camo) {
+        // camouflaged: faded into the grass, a faint shimmer of leaves gives it away
+        ctx.globalAlpha *= 0.55;
+        ctx.fillStyle = '#5ac54f';
+        for (let i = 0; i < 3; i++) {
+          const a = this.time * 2 + i * 2.1 + e.id;
+          if (Math.sin(a * 3) > 0.2) ctx.fillRect(Math.round(e.x + Math.cos(a) * 8), Math.round(e.y - 2 + Math.sin(a * 1.7) * 2), 1, 1);
+        }
+      }
       if (e.inkRule) {
         // ink-rule slime: pulsing gold ring on the ground around it
         const on = Math.floor(this.time * 4) % 2, rx = f.w / 2 + 3 + on, ry = 3 + on;
@@ -958,6 +1095,11 @@
       const p = e.progress, ty = y + 2;
       let tx = x + 2;
       if (e.hidden) F.draw(ctx, '???', tx, ty, C.faint);
+      else if (e.camo && p > 0) {
+        // camouflaged but already started: your letters + blanks (type it blind)
+        F.draw(ctx, e.word.slice(0, p), tx, ty, C.gold);
+        F.draw(ctx, '_'.repeat(e.word.length - p), tx + F.advance(e.word.slice(0, p)), ty, locked && this.typoFlash > 0 ? C.red : C.dim);
+      }
       else if (e.inkRule) {
         // eyedropper icon, then the decoy word in its ink; once you start typing, your letters + blanks
         if (!locked) { ctx.fillStyle = C.gold; ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + 8, w, 1); ctx.fillRect(x + w - 1, y, 1, 9); }
@@ -975,12 +1117,29 @@
         const rest = e.prefix ? '_'.repeat(e.word.length - p) : e.word.slice(p);
         F.draw(ctx, rest, tx + F.advance(e.word.slice(0, p)), ty, restCol);
       }
+      // eggs: time left before it hatches (white) or the goose snatches it back (golden)
+      if (e.life != null && !(e.drop > 0)) {
+        const r = Math.max(0, e.life) / e.lifeMax;
+        ctx.fillStyle = C.ink; ctx.fillRect(x, y + 9, w, 2);
+        ctx.fillStyle = e.kind === 'gegg' ? C.gold : r < 0.34 ? C.red : C.white;
+        ctx.fillRect(x, y + 9, Math.ceil(w * r), 2);
+      }
       // boss: countdown until it summons again
       if (e.t.boss && !e.hidden && !e.charging) {
         ctx.fillStyle = C.ink; ctx.fillRect(x, y + 9, w, 2);
         ctx.fillStyle = C.red; ctx.fillRect(x, y + 9, Math.ceil(w * Math.max(0, e.cd) / e.t.summonEvery), 2);
       }
       ctx.globalAlpha = 1;
+    },
+
+    // golden eggs thrown from the tower at the goose (arc, homing on where it is now)
+    drawThrows() {
+      const img = S.gegg[0].r;
+      for (const t of this.throws) {
+        const p = Math.min(1, t.t / t.dur), g = t.goose;
+        const x = t.x0 + (g.x - t.x0) * p, y = t.y0 + (g.y - 10 - t.y0) * p - Math.sin(p * Math.PI) * 26;
+        ctx.drawImage(img, Math.round(x - 3), Math.round(y - 3));
+      }
     },
 
     drawBolts() {

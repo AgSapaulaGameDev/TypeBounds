@@ -18,7 +18,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - A wave with zero typos gives a PERFECT bonus (50 × wave).
 
 ## Enemies
-### Wave themes (repeat every 10 waves, faster each loop)
+### Wave themes (repeat every 15 waves, faster each loop)
 | Waves | Theme | Enemies |
 |---|---|---|
 | 1-2 | Maths | **Calculator** (fast, 3-4 letter number words: ONE, FOUR, ZERO) + **Chalkboard** tank (long number words: SEVENTEEN, THOUSAND) |
@@ -27,6 +27,9 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
 | 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour). Easier mix: ~40% fewer enemies (13 instead of 22 on wave 8), spawns 1.4x further apart, eyedropper slimes at 75% speed |
 | 10 | Colour | Rainbow Slime boss |
+| 11-12 | Animals | **Rabbit** (fast, short animals: CAT, OWL, FOX; moves in quick hops with pauses) + **Tortoise** tank (long animals: CROCODILE, KANGAROO; very slow, 3 damage; a typo on it makes it hide in its shell for 1 s: word shows ???, it stops, keys on it do nothing). Banner: "ANIMALS: RABBITS HOP FAST!" |
+| 13-14 | Animals | Tortoise + **Chameleon** (medium animals: PANTHER, GECKO). ~20% fewer enemies, 1.15x further apart. Banner: "CHAMELEONS: TYPE THEM WHILE YOU CAN SEE THEM!" |
+| 15 | Animals | Golden Goose boss |
 
 Runner and Tank below are **archived** (code and sprites kept, not spawned) for later use.
 
@@ -34,16 +37,17 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 |---|---|---|
 | Runner | 3 letters, fast | Built (step 1) |
 | Tank | 7–12 letters, slow, hits hard | Built (step 1) |
-| Mathematician (BOSS) | Boss waves 5, 15, 25... See below | Built (step 3) |
+| Mathematician (BOSS) | Boss waves 5, 20, 35... See below | Built (step 3) |
 | Word Color | slime in a random ink; its word is a colour name drawn in a DIFFERENT colour — type the word. Joins normal waves with runners and tanks | ✅ Wave 6+ (15% → 30% of spawns) |
 | Ink Color | type the ink color; must look clearly different from Word Color | Wave TBD (not 9) — step 3 |
 | Boss | long phrase, fires 1-letter projectiles | Every 5th wave — step 4 |
-| Rainbow Slime (BOSS) | long colour words; summons Word Color slimes. See below | ✅ Waves 10, 20, 30... |
+| Rainbow Slime (BOSS) | long colour words; summons Word Color slimes. See below | ✅ Waves 10, 25, 40... |
+| Golden Goose (BOSS) | no word; golden eggs are your ammo. See below | ✅ Waves 15, 30, 45... |
 
 ### Mathematician (boss)
 - Word bank (`mathTerms`, 22, 7-10 letters): algebra, calculus, theorem, variable, equation, integer, fraction, decimal, geometry, polygon, diameter, tangent, parabola, symmetry, magnitude, logarithm, algorithm, numerical, hypotenuse, polynomial, derivative, irrational.
 - Word length rule: tank and boss words are 6-10 letters (no 5-letter words on tanks, nothing over 10).
-- Boss waves: 5, 15, 25, ... (10, 20, 30 are the Rainbow Slime). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
+- Boss waves: 5, 20, 35, ... (10, 25, 40 are the Rainbow Slime; 15, 30, 45 the Golden Goose). Banner "BOSS WAVE n". No runners or tanks in boss waves. Boss HP bar (5) at the bottom of the screen.
 - Enters from the left or right edge, then roams around a wide oval around the tower (left side, over the top or bottom, right side and back), so it visits both sides. Never walks to the tower until its last life.
 - Summons **3 minions on its 1st and 2nd life (HP 5 and 4), 5 minions on its 3rd and 4th (HP 3 and 2)**. Minions always appear at the far left and far right edges of the field (split between both sides, ~34 px apart, each a step further out), not next to the boss, so they arrive one after another. They walk to the tower and attack it. Each shows a sum like `7+5=__` or `14-6=_`; type the answer (digits). Answers start with different digits so lock-on is clear.
 - While any of its minions are alive, its word is hidden (`???`) and it cannot be targeted.
@@ -51,8 +55,19 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - At 1 HP it **charges the tower** and its word becomes a 10-digit number. Reaching the tower it hits for 4.
 - Rewards: 5 gold per hit, 25 gold + 500 score on kill. Minions give 1 gold.
 
+### Chameleon
+- Camouflage cycle per chameleon (own random phase): ~2 s visible (bright orange), ~1.5 s camouflaged (grass colours, faded, a faint green leaf shimmer near it).
+- Camouflaged and not started: label `???`, can't be locked onto, and pressing its first letter is NOT a typo.
+- Camouflaged but already started: you keep your progress and the lock; the label shows your letters + blanks (type it blind).
+
+### Golden Goose (boss)
+- Waves 15, 30, 45, ... 5 HP. No word, can't be typed. Runs fast round the oval, zig-zagging, laying eggs (max 3 + anger on the field).
+- **White egg**: short farm word (NEST, CORN, YOLK) and a 6 s hatch bar. If it runs out the egg cracks (wobbles in the last 2 s) and hatches a **chick** (same word) that runs at the tower. A chick that arrives pecks once (2 damage) and the goose **steals 5 gold**.
+- **Golden egg** (glowing gold ring): gold word (NUGGET, JEWEL, TREASURE) with a 4 s bar; if it runs out the goose snatches it back. Typing it throws it from the tower at the goose: -1 HP, 5 gold, and the goose gets angrier (+15% speed, lays faster, more eggs). At most one golden egg at a time, about every 3rd egg.
+- **Last life**: lays white eggs for a few seconds, then flies up and drops **3 golden eggs** at once (7 s each). Type all 3 = BOSS DEFEATED (500 score, 25 gold); its eggs and chicks vanish with it. Miss one = the others vanish, the goose lands and tries again ~6 s later.
+
 ### Rainbow Slime (boss)
-- Waves 10, 20, 30, ... Big crowned slime, 5 HP (boss HP bar). Enters and roams the same oval as the Mathematician.
+- Waves 10, 25, 40, ... Big crowned slime, 5 HP (boss HP bar). Enters and roams the same oval as the Mathematician.
 - Summons **Word Color slimes** (slower than normal ones, 60% speed): 3 on lives 5 and 4, 4 on lives 3 and 2. Same far-left / far-right spawn spots.
 - **Eyedropper slimes (Ink rule)**: the first slime of every summon and ~35% of the rest are marked: a small **eyedropper icon** (gold bulb, white tube, colour-cycling drip) at the start of the label, a gold border around the label, and a pulsing gold ring on the ground under the slime. For those you type the **ink colour**, not the word ("GREEN" written in red = type RED). Inks for these are only red, blue, green, purple, pink, orange (no white: it looks like plain text). Once you start typing one, its label shows your letters + blanks. Wave banner says "EYEDROPPER = TYPE THE INK COLOUR!".
 - While they live its word is hidden and its body shimmers through the rainbow. When they're dead it holds one colour and shows a **long colour word** (crimson, turquoise, aquamarine, periwinkle, ...) with the 5 s countdown.

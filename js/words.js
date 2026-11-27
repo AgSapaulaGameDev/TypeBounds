@@ -45,6 +45,22 @@
   TD.Words.mathTerms = ['algebra', 'calculus', 'theorem', 'variable', 'equation', 'integer', 'fraction', 'decimal',
     'geometry', 'polygon', 'diameter', 'tangent', 'parabola', 'symmetry', 'magnitude', 'logarithm', 'algorithm',
     'numerical', 'hypotenuse', 'polynomial', 'derivative', 'irrational'];
+// Animal theme (waves 11-14): Rabbit = short animals, Tortoise = long, Chameleon = medium
+  TD.Words.animalShort = ['cat', 'dog', 'owl', 'fox', 'bee', 'pig', 'emu', 'yak', 'cow', 'ant', 'bat', 'elk', 'hen',
+    'ram', 'eel', 'ape', 'gnu', 'boa', 'mole', 'frog', 'crab', 'duck', 'goat', 'lion', 'seal', 'swan', 'toad', 'wolf',
+    'deer', 'hawk', 'mouse', 'tiger'];
+  TD.Words.animalLong = ['crocodile', 'kangaroo', 'flamingo', 'porcupine', 'alligator', 'armadillo', 'hedgehog',
+    'elephant', 'antelope', 'platypus', 'wolverine', 'butterfly', 'scorpion', 'squirrel', 'reindeer', 'mosquito',
+    'caterpillar', 'grasshopper', 'jellyfish', 'orangutan', 'salamander', 'woodpecker', 'hummingbird', 'dragonfly'];
+  TD.Words.animalMed = ['panther', 'gecko', 'hamster', 'monkey', 'iguana', 'lizard', 'donkey', 'jaguar', 'walrus',
+    'badger', 'beaver', 'falcon', 'otter', 'weasel', 'ferret', 'turtle', 'toucan', 'lobster', 'koala', 'zebra',
+    'camel', 'llama', 'raccoon', 'buffalo', 'pelican', 'vulture'];
+// Golden Goose (wave 15): white eggs (and the chicks that hatch) get short farm words,
+// golden eggs get gold words
+  TD.Words.eggWords = ['egg', 'hen', 'nest', 'corn', 'seed', 'hay', 'barn', 'coop', 'peck', 'yolk', 'farm', 'wing',
+    'beak', 'chirp', 'quack', 'honk', 'mud', 'pond', 'grain', 'straw', 'down', 'tail', 'oats'];
+  TD.Words.goldWords = ['golden', 'nugget', 'jewel', 'crown', 'riches', 'honey', 'amber', 'coins', 'shiny', 'treasure',
+    'fortune', 'bullion', 'sparkle', 'glitter', 'wealth', 'ingot'];
   TD.Inks = {
     red: '#e83b3b', blue: '#4d9be6', green: '#5ac54f', purple: '#a884f3', pink: '#f68dbe',
     white: '#f4f4f4', cyan: '#73eff7', brown: '#b8794a', gray: '#9babb2', orange: '#f77622',

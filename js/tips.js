@@ -68,5 +68,36 @@
         [['LAST LIFE: ', RED], ['SPLITS INTO 4 SLIMES: REDORANGE...', WHITE]],
       ] },
     ], foot: 'TAKE YOUR TIME ON ITS WORD - ACCURACY WINS' },
+
+    11: { title: 'NEW ENEMIES', enemies: [
+      { name: 'RABBIT', tag: 'FAST', sprite: () => S().rabbit[0], lines: [
+        'HOPS AT YOUR TOWER IN QUICK BURSTS.',
+        'SHORT ANIMAL NAMES.',
+        [['EXAMPLE: ', DIM], ['CAT  OWL  FOX', WHITE]],
+      ] },
+      { name: 'TORTOISE', tag: 'TANK', sprite: () => S().tortoise[0], lines: [
+        'VERY SLOW. HITS HARD: 3 DAMAGE.',
+        [['TYPO: ', RED], ['IT HIDES IN ITS SHELL FOR 1 SECOND.', WHITE]],
+        [['EXAMPLE: ', DIM], ['CROCODILE  KANGAROO', WHITE]],
+      ] },
+    ] },
+
+    13: { title: 'NEW ENEMY', enemies: [
+      { name: 'CHAMELEON', tag: 'CAMO', sprite: () => S().chameleon[0], lines: [
+        'EVERY FEW SECONDS IT BLENDS INTO THE GRASS.',
+        'HIDDEN = ??? AND YOU CANNOT LOCK ON.',
+        [['STARTED IT? ', GOLD], ['KEEP TYPING - BLIND IS OK.', WHITE]],
+        [['EXAMPLE: ', DIM], ['PANTHER  GECKO', WHITE]],
+      ] },
+    ], foot: 'TORTOISES STILL COME WITH THEM' },
+
+    15: { title: 'BOSS', enemies: [
+      { name: 'THE GOLDEN GOOSE', sprite: () => S().goose[0], lines: [
+        'NO WORD. IT RUNS AROUND LAYING EGGS.',
+        [['GOLDEN EGG: ', GOLD], ['TYPE IT = THROW IT AT THE GOOSE.', WHITE]],
+        [['WHITE EGG: ', WHITE], ['HATCHES A CHICK THAT STEALS 5 GOLD.', DIM]],
+        [['LAST LIFE: ', RED], ['IT DROPS 3 GOLDEN EGGS. TYPE ALL 3!', WHITE]],
+      ] },
+    ], foot: 'EACH HIT MAKES IT ANGRIER AND FASTER' },
   };
 })();

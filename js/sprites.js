@@ -414,6 +414,50 @@
     return c;
   }
 
+
+  // ---- Animal theme (waves 11-15) ----
+  // Rabbit: frame 0 = sitting, frame 1 = mid-hop (stretched out)
+  const RABBIT_PAL = { k: '#1a1c2c', f: '#c2c3c7', d: '#8b9bb4', p: '#f5a097', w: '#f4f4f4' };
+  const rabbitA = ['......k..k..', '.....kpkkpk.', '.....kpkkpk.', '.....kfkkfk.', '....kffffffk', '....kffffkfk',
+    '..kkkfffffpk', '.kffffffffk.', 'kwffffffffk.', 'kwfdfffdffk.', '.kkkkkkkkk..'];
+  const rabbitB = ['............', '......k..k..', '.....kpkkpk.', '.....kfkkfk.', '....kffffffk', '....kffffkfk',
+    '.kkkkfffffpk', 'kwfffffffk..', 'kwffffffk...', '.kdk..kdk...', '..k....k....'];
+  // Tortoise: two walk frames + frame 2 = hiding in its shell
+  const TORT_PAL = { k: '#1a1c2c', b: '#4f7a3a', y: '#c2a36b', h: '#a7c06a' };
+  const tortTop = ['.....kkkkkk.......', '...kkbbybbkk......', '..kbbybbbybbk.....', '.kbybbbybbbybkkkkk',
+    'kbbbybbbybbbbkhkhk', 'kyyyyyyyyyyyykhhk.', '.kkkkkkkkkkkkkkk..'];
+  const tortA = tortTop.concat(['..khhk....khhk....', '..kkkk....kkkk....']);
+  const tortB = tortTop.concat(['...khhk..khhk.....', '...kkkk..kkkk.....']);
+  const tortShell = ['..................', '.....kkkkkk.......', '...kkbbybbkk......', '..kbbybbbybbk.....',
+    '.kbybbbybbbybk....', 'kbbbybbbybbbbk....', 'kyyyyyyyyyyyyk....', '.kkkkkkkkkkkkk....', '..................'];
+  // Chameleon: bright colours when you can see it, grass colours while camouflaged
+  const chamTop = ['.......kkkk...', '......kccccck.', '.kkk.kcscscwkk', 'kcck.kccccccck', 'kck.kccccccck.',
+    '.kkcscscscsck.', '...kkkkkkkkk..'];
+  const chamA = chamTop.concat(['....kck..kck..', '....kk...kk...']);
+  const chamB = chamTop.concat(['.....kck.kck..', '.....kk..kk...']);
+  const chamSet = (c, s, k) => { const pal = { k, c, s, w: '#f4f4f4' }; return [frameSet(chamA, pal), frameSet(chamB, pal)]; };
+  // Golden Goose (boss)
+  const GOOSE_PAL = { k: '#1a1c2c', y: '#ffd541', d: '#f9a31b', w: '#fff4a3', o: '#ef7d57' };
+  const gooseTop = ['.............kkk....', '............kyyyk...', '............kykyykk.', '............kyyyyook',
+    '.............kyykkk.', '.............kyyk...', '.............kyyk...', '............kyyyk...', '..kk........kyyyk...',
+    '.kyykkkkkkkkyyyyk...', 'kyyyyyyyyyyyyyyyk...', 'kyddddddyyyyyyyyk...', 'kywddddddyyyyyyk....', '.kyyddddyyyyyyk.....',
+    '..kkyyyyyyyykk......', '....kkkkkkkk........'];
+  const gooseA = gooseTop.concat(['.....ko..ko.........', '....koo.koo.........']);
+  const gooseB = gooseTop.concat(['......ko.ko.........', '.....koo..koo.......']);
+  // flying: wings up
+  const gooseFly = gooseTop.slice(0, 8).concat(['.kk.........kyyyk...', 'kddk........kyyyk...', 'kwddkkkkkkkkyyyyk...',
+    '.kwdddyyyyyyyyyyk...', '..kddyyyyyyyyyyk....', '..kyyyyyyyyyyyk.....', '...kkyyyyyyyykk.....', '.....kkkkkkkk.......',
+    '......ko..ko........', '......kk..kk........']);
+  // eggs: frame 0 whole, frame 1 cracked (about to hatch)
+  const eggRows = ['..kk..', '.kwwk.', 'kwwwwk', 'kwwwgk', 'kwwwgk', '.kggk.', '..kk..'];
+  const eggCrack = ['..kk..', '.kwwk.', 'kwkwwk', 'kwwkwk', 'kwwwgk', '.kggk.', '..kk..'];
+  const EGG_PAL = { k: '#1a1c2c', w: '#f4f4f4', g: '#c2c3c7' };
+  const GEGG_PAL = { k: '#1a1c2c', w: '#ffd541', g: '#f9a31b' };
+  const CHICK_PAL = { k: '#1a1c2c', y: '#ffe762', o: '#ef7d57' };
+  const chickTop = ['..kkk..', '.kyyyk.', '.kykyok', 'kyyyyk.', 'kyyyyk.', '.kkkk..'];
+  const chickA = chickTop.concat(['.o..o..']);
+  const chickB = chickTop.concat(['..oo...']);
+
   TD.Sprites = {
     runner: [frameSet(runnerA, RUNNER_PAL), frameSet(runnerB, RUNNER_PAL)],
     tank: [frameSet(tankA, TANK_PAL), frameSet(tankB, TANK_PAL)],
@@ -421,6 +465,14 @@
     board: [frameSet(boardA, BOARD_PAL), frameSet(boardB, BOARD_PAL)],
     math: [frameSet(mathA, MATH_PAL), frameSet(mathB, MATH_PAL)],
     minion: [frameSet(minionA, MINION_PAL), frameSet(minionB, MINION_PAL)],
+    rabbit: [frameSet(rabbitA, RABBIT_PAL), frameSet(rabbitB, RABBIT_PAL)],
+    tortoise: [frameSet(tortA, TORT_PAL), frameSet(tortB, TORT_PAL), frameSet(tortShell, TORT_PAL)],
+    chameleon: chamSet('#ef7d57', '#ffcd75', '#1a1c2c'),
+    chameleonCamo: chamSet('#28564f', '#214a4c', '#16343a'),
+    goose: [frameSet(gooseA, GOOSE_PAL), frameSet(gooseB, GOOSE_PAL), frameSet(gooseFly, GOOSE_PAL)],
+    egg: [frameSet(eggRows, EGG_PAL), frameSet(eggCrack, EGG_PAL)],
+    gegg: [frameSet(eggRows, GEGG_PAL), frameSet(eggRows, GEGG_PAL)],
+    chick: [frameSet(chickA, CHICK_PAL), frameSet(chickB, CHICK_PAL)],
     slime,
     bigSlime,
     medSlime,

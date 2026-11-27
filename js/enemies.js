@@ -35,6 +35,23 @@
     rainbow: { sprite: 'bigSlime', name: 'RAINBOW SLIME', boss: true, minion: 'color', speed: 11, chargeSpeed: 13, dmg: 4,
       atkEvery: 1.5, list: 'longColors', animFps: 3, gold: 25, hitGold: 5, maxHp: 5, summonEvery: 5,
       gore: ['#e83b3b', '#f9a31b', '#ffd541', '#5ac54f', '#4d9be6', '#a884f3'] },
+    // Animal theme (waves 11-14): Rabbit hops fast (short animals), Tortoise tank hides in its shell
+    // on a typo (long animals), Chameleon camouflages every few seconds (medium animals)
+    rabbit: { sprite: 'rabbit', speed: 26, dmg: 1, atkEvery: 1.0, list: 'animalShort', animFps: 0, gold: 2,
+      gore: ['#c2c3c7', '#f4f4f4', '#f5a097'] },
+    tortoise: { sprite: 'tortoise', heavy: true, speed: 5.5, dmg: 3, atkEvery: 1.8, list: 'animalLong', animFps: 3, gold: 6,
+      gore: ['#4f7a3a', '#c2a36b', '#a7c06a'] },
+    chameleon: { sprite: 'chameleon', speed: 11, dmg: 2, atkEvery: 1.2, list: 'animalMed', animFps: 5, gold: 4,
+      gore: ['#ef7d57', '#ffcd75', '#5ac54f'] },
+    // Golden Goose (wave 15): no word, can't be typed. Runs around laying eggs; golden eggs are your ammo.
+    goose: { sprite: 'goose', name: 'GOLDEN GOOSE', boss: true, noLabel: true, speed: 34, dmg: 0, atkEvery: 1,
+      animFps: 8, gold: 25, hitGold: 5, maxHp: 5, gore: ['#ffd541', '#f9a31b', '#fff4a3', '#f4f4f4'] },
+    egg: { sprite: 'egg', speed: 0, dmg: 0, atkEvery: 1, list: 'eggWords', animFps: 0, gold: 1,
+      gore: ['#f4f4f4', '#c2c3c7', '#ffe762'] },
+    gegg: { sprite: 'gegg', speed: 0, dmg: 0, atkEvery: 1, list: 'goldWords', animFps: 0, gold: 2,
+      gore: ['#ffd541', '#f9a31b', '#fff4a3'] },
+    chick: { sprite: 'chick', speed: 30, dmg: 2, atkEvery: 1, list: 'eggWords', animFps: 10, gold: 1,
+      gore: ['#ffe762', '#ef7d57'] },
   };
   const RAINBOW = TD.EnemyTypes.rainbow.gore;
 
@@ -44,6 +61,10 @@
   function roamPoint(ang) {
     return { x: TD.BASE.cx + Math.cos(ang) * ORBIT.rx, y: TD.BASE.cy + 2 + Math.sin(ang) * ORBIT.ry, ang };
   }
+
+  const HOP = { every: 0.62, air: 0.32, height: 5 }; // rabbit: hop for 0.32 s, sit for 0.3 s
+  const CAMO = { seen: 2.0, period: 3.5 };            // chameleon: visible 2 s, camouflaged 1.5 s
+  const clampField = (e) => { e.x = Math.max(10, Math.min(310, e.x)); e.y = Math.max(28, Math.min(170, e.y)); };
 
   let nextId = 1;
 
@@ -78,10 +99,15 @@
         this.dest = roamPoint(Math.random() < 0.5 ? 0 : Math.PI);
         this.hue = 0; this.hueT = 0;
       }
+      if (kind === 'goose') { this.mode = 'walk'; this.layCd = 1.2; this.layN = 0; this.anger = 0; this.finalCd = 0; }
+      if (kind === 'chameleon') { this.camoT = Math.random() * 1.8; this.camo = false; }
+      if (kind === 'rabbit') this.hopT = Math.random() * HOP.every;
+      this.shell = 0; this.lift = 0;
     }
 
     get frames() {
       if (this.kind === 'rainbow') return TD.Sprites.bigSlime(RAINBOW[this.hue]);
+      if (this.kind === 'chameleon' && this.camo) return TD.Sprites.chameleonCamo;
       if (this.ink) return this.t.sprite === 'medSlime' ? TD.Sprites.medSlime(TD.inkHex(this.ink)) : TD.Sprites.slime(TD.inkHex(this.ink));
       return TD.Sprites[this.t.sprite];
     }
@@ -101,8 +127,81 @@
       if (this.shake > 0) this.shake -= dt;
       // Rainbow Slime shimmers through the rainbow while its word is hidden, holds still while you type
       if (this.kind === 'rainbow' && this.hidden && (this.hueT += dt) > 0.35) { this.hueT = 0; this.hue = (this.hue + 1) % RAINBOW.length; }
+      if (this.kind === 'goose') return this.gooseUpdate(dt, game);
+      if (this.kind === 'egg' || this.kind === 'gegg') return this.eggUpdate(dt, game);
+      if (this.kind === 'chameleon') {
+        // camouflaged: an untouched chameleon can't be targeted; one you started stays typeable (blind)
+        this.camoT += dt;
+        this.camo = this.camoT % CAMO.period > CAMO.seen;
+        this.hidden = this.camo && this.progress === 0;
+      }
+      if (this.shell > 0) { // tortoise hiding in its shell after a typo: word hidden, doesn't move
+        this.shell -= dt;
+        if (this.shell <= 0) { this.shell = 0; this.hidden = false; }
+        return;
+      }
       if (this.t.boss && !this.charging) return this.roam(dt, game);
       this.walkAttack(dt, game);
+    }
+
+    // rabbit: quick hops with pauses in between; returns how much of this frame it moves
+    hopStep(dt) {
+      this.hopT = (this.hopT + dt) % HOP.every;
+      const air = this.hopT < HOP.air;
+      this.lift = air ? Math.sin((this.hopT / HOP.air) * Math.PI) * HOP.height : 0;
+      this.air = air;
+      return air ? 1 : 0;
+    }
+
+    // white egg: hatches into a chick when its timer runs out. golden egg: the goose snatches it back.
+    eggUpdate(dt, game) {
+      if (this.drop > 0) this.drop = Math.max(0, this.drop - dt);
+      if (this.drop > 0) return;
+      this.life -= dt;
+      if (this.life <= 0) game.eggExpire(this);
+    }
+
+    // Golden Goose: runs fast round the tower zig-zagging and laying eggs. On its last life it flies up
+    // and drops 3 golden eggs; type all 3 before they vanish or it lands and tries again.
+    gooseUpdate(dt, game) {
+      const sp = this.t.speed * this.mul * (1 + 0.15 * this.anger);
+      const fly = (tx, ty, v) => {
+        const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
+        if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
+        if (d < 2) return true;
+        const k = Math.min(d, v * dt) / d;
+        this.x += dx * k; this.y += dy * k;
+        return false;
+      };
+      if (this.mode === 'up') { if (fly(TD.BASE.cx, 34, 60)) { this.mode = 'drop'; game.dropFinalEggs(this); } return; }
+      if (this.mode === 'drop') { this.y = 34 + Math.sin(this.age * 3) * 2; return; }
+      if (this.mode === 'down') { if (fly(this.dest.x, this.dest.y, 60)) { this.mode = 'walk'; this.finalCd = 6; } return; }
+      // walk: roam the oval, zig-zagging across the path
+      const dx = this.dest.x - this.x, dy = this.dest.y - this.y, d = Math.hypot(dx, dy);
+      if (d < 3) {
+        if (Math.random() < 0.15) this.dir = -this.dir;
+        this.dest = roamPoint(this.dest.ang + this.dir * (0.4 + Math.random() * 0.4));
+      } else {
+        if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
+        const zig = Math.sin(this.age * 7) * 0.8;
+        this.x += ((dx - dy * zig) / d) * sp * dt;
+        this.y += ((dy + dx * zig) / d) * sp * dt;
+        clampField(this);
+      }
+      if (this.hp === 1) { // last life: lay white eggs for a bit, then fly up for the final drop
+        this.finalCd -= dt;
+        if (this.finalCd <= 0) { this.mode = 'up'; return; }
+      }
+      this.layCd -= dt;
+      if (this.layCd > 0) return;
+      this.layCd = Math.max(1.0, 2.3 - 0.3 * this.anger);
+      const mine = game.enemies.filter((m) => m.owner === this);
+      if (mine.length >= 3 + this.anger) return;
+      const hasGold = mine.some((m) => m.kind === 'gegg');
+      const golden = this.hp > 1 && !hasGold && (this.layN % 3 === 2 || Math.random() < 0.3);
+      this.layN++;
+      this.hop = 0.2;
+      game.layEgg(this, golden);
     }
 
     walkAttack(dt, game) {
@@ -110,8 +209,9 @@
         const dx = TD.BASE.cx - this.x, dy = TD.BASE.cy - this.y;
         const d = Math.hypot(dx, dy) || 1;
         if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;
-        this.x += (dx / d) * this.speed * dt;
-        this.y += (dy / d) * this.speed * dt;
+        const mv = this.kind === 'rabbit' ? this.hopStep(dt) * 1.9 : 1;
+        this.x += (dx / d) * this.speed * dt * mv;
+        this.y += (dy / d) * this.speed * dt * mv;
         if (game.wall.alive && TD.inRing(this.x, this.y)) {
           this.state = 'attack'; this.target = 'wall'; this.atkTimer = 0.3;
         } else if (TD.inBaseZone(this.x, this.y)) {
@@ -120,7 +220,9 @@
       } else {
         if (this.target === 'wall' && !game.wall.alive) { this.state = 'walk'; return; }
         this.atkTimer -= dt;
+        if (this.kind === 'rabbit') this.lift = 0;
         if (this.atkTimer <= 0) {
+          if (this.kind === 'chick') return game.chickHit(this); // one peck, then the goose robs you
           this.atkTimer = this.t.atkEvery;
           this.hop = 0.15;
           if (this.target === 'wall') game.damageWall(this.t.dmg, this);
