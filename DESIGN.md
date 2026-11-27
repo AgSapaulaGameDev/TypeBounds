@@ -16,6 +16,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Enemies that reach the tower stop and attack it on a timer. Tower HP 0 = game over.
 - Score per kill = word length × 10 × combo multiplier (+0.25 per 10 combo, max ×3).
 - A wave with zero typos gives a PERFECT bonus (50 × wave).
+- Each wave: 6 + 2 x wave enemies, spawning faster (2.3 s gap - 0.13 s per wave, min 0.55 s), more tanks (12% + 4% per wave, max 45%), and every enemy walks 2% faster per wave (wave 11 = x1.20, wave 15 = x1.28).
 
 ## Enemies
 ### Wave themes (repeat every 15 waves, faster each loop)
@@ -63,7 +64,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 ### Golden Goose (boss)
 - Waves 15, 30, 45, ... 5 HP. No word, can't be typed. Runs fast round the oval, zig-zagging, laying eggs (max 3 + anger on the field).
 - **White egg**: short farm word (NEST, CORN, YOLK) and a 6 s hatch bar. If it runs out the egg cracks (wobbles in the last 2 s) and hatches a **chick** (same word) that runs at the tower. A chick that arrives pecks once (2 damage) and the goose **steals 5 gold**.
-- **Golden egg** (glowing gold ring): gold word (NUGGET, JEWEL, TREASURE) with a 4 s bar; if it runs out the goose snatches it back. Typing it throws it from the tower at the goose: -1 HP, 5 gold, and the goose gets angrier (+15% speed, lays faster, more eggs). At most one golden egg at a time, about every 3rd egg.
+- **Golden egg** (glowing gold ring): gold word (NUGGET, JEWEL, TREASURE) with a 4 s bar; if it runs out the goose snatches it back. Typing it throws it from the tower at the goose: -1 HP, 5 gold, and the goose gets angrier (+10% speed, lays faster, more eggs). At most one golden egg at a time, about every 3rd egg.
 - **Last life**: lays white eggs for a few seconds, then flies up and drops **3 golden eggs** at once (7 s each). Type all 3 = BOSS DEFEATED (500 score, 25 gold); its eggs and chicks vanish with it. Miss one = the others vanish, the goose lands and tries again ~6 s later.
 
 ### Rainbow Slime (boss)

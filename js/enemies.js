@@ -37,20 +37,20 @@
       gore: ['#e83b3b', '#f9a31b', '#ffd541', '#5ac54f', '#4d9be6', '#a884f3'] },
     // Animal theme (waves 11-14): Rabbit hops fast (short animals), Tortoise tank hides in its shell
     // on a typo (long animals), Chameleon camouflages every few seconds (medium animals)
-    rabbit: { sprite: 'rabbit', speed: 26, dmg: 1, atkEvery: 1.0, list: 'animalShort', animFps: 0, gold: 2,
+    rabbit: { sprite: 'rabbit', speed: 17, dmg: 1, atkEvery: 1.0, list: 'animalShort', animFps: 0, gold: 2,
       gore: ['#c2c3c7', '#f4f4f4', '#f5a097'] },
     tortoise: { sprite: 'tortoise', heavy: true, speed: 5.5, dmg: 3, atkEvery: 1.8, list: 'animalLong', animFps: 3, gold: 6,
       gore: ['#4f7a3a', '#c2a36b', '#a7c06a'] },
     chameleon: { sprite: 'chameleon', speed: 11, dmg: 2, atkEvery: 1.2, list: 'animalMed', animFps: 5, gold: 4,
       gore: ['#ef7d57', '#ffcd75', '#5ac54f'] },
     // Golden Goose (wave 15): no word, can't be typed. Runs around laying eggs; golden eggs are your ammo.
-    goose: { sprite: 'goose', name: 'GOLDEN GOOSE', boss: true, noLabel: true, speed: 34, dmg: 0, atkEvery: 1,
+    goose: { sprite: 'goose', name: 'GOLDEN GOOSE', boss: true, noLabel: true, speed: 26, dmg: 0, atkEvery: 1,
       animFps: 8, gold: 25, hitGold: 5, maxHp: 5, gore: ['#ffd541', '#f9a31b', '#fff4a3', '#f4f4f4'] },
     egg: { sprite: 'egg', speed: 0, dmg: 0, atkEvery: 1, list: 'eggWords', animFps: 0, gold: 1,
       gore: ['#f4f4f4', '#c2c3c7', '#ffe762'] },
     gegg: { sprite: 'gegg', speed: 0, dmg: 0, atkEvery: 1, list: 'goldWords', animFps: 0, gold: 2,
       gore: ['#ffd541', '#f9a31b', '#fff4a3'] },
-    chick: { sprite: 'chick', speed: 30, dmg: 2, atkEvery: 1, list: 'eggWords', animFps: 10, gold: 1,
+    chick: { sprite: 'chick', speed: 22, dmg: 2, atkEvery: 1, list: 'eggWords', animFps: 10, gold: 1,
       gore: ['#ffe762', '#ef7d57'] },
   };
   const RAINBOW = TD.EnemyTypes.rainbow.gore;
@@ -164,7 +164,7 @@
     // Golden Goose: runs fast round the tower zig-zagging and laying eggs. On its last life it flies up
     // and drops 3 golden eggs; type all 3 before they vanish or it lands and tries again.
     gooseUpdate(dt, game) {
-      const sp = this.t.speed * this.mul * (1 + 0.15 * this.anger);
+      const sp = this.t.speed * this.mul * (1 + 0.10 * this.anger);
       const fly = (tx, ty, v) => {
         const dx = tx - this.x, dy = ty - this.y, d = Math.hypot(dx, dy);
         if (Math.abs(dx) > 0.5) this.face = dx < 0 ? -1 : 1;

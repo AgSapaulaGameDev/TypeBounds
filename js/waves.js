@@ -34,7 +34,7 @@
         11: ['rabbit', 'tortoise'], 13: ['chameleon', 'tortoise'] };
       const key = [13, 11, 8, 6, 3, 1].find((k) => pos >= k);
       [this.light, this.heavy] = MIX[key];
-      this.speedMul = 1 + 0.04 * (n - 1);
+      this.speedMul = 1 + 0.02 * (n - 1); // +2% speed per wave
     }
 
     update(dt, game) {
