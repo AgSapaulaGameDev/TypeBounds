@@ -68,7 +68,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle.
 - Pause and leaderboard panels: gold frame with chunky stair-notched corners (3-px steps) and an inner echo step.
 - Pause: maroon panel, gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
-- Leaderboard: maroon panel, gold LEADERBOARD title with red shadow, # NAME WAVE SCORE under a red line, #1 and your own name in gold, online status + back hint.
+- Leaderboard: maroon panel, gold LEADERBOARD title with red shadow, # NAME WAVE SCORE under a red line, #1 and your own name in gold, back hint (offline warning only when offline).
 - Game over: 6 stat rows with icons (score, wave, words, gold earned, accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s).
 
 ## Tip cards
