@@ -819,8 +819,9 @@
 
       // world (shakes)
       ctx.save();
-      const sx = this.shake > 0 ? Math.round(rand(-this.shake, this.shake)) : 0;
-      const sy = this.shake > 0 ? Math.round(rand(-this.shake, this.shake)) : 0;
+      const shaking = this.shake > 0 && !this.frozen; // a paused game holds still
+      const sx = shaking ? Math.round(rand(-this.shake, this.shake)) : 0;
+      const sy = shaking ? Math.round(rand(-this.shake, this.shake)) : 0;
       ctx.translate(OX + sx, sy);
       ctx.drawImage(bg, -OX, 0);
       this.drawFireflies();
