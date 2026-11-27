@@ -98,3 +98,21 @@
 #ui .scr[data-s="over"] .btn.sel { transform: none; }
 #ui .scr[data-s="over"] .btn:hover { transform: scale(1.06); }
 #ui .scr[data-s="over"] .btn:active { transform: scale(1.02); }
+
+/* tip cards: small royal-red card with a ribbon title */
+#ui .tipcard { position: absolute; }
+#ui .tipcard .pnl { position: absolute; left: 0; top: 0; }
+#ui .tipcard .btn { position: absolute; }
+#ui .tip-body { position: relative; padding: 15px 11px 6px; }
+#ui .tblk { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+#ui .tspr {
+  flex: none; width: 32px; min-height: 28px; align-self: stretch; display: flex; align-items: center; justify-content: center;
+  background: #1a080e; box-shadow: inset 0 0 0 1px #5a2418, inset 0 1px 0 2px #120408;
+}
+#ui .ttxt { flex: 1; min-width: 0; }
+#ui .tname { display: flex; align-items: center; gap: 3px; font-size: 7.5px; letter-spacing: .5px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; margin-bottom: 1.5px; }
+#ui .ttag { margin-left: 3px; padding: 0 2px; font-size: 6px; color: #fff4dc; background: #b8283a; box-shadow: 0 0 0 1px #2a0a10; line-height: 8px; }
+#ui .tline { font-size: 5.8px; line-height: 7.2px; letter-spacing: .3px; font-weight: 500; color: #cdbca6; text-shadow: .5px .5px 0 #140508; white-space: nowrap; }
+#ui .tfoot { text-align: center; font-size: 5.8px; letter-spacing: .4px; font-weight: 500; color: #b89a86; margin: 1px 0 2px; }
+#ui .tgo-space { height: 22px; }
+#ui .tipgo:hover { transform: scale(1.05); }

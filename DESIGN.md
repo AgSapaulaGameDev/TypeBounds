@@ -74,6 +74,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 ## Tip cards
 - Before a wave that brings new enemies (waves 1, 3, 5, 6, 8, 10), the game shows a tip card: each new enemy's sprite at 2x, name, tag, rules and a coloured example (e.g. PURPLE in green ink -> type GREEN). Text lives in `js/tips.js`.
 - Shown once per run (not again on the second loop or after a No Spamming restart). Enter starts the wave.
+- Drawn by the HTML overlay as a small royal-red card (228 wide, height fits the text): notched maroon panel, ribbon title (skulls on boss waves), sprite in a dark box, gold name + red tag, coloured example lines, foot note, gold START WAVE n button (or Enter).
 
 ## No Spamming
 - **6 wrong keys within 1.5 s** during a fight = keyboard smash. Correct letters never count, so a fast typist who slips once or twice is safe.

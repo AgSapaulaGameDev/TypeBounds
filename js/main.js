@@ -1103,6 +1103,7 @@
       const tip = TD.Tips[this.waves.wave];
       if (!tip) return;
       this.dim(0.55);
+      if (TD.Overlay) return; // the card is HTML (js/overlay.js)
       const blocks = tip.enemies.map((en) => {
         const f = en.sprite();
         return { en, f, h: Math.max(f.h * 2, 9 + en.lines.length * 7) + 4 };

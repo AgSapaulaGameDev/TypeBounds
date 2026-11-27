@@ -80,6 +80,7 @@
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
+    dropper: ['.....##', '....###', '...###.', '..#*#..', '.#*#...', '#*#....', '#......'],
     chev: ['##....', '###...', '.###..', '..###.', '...###', '..###.', '.###..', '###...', '##....'],
   };
   const flipX = (rows) => rows.map((r) => r.split('').reverse().join(''));
@@ -307,6 +308,52 @@
     button(s, 'quit', 'crimson', 107, 142, 111, 22, 'MAIN MENU', 'home', 10, GOLD_IC);
   }
 
+  // TIP CARDS (before a wave with new enemies): built per wave by syncTips
+  const tips = { scr: scr('tips'), wave: null };
+  const TIP_COL = { '#94b0c2': '#cdbca6', '#f4f4f4': '#fff4dc', '#ffcd75': '#ffcd4a', '#e83b3b': '#ff5a4a' };
+  function buildTips(g) {
+    const s = tips.scr, tip = TD.Tips[g.waves.wave];
+    s.textContent = '';
+    if (!tip) return;
+    const X = 46, W = 228;
+    const card = el('div', 'tipcard', s, { left: X + 'px', width: W + 'px' });
+    const pc = art(W, 10, card, 'pnl');
+    const body = el('div', 'tip-body', card);
+    for (const en of tip.enemies) {
+      const blk = el('div', 'tblk', body);
+      const box = el('div', 'tspr', blk);
+      const f = en.sprite();
+      const sc = f.w * 2 <= 30 && f.h * 2 <= 30 ? 2 : Math.min(1, 30 / f.w, 30 / f.h); // fit the 32px box
+      const c = art(f.w, f.h, box, 'ic');
+      Object.assign(c.style, { width: f.w * sc + 'px', height: f.h * sc + 'px' });
+      c.getContext('2d').drawImage(f.r, 0, 0);
+      const txt = el('div', 'ttxt', blk);
+      const nm = el('div', 'tname', txt);
+      if (en.dropper) sprite('dropper', GOLD_IC, nm);
+      el('span', '', nm).textContent = en.name;
+      el('span', 'ttag', nm).textContent = en.tag;
+      for (const ln of en.lines) {
+        const row = el('div', 'tline', txt);
+        for (const [t, col] of typeof ln === 'string' ? [[ln, '#94b0c2']] : ln) el('span', '', row, { color: TIP_COL[col] || col }).textContent = t;
+      }
+    }
+    if (tip.foot) el('div', 'tfoot', body).textContent = tip.foot;
+    el('div', 'tgo-space', body);
+    const h = Math.ceil(body.offsetHeight);
+    pc.height = h; pc.style.height = h + 'px';
+    drawPanel(pc, true);
+    const top = Math.max(14, Math.round((180 - h) / 2) + 5);
+    card.style.top = top + 'px'; card.style.height = h + 'px';
+    ribbon(s, 160 - 60, top - 13, 120, 24, tip.title, g.waves.boss ? 'skull' : null, g.waves.boss ? 'skull' : null, 11);
+    const go = button(card, 'tipgo', 'gold', W / 2 - 50, h - 25, 100, 18, 'START WAVE ' + g.waves.wave, 'play', 8);
+    drawButton(go.cv, THEME.gold, false);
+    go.wrap.classList.add('tipgo');
+    buttons.pop(); // drawn once here, not by the menu selection loop
+  }
+  function syncTips(g) {
+    if (tips.wave !== g.waves.wave) { tips.wave = g.waves.wave; buildTips(g); }
+  }
+
   // LEADERBOARD (rows filled in by sync; any click / Enter / Esc goes back, handled by the game)
   const board = {};
   {
@@ -364,6 +411,11 @@
   root.addEventListener('pointerdown', (ev) => {
     const g = TD.game;
     TD.Audio.unlock();
+    if (ev.target.closest('.tipgo')) { // same as Enter on a tip card
+      ev.preventDefault();
+      if (g.state === 'play' && g.phase === 'tips' && g.time - g.tipsAt > 0.4) { g.phase = 'banner'; TD.Audio.hover(); }
+      return;
+    }
     const b = ev.target.closest('.btn');
     if (b) { ev.preventDefault(); select(b.dataset.id); g.activate(b.dataset.id); return; }
     const tog = ev.target.closest('.tog');
@@ -417,13 +469,16 @@
         root.style.transform = 'translate(' + (r.left + v.OX * u) + 'px,' + r.top + 'px) scale(' + u + ')';
       }
 
-      const s = screens[g.state] ? g.state : null;
+      const key = g.state === 'play' && g.phase === 'tips' && TD.Tips[g.waves.wave] ? 'tips' : g.state;
+      const s = screens[key] ? key : null;
+      if (s !== 'tips') tips.wave = null; // rebuild next time a card shows
       if (s !== lastState) {
         for (const k in screens) screens[k].classList.toggle('on', k === s);
         lastState = s;
       }
       if (!s) return;
       if (s === 'board') return syncBoard();
+      if (s === 'tips') return syncTips(g);
       const list = TD.menuButtons(SCREEN_MENU[s]);
       const selId = list[g.sel] && list[g.sel].id;
       for (const b of buttons) {
