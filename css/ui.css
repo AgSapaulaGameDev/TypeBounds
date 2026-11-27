@@ -71,7 +71,7 @@
 
 /* leaderboard */
 #ui .lb-title {
-  left: 0; right: 0; top: 14px; text-align: center; font-size: 18px; line-height: 18px; letter-spacing: 1px;
+  left: 0; right: 0; top: 11px; text-align: center; font-size: 18px; line-height: 18px; letter-spacing: 1px;
   background: linear-gradient(#fff2b0 0 35%, #ffd65a 35% 70%, #f2a52a 70%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 2px 0 #b8283a) drop-shadow(0 1px 0 #2a0a10);
@@ -89,9 +89,9 @@
 #ui .lb-row.mine { color: #ffcd4a; }
 #ui .lb-row.mine::before { content: ''; position: absolute; left: 62px; width: 196px; top: 0; bottom: 0; background: rgba(255, 205, 74, .12); }
 #ui .lb-msg { left: 0; right: 0; top: 90px; text-align: center; font-size: 8px; color: #c8bfb0; }
-#ui .lb-status { left: 0; right: 0; top: 145px; text-align: center; font-size: 8px; letter-spacing: .6px; text-shadow: 1px 1px 0 #140508; }
+#ui .lb-status { left: 0; right: 0; top: 141px; text-align: center; font-size: 8px; letter-spacing: .6px; text-shadow: 1px 1px 0 #140508; }
 #ui .lb-status.on { color: #ffcd4a; } #ui .lb-status.off { color: #ef5a4a; } #ui .lb-status.wait { color: #94b0c2; }
-#ui .lb-hint { left: 0; right: 0; top: 154px; text-align: center; font-size: 7px; letter-spacing: .6px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
+#ui .lb-hint { left: 0; right: 0; top: 150px; text-align: center; font-size: 7px; letter-spacing: .6px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
 
 /* game over buttons: no selected look, they only grow while the mouse is over them */
 #ui .scr[data-s="over"] .btn { transition: transform .08s; }

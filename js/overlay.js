@@ -358,12 +358,12 @@
   const board = {};
   {
     const s = scr('board');
-    panel(s, 52, 12, 216, 154, true);
+    panel(s, 52, 7, 216, 160, true);
     el('div', 'lb-title', s).textContent = 'LEADERBOARD';
-    const head = el('div', 'lb-row lb-head', s, { top: '36px' });
+    const head = el('div', 'lb-row lb-head', s, { top: '33px' });
     for (const [c, t] of [['n', '#'], ['nm', 'NAME'], ['w', 'WAVE'], ['sc', 'SCORE']]) el('span', c, head).textContent = t;
-    el('div', 'lb-line', s, at(62, 45, 196, 1));
-    board.rows = el('div', 'lb-rows', s, at(0, 48, 320, 100));
+    el('div', 'lb-line', s, at(62, 42, 196, 1));
+    board.rows = el('div', 'lb-rows', s, at(0, 45, 320, 100));
     board.msg = el('div', 'lb-msg', s);
     board.status = el('div', 'lb-status', s);
     el('div', 'lb-hint', s).textContent = 'ENTER / ESC / CLICK TO GO BACK';
