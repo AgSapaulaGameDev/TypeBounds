@@ -684,7 +684,6 @@
     list.forEach((e, i) => {
       const r = el('div', 'lb-row' + (i === 0 ? ' first' : '') + (LB.isMine(e) ? ' mine' : ''), board.rows, { top: i * 10 + 'px' });
       for (const [c, t] of [['n', i + 1], ['nm', e.name], ['w', e.wave], ['sc', e.score]]) el('span', c, r).textContent = String(t);
-      if (e.reg) sprite('crown', GOLD_IC, r.querySelector('.nm'), 'lb-crown'); // name belongs to an account
     });
     board.msg.textContent = list.length ? '' : LB.status === 'loading' ? 'LOADING...' : 'NO SCORES YET - GO PLAY!';
     const st = LB.status === 'online' ? ['', 'on'] : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', 'off'] : ['LOADING...', 'wait'];

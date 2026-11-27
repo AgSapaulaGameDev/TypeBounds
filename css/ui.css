@@ -188,7 +188,6 @@
 #ui .ac-hint { left: 0; right: 0; top: 158px; text-align: center; font-size: 5.5px; letter-spacing: .5px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
 
 /* leaderboard: crown after names that belong to an account */
-#ui .lb-row .nm .lb-crown { display: inline-block; vertical-align: 1px; margin-left: 3px; }
 #ui .scr[data-s="account"] .rib-txt { font-weight: 500; }
 /* ACCOUNT pill: icon on the left, label centred in the rest */
 #ui .pill .pic { position: absolute; left: 5px; top: 4px; }
