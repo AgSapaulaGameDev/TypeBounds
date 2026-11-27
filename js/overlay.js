@@ -496,6 +496,7 @@
   }
 
   // ---- in-game HUD (full canvas width, not just the play area) ----
+  const HUD_SCALE = 0.7;
   const hud = el('div', '', document.body);
   hud.id = 'hud';
   // two-row stat box: gold frame, maroon inside, a dark icon well per row and a divider between rows
@@ -590,9 +591,11 @@
     const show = g.state === 'play' && g.phase !== 'tips'; // only while playing: tip cards, pause, settings, game over get a clean screen
     hud.style.display = show ? '' : 'none';
     if (!show) return;
-    const t = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + u + ')';
-    if (HUD.last.t !== t) { HUD.last.t = t; hud.style.transform = t; hud.style.width = v.VW + 'px'; }
-    if (HUD.last.vw !== v.VW) { HUD.last.vw = v.VW; HUD.bar.style.left = Math.round(v.VW / 2 - 55) + 'px'; HUD.wall.style.left = Math.round(v.VW / 2 - 35) + 'px'; }
+    // drawn at HUD_SCALE of the game's pixel size so it stays small and out of the way
+    const hw = v.VW / HUD_SCALE;
+    const t = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + u * HUD_SCALE + ')';
+    if (HUD.last.t !== t) { HUD.last.t = t; hud.style.transform = t; hud.style.width = hw + 'px'; hud.style.height = 180 / HUD_SCALE + 'px'; }
+    if (HUD.last.vw !== hw) { HUD.last.vw = hw; HUD.bar.style.left = Math.round(hw / 2 - 55) + 'px'; HUD.wall.style.left = Math.round(hw / 2 - 35) + 'px'; }
     setText(HUD.score, g.score);
     setText(HUD.gold, g.gold);
     setText(HUD.wave, g.waves.wave);

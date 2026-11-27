@@ -126,7 +126,7 @@
 #ui .xbtn:active { transform: scale(1.01); }
 
 /* in-game HUD: spans the whole canvas width (js/overlay.js scales it like #ui) */
-#hud {
+#hud { opacity: .92;
   position: fixed; left: 0; top: 0; height: 180px; transform-origin: 0 0; pointer-events: none; z-index: 4;
   font-family: 'Pixelify Sans', monospace; font-weight: 700; user-select: none;
 }
