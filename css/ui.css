@@ -25,23 +25,11 @@
 
 /* main menu */
 #ui .pennant { top: 0; }
-#ui .logo { pointer-events: none; }
+#ui .logo { pointer-events: none; image-rendering: pixelated; }
 #ui .chev { animation: chev .9s steps(2) infinite; }
 #ui .chev[data-side="R"] { animation-name: chev-r; }
 @keyframes chev { 50% { margin-left: 2px; } }
 @keyframes chev-r { 50% { margin-left: -2px; } }
-#ui .title {
-  left: 0; right: 0; top: 43px; text-align: center; font-size: 28px; line-height: 28px; letter-spacing: 1px;
-  background: linear-gradient(#fff6c0 0 22%, #ffe066 22% 42%, #ffc93c 42% 62%, #f2a52a 62% 78%, #d9801a 78%);
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(1px 0 0 #2a1404) drop-shadow(-1px 0 0 #2a1404) drop-shadow(0 1px 0 #2a1404) drop-shadow(0 -1px 0 #2a1404) drop-shadow(0 2px 0 #7a3a0a) drop-shadow(0 1px 0 #140802);
-}
-#ui .subtitle {
-  left: 0; right: 0; top: 60px; height: 10px; display: flex; align-items: center; justify-content: center; gap: 4px;
-  font-size: 6px; font-weight: 500; letter-spacing: 1.2px; color: #f3e2c0; text-shadow: 1px 1px 0 #140802;
-}
-#ui .subtitle i { display: block; width: 9px; height: 1px; background: #e0a640; box-shadow: 1px 1px 0 #140802; }
-
 /* ribbons */
 #ui .rib-txt {
   position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
