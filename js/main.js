@@ -1122,7 +1122,7 @@
         let nx = tx;
         if (en.dropper) { drawDropper(nx, by, this.time); nx += 10; }
         F.draw(ctx, en.name, nx, by + 1, C.gold);
-        F.draw(ctx, en.tag, nx + F.advance(en.name) + 6, by + 1, C.red);
+        if (en.tag) F.draw(ctx, en.tag, nx + F.advance(en.name) + 6, by + 1, C.red);
         en.lines.forEach((ln, i) => {
           let lx = tx;
           const parts = typeof ln === 'string' ? [[ln, C.dim]] : ln;

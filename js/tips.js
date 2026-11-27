@@ -30,7 +30,7 @@
     ], foot: 'CHALKBOARDS STILL COME WITH THEM' },
 
     5: { title: 'BOSS', enemies: [
-      { name: 'THE MATHEMATICIAN', tag: '5 LIVES', sprite: () => S().math[0], lines: [
+      { name: 'THE MATHEMATICIAN', sprite: () => S().math[0], lines: [
         'SUMMONS MATHS IMPS. HIS WORD IS ??? MEANWHILE.',
         'KILL EVERY IMP: HIS WORD SHOWS FOR 5 SECONDS.',
         'TYPE IT TO TAKE A LIFE. THEN HE SUMMONS AGAIN.',
@@ -61,7 +61,7 @@
     ], foot: 'TANK SLIMES STILL USE THE WORD' },
 
     10: { title: 'BOSS', enemies: [
-      { name: 'THE RAINBOW SLIME', tag: '5 LIVES', sprite: () => TD.Sprites.bigSlime('#4d9be6')[0], lines: [
+      { name: 'THE RAINBOW SLIME', sprite: () => TD.Sprites.bigSlime('#4d9be6')[0], lines: [
         'SUMMONS SLIMES. EYEDROPPER ONES: TYPE THE INK.',
         'KILL THEM ALL: ITS LONG COLOUR WORD SHOWS.',
         [['ONE TYPO ', RED], ['= NEW COLOUR AND A NEW WORD.', WHITE]],

@@ -299,13 +299,13 @@
   // PAUSE: maroon panel, big gold icons on the left of each button
   {
     const s = scr('paused');
-    panel(s, 77, 37, 170, 135, true);
-    ribbon(s, 102, 23, 120, 28, 'PAUSED', 'pause', null, 13);
+    panel(s, 77, 27, 170, 135, true); // sits ~10 units higher than centre so it doesn't look low
+    ribbon(s, 102, 13, 120, 28, 'PAUSED', 'pause', null, 13);
     const PLAY_IC = { main: '#ffb02e', shade: '#d9801a', ol: '#2a1404' };
-    button(s, 'resume', 'green', 107, 61, 111, 22, 'RESUME', 'play', 10, PLAY_IC);
-    button(s, 'restart', 'brown', 107, 88, 111, 22, 'RESTART', 'restart', 10, GOLD_IC);
-    button(s, 'settings', 'crimson', 107, 115, 111, 22, 'SETTINGS', 'gear', 10, GOLD_IC);
-    button(s, 'quit', 'crimson', 107, 142, 111, 22, 'MAIN MENU', 'home', 10, GOLD_IC);
+    button(s, 'resume', 'green', 107, 51, 111, 22, 'RESUME', 'play', 10, PLAY_IC);
+    button(s, 'restart', 'brown', 107, 78, 111, 22, 'RESTART', 'restart', 10, GOLD_IC);
+    button(s, 'settings', 'crimson', 107, 105, 111, 22, 'SETTINGS', 'gear', 10, GOLD_IC);
+    button(s, 'quit', 'crimson', 107, 132, 111, 22, 'MAIN MENU', 'home', 10, GOLD_IC);
   }
 
   // TIP CARDS (before a wave with new enemies): built per wave by syncTips
@@ -331,7 +331,7 @@
       const nm = el('div', 'tname', txt);
       if (en.dropper) sprite('dropper', GOLD_IC, nm);
       el('span', '', nm).textContent = en.name;
-      el('span', 'ttag', nm).textContent = en.tag;
+      if (en.tag) el('span', 'ttag', nm).textContent = en.tag;
       for (const ln of en.lines) {
         const row = el('div', 'tline', txt);
         for (const [t, col] of typeof ln === 'string' ? [[ln, '#94b0c2']] : ln) el('span', '', row, { color: TIP_COL[col] || col }).textContent = t;
