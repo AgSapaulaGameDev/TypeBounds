@@ -236,7 +236,7 @@
     s.querySelectorAll('.pennant').forEach((p) => { const c = sprite('crown', { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0', ol: '#1e0a06' }, p); Object.assign(c.style, { position: 'absolute', left: '7px', top: '38px' }); });
     // logo traced from the reference art: 400 x 161 png shown at half size (2 image px per unit)
     const logo = el('img', 'logo', s, at(60, 2, 200, 80.5));
-    logo.src = 'img/logo.png?v=53'; logo.alt = 'TypeBounds - Protect the Tower'; logo.draggable = false;
+    logo.src = 'img/logo.png?v=54'; logo.alt = 'TypeBounds - Protect the Tower'; logo.draggable = false;
     button(s, 'play', 'gold', 95, 90, 131, 23, 'PLAY', null, 12.5);
     button(s, 'board', 'crimson', 95, 117, 131, 20, 'LEADERBOARD', null, 10);
     button(s, 'settings', 'crimson', 95, 141, 131, 20, 'SETTINGS', null, 10);
