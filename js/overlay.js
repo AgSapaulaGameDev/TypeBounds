@@ -415,7 +415,7 @@
     panel(s, 58, 30, 204, 124, true);
     ribbon(s, 96, 16, 128, 27, 'ACCOUNT', 'crown', 'crown', 12);
     const out = (acct.out = el('div', 'ac-view', s));
-    el('div', 'ac-note', out, { top: '46px' }).textContent = 'SAVE ONLINE AND PROTECT YOUR NAME';
+    el('div', 'ac-note', out, { top: '45px' }).textContent = 'SAVE ONLINE AND PROTECT YOUR NAME';
     const field = (label, Y, type) => {
       el('div', 'ac-lab', out, { left: '72px', top: Y + 5 + 'px' }).textContent = label;
       const box = el('div', 'ac-box', out, at(124, Y, 124, 17));
@@ -425,17 +425,17 @@
       inp.setAttribute('autocapitalize', 'characters');
       return inp;
     };
-    acct.name = field('NAME', 57, 'text');
-    acct.pw = field('PASSWORD', 77, 'password');
-    xbtn(out, 'aclogin', 'gold', 72, 108, 84, 20, 'LOG IN', 'play', 9);
-    xbtn(out, 'acsignup', 'crimson', 164, 108, 84, 20, 'SIGN UP', null, 9);
-    xbtn(out, 'acback', 'crimson', 120, 132, 80, 16, 'BACK', 'back', 8);
+    acct.name = field('NAME', 55, 'text');
+    acct.pw = field('PASSWORD', 74, 'password');
+    xbtn(out, 'aclogin', 'gold', 72, 103, 84, 18, 'LOG IN', 'play', 9);
+    xbtn(out, 'acsignup', 'crimson', 164, 103, 84, 18, 'SIGN UP', null, 9);
+    xbtn(out, 'acback', 'crimson', 120, 126, 80, 15, 'BACK', 'back', 8);
     const inn = (acct.in = el('div', 'ac-view', s));
     el('div', 'ac-note', inn, { top: '50px' }).textContent = 'LOGGED IN AS';
     acct.who = el('div', 'ac-who', inn);
-    el('div', 'ac-note', inn, { top: '83px' }).textContent = 'YOUR SAVE AND NAME ARE KEPT ONLINE';
-    xbtn(inn, 'aclogout', 'crimson', 72, 108, 84, 20, 'LOG OUT', null, 9);
-    xbtn(inn, 'acback', 'gold', 164, 108, 84, 20, 'BACK', 'back', 9);
+    el('div', 'ac-note', inn, { top: '82px' }).textContent = 'YOUR SAVE AND NAME ARE KEPT ONLINE';
+    xbtn(inn, 'aclogout', 'crimson', 72, 103, 84, 18, 'LOG OUT', null, 9);
+    xbtn(inn, 'acback', 'gold', 164, 103, 84, 18, 'BACK', 'back', 9);
     acct.msg = el('div', 'ac-msg', s);
     el('div', 'ac-hint', s).textContent = 'NO ACCOUNT NEEDED TO PLAY  -  FORGOT YOUR PASSWORD? ASK THE DEV';
 
