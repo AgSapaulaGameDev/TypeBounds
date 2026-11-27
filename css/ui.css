@@ -137,13 +137,19 @@
 #hud .hbox { width: 66px; height: 25px; }
 #hud .hrow { position: absolute; left: 3px; right: 6px; height: 9px; display: flex; align-items: center; white-space: nowrap; }
 #hud .hic { width: 11px; height: 9px; display: flex; align-items: center; justify-content: center; }
-#hud .hl { margin-left: 4px; font-size: 5px; letter-spacing: .7px; color: #d9b98a; text-shadow: 1px 1px 0 #140508; }
-#hud .hv { margin-left: auto; font-size: 7px; letter-spacing: .4px; color: #fff4dc; text-shadow: 1px 1px 0 #140508; }
-#hud .hrow.gold .hv { color: #ffcd4a; }
-#hud .hcombo { left: 5px; top: 29px; font-size: 6px; letter-spacing: .4px; color: #ffcd4a; text-shadow: 1px 1px 0 #140508; }
-#hud .hfrost { right: 5px; top: 29px; font-size: 6px; color: #73eff7; text-shadow: 1px 1px 0 #140508; }
-#hud .hesc { right: 4px; bottom: 2px; font-size: 5.5px; font-weight: 500; letter-spacing: .4px; color: #566c86; }
+#hud canvas.px { flex: none; }
+#hud .hl { margin-left: 3px; }
+#hud .hv { margin-left: auto; }
+#hud .hcombo { left: 3px; top: 29px; width: 58px; height: 20px; transform-origin: 0 50%; }
+#hud .hcombo.pop { animation: cpop .2s steps(3); }
+@keyframes cpop { 0% { transform: scale(1.15); } 100% { transform: scale(1); } }
+#hud .hcombo > div { position: absolute; }
+#hud .hcn { left: 3px; top: 3px; width: 24px; height: 12px; display: flex; justify-content: center; }
+#hud .hcl { left: 30px; top: 3px; }
+#hud .hcm { left: 30px; top: 9px; }
+#hud .hfrost { right: 5px; top: 29px; }
+#hud .hesc { right: 4px; bottom: 2px; opacity: .8; }
 #hud .hbar { top: 3px; width: 110px; height: 17px; }
 #hud .hbadge { position: absolute; left: 0; top: 0; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; padding-bottom: 1px; }
-#hud .hhp { position: absolute; left: 16px; right: 1px; top: 2px; height: 11px; display: flex; align-items: center; justify-content: center; line-height: 1; font-size: 7.5px; letter-spacing: .6px; color: #fff4dc; text-shadow: 1px 1px 0 #0a2a10, -1px 0 0 #0a2a10, 0 -1px 0 #0a2a10, 1px 0 0 #0a2a10; }
+#hud .hhp { position: absolute; left: 16px; right: 1px; top: 2px; height: 13px; display: flex; align-items: center; justify-content: center; }
 #hud .hwall { top: 21px; width: 70px; height: 4px; }

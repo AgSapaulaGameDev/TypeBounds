@@ -559,31 +559,75 @@
   const H_IC = { trophy: { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0' }, coin: { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0' },
     swords: { main: '#ffcd4a', hi: '#e8eef4', shade: '#8a5a2a' }, skull: { main: '#f3e2c0' },
     heart: { main: '#c0182e', hi: '#f0607a', ol: '#2a0508' } };
+  // small framed tag behind the combo counter: big number | COMBO over the multiplier
+  function drawTag(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    step(x, 'rgba(0,0,0,.45)', 1, 1, w - 1, h - 1, 2);
+    step(x, '#140a04', 0, 0, w - 1, h - 1, 2);
+    step(x, '#e0a640', 1, 1, w - 3, h - 3, 1);
+    R(x, '#ffe27a', 2, 1, w - 5, 1); R(x, '#a86a14', 2, h - 3, w - 5, 1);
+    step(x, '#2a0a10', 2, 2, w - 5, h - 5, 1);
+    R(x, '#4e1420', 3, 3, w - 7, h - 7);
+    R(x, '#5e1a28', 3, 3, w - 7, 1);
+    R(x, '#22080e', 3, 3, 24, h - 7); R(x, '#140508', 27, 3, 1, h - 7); // dark well behind the number
+  }
+  // HUD text in the game's own 5px bitmap font: Pixelify gets mushy this small (2 read as 8, C as O).
+  // Each canvas is drawn at k device pixels per HUD unit so every font pixel stays square and sharp.
+  const PX = [];
+  function pxText(parent, cls, color, sz, text, outline) {
+    const o = { c: el('canvas', 'px ' + (cls || ''), parent), color, s: sz || 1, text: text == null ? '' : String(text), outline, key: '' };
+    PX.push(o);
+    return o;
+  }
+  function drawPx(o) {
+    const F = TD.Font, k = HUD.R, t = o.text, key = t + '|' + o.color + '|' + k;
+    if (o.key === key) return;
+    o.key = key;
+    const w = t ? F.width(t, o.s) + 2 : 0, h = 5 * o.s + 2;
+    o.c.width = Math.max(1, w * k); o.c.height = h * k;
+    o.c.style.width = w + 'px'; o.c.style.height = h + 'px';
+    if (!t) return;
+    const x = o.c.getContext('2d');
+    x.imageSmoothingEnabled = false;
+    const sh = o.outline || '#140508';
+    const offs = o.outline ? [[0, 1], [1, 0], [2, 1], [1, 2], [2, 2]] : [[2, 2]];
+    for (const [dx, dy] of offs) F.draw(x, t, dx * k, dy * k, sh, o.s * k);
+    F.draw(x, t, k, k, o.color, o.s * k);
+  }
+  function setPx(o, text, color) {
+    o.text = String(text);
+    if (color) o.color = color;
+    drawPx(o);
+  }
   function hudBox(css, rows) {
     const b = el('div', 'hbox', hud, css);
     drawHudBox(art(66, 25, b));
     return rows.map(([ic, lab, cls], i) => {
       const r = el('div', 'hrow ' + (cls || ''), b, { top: (i ? 13 : 3) + 'px' });
       sprite(ic, H_IC[ic], el('div', 'hic', r));
-      el('span', 'hl', r).textContent = lab;
-      return el('span', 'hv', r);
+      pxText(r, 'hl', '#d9b98a', 1, lab);
+      return pxText(r, 'hv', cls === 'gold' ? '#ffcd4a' : '#fff4dc');
     });
   }
-  const HUD = {};
+  const HUD = { R: 2 };
   [HUD.score, HUD.gold] = hudBox({ left: '3px', top: '2px' }, [['trophy', 'SCORE'], ['coin', 'GOLD', 'gold']]);
   [HUD.wave, HUD.left] = hudBox({ right: '3px', top: '2px' }, [['swords', 'WAVE'], ['skull', 'LEFT']]);
   HUD.combo = el('div', 'hcombo', hud);
+  drawTag(art(58, 20, HUD.combo));
+  HUD.cNum = pxText(el('div', 'hcn', HUD.combo), '', '#ffcd4a', 2);
+  pxText(el('div', 'hcl', HUD.combo), '', '#d9b98a', 1, 'COMBO');
+  HUD.cMul = pxText(el('div', 'hcm', HUD.combo), '', '#fff4dc', 1);
   HUD.frost = el('div', 'hfrost', hud);
-  HUD.frost.textContent = 'FROST';
+  pxText(HUD.frost, '', '#73eff7', 1, 'FROST');
   HUD.esc = el('div', 'hesc', hud);
-  HUD.esc.textContent = 'ESC: PAUSE';
+  pxText(HUD.esc, '', '#6a7f96', 1, 'ESC: PAUSE');
   HUD.bar = el('div', 'hbar', hud);
   HUD.barCv = art(100, 13, HUD.bar);
   HUD.barCv.style.left = '9px'; HUD.barCv.style.top = '2px';
   const badge = el('div', 'hbadge', HUD.bar);
   drawBadge(art(17, 17, badge));
   sprite('heart', H_IC.heart, badge);
-  HUD.hp = el('div', 'hhp', HUD.bar);
+  HUD.hp = pxText(el('div', 'hhp', HUD.bar), '', '#fff4dc', 1, '', '#0a2a10');
   HUD.wall = el('div', 'hwall', hud);
   HUD.wallCv = art(70, 4, HUD.wall);
   HUD.last = {};
@@ -596,18 +640,29 @@
     const t = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + u * HUD_SCALE + ')';
     if (HUD.last.t !== t) { HUD.last.t = t; hud.style.transform = t; hud.style.width = hw + 'px'; hud.style.height = 180 / HUD_SCALE + 'px'; }
     if (HUD.last.vw !== hw) { HUD.last.vw = hw; HUD.bar.style.left = Math.round(hw / 2 - 55) + 'px'; HUD.wall.style.left = Math.round(hw / 2 - 35) + 'px'; }
-    setText(HUD.score, g.score);
-    setText(HUD.gold, g.gold);
-    setText(HUD.wave, g.waves.wave);
-    setText(HUD.left, g.waves.left + g.enemies.length);
-    setText(HUD.hp, g.hp + '/' + g.maxHp);
+    const k = Math.max(1, Math.round(u * HUD_SCALE * (window.devicePixelRatio || 1)));
+    if (HUD.R !== k) { HUD.R = k; PX.forEach(drawPx); }
+    setPx(HUD.score, g.score);
+    setPx(HUD.gold, g.gold);
+    setPx(HUD.wave, g.waves.wave);
+    setPx(HUD.left, g.waves.left + g.enemies.length);
+    setPx(HUD.hp, g.hp + '/' + g.maxHp);
     const ratio = g.maxHp ? g.hp / g.maxHp : 0;
     if (HUD.last.hp !== ratio) { HUD.last.hp = ratio; drawHpBar(HUD.barCv, ratio); }
     const wr = g.wall.level > 0 ? g.wall.hp / g.wall.max : -1;
     HUD.wall.style.display = wr >= 0 ? '' : 'none';
     if (wr >= 0 && HUD.last.wall !== wr) { HUD.last.wall = wr; drawWallBar(HUD.wallCv, wr); }
     const m = g.mult;
-    setText(HUD.combo, g.combo > 0 ? 'COMBO ' + g.combo + (m > 1 ? ' X' + m : '') : '');
+    HUD.combo.style.display = g.combo > 0 ? '' : 'none';
+    if (g.combo > 0) {
+      const hot = m >= 3 ? '#ff5a6a' : m >= 2 ? '#ff9d3a' : '#ffcd4a'; // number heats up as the multiplier climbs
+      setPx(HUD.cNum, g.combo, hot);
+      setPx(HUD.cMul, 'X' + m, m > 1 ? hot : '#cdbca6');
+      if (g.combo > (HUD.last.combo || 0)) { // little pop on every hit
+        HUD.combo.classList.remove('pop'); void HUD.combo.offsetWidth; HUD.combo.classList.add('pop');
+      }
+    }
+    HUD.last.combo = g.combo;
     HUD.frost.style.display = g.phase !== 'shop' && g.buffs && g.buffs.frost ? '' : 'none';
     HUD.esc.style.display = g.state === 'over' ? 'none' : '';
   }
