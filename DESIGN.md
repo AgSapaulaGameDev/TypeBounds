@@ -58,13 +58,14 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - **Last life**: it bursts into **4 medium slimes** (2 far left, 2 far right), slower than normal slimes (speed 9 vs 15). Their words are tertiary colours typed as one word: REDORANGE, YELLOWORANGE, YELLOWGREEN, BLUEGREEN, BLUEVIOLET, REDVIOLET. Each is drawn in a different tertiary ink; killing one re-inks the others. Kill all 4 = BOSS DEFEATED (500 score, 25 gold).
 - Words that start the same (BLUEGREEN / BLUEVIOLET): if your next letter fits another enemy's word better, the lock moves to that one (no typo). Works for every enemy.
 
-## UI style (js/ui.js)
-- Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with forked tails and icons.
-- Buttons: gold (main action), crimson (secondary), green (resume), with pixel icons (play, restart, gear, home, back arrow).
-- Main menu: hanging crimson pennants with crowns, title, "- PROTECT THE TOWER -", castle glow, PLAY (gold) / LEADERBOARD / SETTINGS.
-- Settings: icon rows; gold slider track with knob; ON/OFF pill. Pause: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
-- Game over: stat rows with icons (score, wave, words, gold earned, accuracy, best), rank note, PLAY AGAIN / MAIN MENU buttons.
-- In-game HUD: top bar (crown pennant, SCORE 000000, COMBO, TIME of fighting, WPM, clickable pause button); WAVE n with 5 pips for the 5-wave chapter (5th = boss, red); boss HP bar under the pips. Bottom bar (y 152+): HP bar, fence HP in 5 segments, knight portrait, "TYPE THE WORD" box with the letters typed so far, gold, armour / frost / fence slots. Enemies spawn and labels stay between y 36 and 146 so the bars never cover them.
+## UI style (js/overlay.js + css/ui.css)
+- Main menu, settings, pause and game over are an HTML overlay in the Pixelify Sans font, laid out in play units (320 x 180) and scaled onto the canvas play area. The canvas still draws the world, castle glow and dim behind them; the in-game HUD stays canvas.
+- Keyboard stays with the game (arrows + Enter move game.sel); the mouse sets game.sel and calls game.activate, so both share one selection.
+- Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with folded tails and icons.
+- Buttons: chamfered, gold (main action), crimson (secondary), green (resume), brown (restart), with icons (play, restart, gear, home, back arrow).
+- Main menu: hanging crimson pennants with crowns, gold TYPEBOUNDS title, "PROTECT THE TOWER", castle glow, PLAY (gold) / LEADERBOARD / SETTINGS, chevrons beside the selected button.
+- Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle. Pause: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
+- Game over: 6 stat rows with icons (score, wave, words, gold earned, accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s).
 
 ## Tip cards
 - Before a wave that brings new enemies (waves 1, 3, 5, 6, 8, 10), the game shows a tip card: each new enemy's sprite at 2x, name, tag, rules and a coloured example (e.g. PURPLE in green ink -> type GREEN). Text lives in `js/tips.js`.
@@ -133,6 +134,8 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - `js/shop.js` typed shop between waves
 - `js/leaderboard.js` local top-10 scores + last player name
 - `js/input.js` keyboard
+- `js/tips.js` tip cards before waves with new enemies
+- `js/overlay.js` + `css/ui.css` HTML menu screens (main, settings, pause, game over)
 - `js/main.js` game state, update, render
 
 Note: separate files make editing easier. They do not stop copying — the browser downloads every file it runs.

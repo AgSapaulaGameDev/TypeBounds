@@ -40,7 +40,7 @@
 
   // The boss wanders along a wide oval around the tower (left side -> over the top/bottom ->
   // right side and back), so it visits both sides and never walks through the middle.
-  const ORBIT = { rx: 125, ry: 48 }; // stays clear of the bottom HUD bar
+  const ORBIT = { rx: 125, ry: 56 };
   function roamPoint(ang) {
     return { x: TD.BASE.cx + Math.cos(ang) * ORBIT.rx, y: TD.BASE.cy + 2 + Math.sin(ang) * ORBIT.ry, ang };
   }
