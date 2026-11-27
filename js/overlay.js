@@ -632,7 +632,7 @@
   HUD.wallCv = art(70, 4, HUD.wall);
   HUD.last = {};
   function syncHud(g, r, u, v) {
-    const show = g.state === 'play' && g.phase !== 'tips'; // only while playing: tip cards, pause, settings, game over get a clean screen
+    const show = g.state === 'play' && g.phase !== 'tips' && g.phase !== 'shop'; // only while fighting: tips, shop, pause, settings, game over get a clean screen
     hud.style.display = show ? '' : 'none';
     if (!show) return;
     // drawn at HUD_SCALE of the game's pixel size so it stays small and out of the way
@@ -695,6 +695,20 @@
     WB.plqCv.width = pw; WB.plqCv.style.width = pw + 'px'; drawPlaque(WB.plqCv);
     WB.el.classList.remove('pop'); void WB.el.offsetWidth; WB.el.classList.add('pop');
   }
+
+  // the same pixel art for canvas-drawn screens (shop): cached canvases by size
+  const artCache = {};
+  TD.Art = {
+    get(kind, w, h) {
+      const k = kind + w + 'x' + h;
+      if (!artCache[k]) {
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        if (kind === 'panel') drawNotchPanel(c); else if (kind === 'ribbon') drawRibbon(c); else drawPlaque(c);
+        artCache[k] = c;
+      }
+      return artCache[k];
+    },
+  };
 
   TD.Overlay = {
     sync(g) {

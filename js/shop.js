@@ -4,7 +4,7 @@
 (function () {
   const TD = (window.TD = window.TD || {});
   const F = TD.Font, A = TD.Audio;
-  const COL = { gold: '#ffcd75', coin: '#e8d27a', white: '#f4f4f4', dim: '#94b0c2', faint: '#566c86', red: '#ef7d57', green: '#a7f070', ink: '#1a1c2c', cyan: '#73eff7' };
+  const COL = { gold: '#ffcd4a', coin: '#ffd65a', white: '#fff4dc', dim: '#d9b98a', faint: '#a0806c', red: '#ff6a5a', green: '#a7f070', ink: '#140508', cyan: '#73eff7' }; // royal-red theme
   const ARMOR_MAX = 8;
 
   // ---- 12x12 icons drawn from strings ----
@@ -177,18 +177,20 @@
       const r = (rx, ry, rw, rh, col) => { ctx.fillStyle = col; ctx.fillRect(rx, ry, rw, rh); };
 
       const typed = !rolling && !card.sold && this.buf && it.word.startsWith(this.buf);
-      // frame
-      r(x - 1, y - 1, w + 2, h + 2, COL.ink);
-      r(x, y, w, h, typed ? '#5a4520' : '#333c57');
-      r(x + 1, y + 1, w - 2, h - 2, '#1c2435');
-      r(x + 1, y + 1, w - 2, 1, typed ? COL.gold : '#46506e');
-      for (const [bx, by] of [[x + 2, y + 2], [x + w - 4, y + 2], [x + 2, y + h - 4], [x + w - 4, y + h - 4]]) r(bx, by, 2, 2, '#46506e');
+      // frame: gold-trimmed maroon card with stepped corners (brighter gold while you type its word)
+      r(x, y - 1, w, h + 2, COL.ink); r(x - 1, y, w + 2, h, COL.ink);
+      r(x + 1, y, w - 2, h, typed ? '#ffe27a' : '#c98a2a'); r(x, y + 1, w, h - 2, typed ? '#ffe27a' : '#c98a2a');
+      r(x + 1, y + 1, w - 2, h - 2, typed ? '#5a1a26' : '#3a1218');
+      r(x + 2, y + 2, w - 4, h - 4, typed ? '#4a1620' : '#2a0f16');
+      r(x + 2, y + 2, w - 4, 1, typed ? '#7a2a36' : '#45161f');
+      r(x + 1, y, w - 2, 1, typed ? '#fff3b0' : '#e0a640');
+      for (const [bx, by] of [[x + 3, y + 3], [x + w - 4, y + 3], [x + 3, y + h - 4], [x + w - 4, y + h - 4]]) r(bx, by, 1, 1, '#e0a640');
 
       // title (the word you type)
       this.drawWord(ctx, it.word, x + w / 2, y + 4, 1, card.sold ? COL.faint : COL.white, !card.sold && !rolling);
       // icon box
       const ix = x + 4, iy = y + 11, iw = w - 8, ih = 26;
-      r(ix, iy, iw, ih, '#0a0d14');
+      r(ix, iy, iw, ih, '#1a080e'); r(ix, iy, iw, 1, '#0e0306'); r(ix, iy + ih - 1, iw, 1, '#5a2418');
       const bob = rolling ? Math.round(((this.t / TICK) % 1) * 8) - 4 : 0;
       ctx.save();
       ctx.beginPath(); ctx.rect(ix, iy, iw, ih); ctx.clip();
@@ -209,7 +211,7 @@
       F.draw(ctx, c + 'G', x + w / 2, y + h - 9, card.sold ? COL.faint : can ? COL.coin : COL.red, 1, 'center', COL.ink);
 
       if (card.sold) {
-        r(x + 1, y + 1, w - 2, h - 2, 'rgba(10,13,20,0.55)');
+        r(x + 1, y + 1, w - 2, h - 2, 'rgba(20,5,8,0.55)');
         const sy = iy + 10;
         r(x + 10, sy - 3, w - 20, 12, COL.ink);
         r(x + 11, sy - 2, w - 22, 10, '#2a4a24');
@@ -225,21 +227,19 @@
       const px = x0 - 8, pw = x1 - x0 + 16, py = 30, ph = 106;
       const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
 
-      // tab + window
-      const tw = F.width('SHOP') + 14;
-      r(px - 1, py - 9, tw + 2, 10, COL.ink);
-      r(px, py - 8, tw, 9, '#1c2435');
-      r(px, py - 8, tw, 1, COL.gold);
-      F.draw(ctx, 'SHOP', px + 7, py - 6, COL.gold, 1, 'left');
-      r(px - 1, py - 1, pw + 2, ph + 2, COL.ink);
-      r(px, py, pw, ph, '#333c57');
-      r(px + 1, py + 1, pw - 2, ph - 2, 'rgba(14,18,28,0.97)');
-      r(px + tw, py, pw - tw, 1, COL.gold);
-      r(px, py, 1, 1, COL.gold);
-      r(px + 1, py, tw - 1, 1, '#1c2435'); // tab opens into the window
+      // window: the royal-red notched panel with a SHOP ribbon on top (same art as the HTML menus)
+      if (TD.Art) {
+        ctx.drawImage(TD.Art.get('panel', pw + 5, ph + 6), px - 2, py - 2);
+        const rw = 74;
+        ctx.drawImage(TD.Art.get('ribbon', rw, 19), 160 - rw / 2, py - 15);
+        F.draw(ctx, 'SHOP', 160, py - 11, '#fff4dc', 1, 'center', '#2a0a10');
+      } else {
+        r(px - 1, py - 1, pw + 2, ph + 2, COL.ink); r(px, py, pw, ph, '#2a0f16');
+        F.draw(ctx, 'SHOP', 160, py - 8, COL.gold, 1, 'center');
+      }
 
       // info row
-      const iy = py + 5;
+      const iy = py + 7;
       F.draw(ctx, 'GOLD ' + g.gold, x0, iy, COL.coin, 1, 'left');
       const wallTxt = g.wall.level ? g.wall.hp + '/' + g.wall.max : 'NONE';
       F.draw(ctx, 'TOWER ' + g.hp + '/' + g.maxHp + '  WALL ' + wallTxt, x1, iy, COL.dim, 1, 'right');
@@ -253,7 +253,7 @@
 
       // bottom row: the two always-there words
       const ry = my + 11;
-      r(px + 4, ry - 4, pw - 8, 1, '#2a3148');
+      r(px + 5, ry - 4, pw - 10, 1, '#5a2418'); r(px + 5, ry - 3, pw - 10, 1, '#140508');
       const rc = this.rerollCost();
       const rw = F.width('REROLL') + 4 + F.width(rc + 'G');
       this.drawWord(ctx, 'reroll', x0 + F.width('REROLL') / 2, ry, 1, COL.white);
