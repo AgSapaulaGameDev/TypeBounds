@@ -308,6 +308,38 @@
     button(s, 'quit', 'crimson', 107, 132, 111, 22, 'MAIN MENU', 'home', 10, GOLD_IC);
   }
 
+  // NAME ENTRY ("WHO IS DEFENDING?"): typing stays with the game; START / BACK buttons for the mouse
+  const nameUI = {};
+  {
+    const s = scr('name');
+    panel(s, 60, 46, 200, 96, true);
+    ribbon(s, 68, 31, 184, 27, 'WHO IS DEFENDING?', null, null, 11);
+    el('div', 'nm-label', s).textContent = 'ENTER YOUR NAME';
+    const box = el('div', 'nm-box', s, at(78, 73, 164, 23));
+    const c = art(164, 23, box), x = c.getContext('2d');
+    step(x, '#140a04', 0, 0, 164, 23, 2);
+    step(x, '#e0a640', 1, 1, 162, 21, 1);
+    R(x, '#ffe27a', 2, 1, 160, 1);
+    step(x, '#120408', 2, 2, 160, 19, 1);
+    R(x, '#1e0a12', 3, 2, 158, 2);
+    nameUI.text = el('div', 'nm-text', box);
+    nameUI.count = el('div', 'nm-count', s);
+    nameUI.err = el('div', 'nm-err', s);
+    nameUI.err.textContent = 'TYPE A NAME FIRST';
+    for (const [id, theme, X, label, ic] of [['namego', 'gold', 84, 'START', 'play'], ['nameback', 'crimson', 164, 'BACK', 'back']]) {
+      const b = button(s, id, theme, X, 112, 72, 20, label, ic, 9);
+      buttons.pop(); // not a game menu: drawn once here
+      drawButton(b.cv, THEME[theme], false);
+      b.wrap.classList.add('xbtn');
+    }
+  }
+  function syncName(g) {
+    const n = g.playerName || '', cur = n.length < 10 && Math.floor(g.time * 3) % 2 === 0 ? '_' : ' ';
+    setText(nameUI.text, n + cur);
+    setText(nameUI.count, n.length + '/10');
+    nameUI.err.style.visibility = g.nameErrT > 0 ? 'visible' : 'hidden';
+  }
+
   // TIP CARDS (before a wave with new enemies): built per wave by syncTips
   const tips = { scr: scr('tips'), wave: null };
   const TIP_COL = { '#94b0c2': '#cdbca6', '#f4f4f4': '#fff4dc', '#ffcd75': '#ffcd4a', '#e83b3b': '#ff5a4a' };
@@ -411,6 +443,8 @@
   root.addEventListener('pointerdown', (ev) => {
     const g = TD.game;
     TD.Audio.unlock();
+    if (ev.target.closest('[data-id="namego"]')) { ev.preventDefault(); if (g.state === 'name') g.confirmName(); return; }
+    if (ev.target.closest('[data-id="nameback"]')) { ev.preventDefault(); if (g.state === 'name') g.toMenu(); return; }
     if (ev.target.closest('.tipgo')) { // same as Enter on a tip card
       ev.preventDefault();
       if (g.state === 'play' && g.phase === 'tips' && g.time - g.tipsAt > 0.4) { g.phase = 'banner'; TD.Audio.hover(); }
@@ -479,6 +513,7 @@
       if (!s) return;
       if (s === 'board') return syncBoard();
       if (s === 'tips') return syncTips(g);
+      if (s === 'name') return syncName(g);
       const list = TD.menuButtons(SCREEN_MENU[s]);
       const selId = list[g.sel] && list[g.sel].id;
       for (const b of buttons) {

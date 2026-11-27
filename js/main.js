@@ -1204,6 +1204,7 @@
 
     drawName() {
       this.dim(0.5);
+      if (TD.Overlay) return; // drawn by js/overlay.js
       F.draw(ctx, 'WHO IS DEFENDING?', W / 2, 40, C.gold, 2, 'center', C.ink);
       this.panel(60, 62, 200, 62);
       F.draw(ctx, 'ENTER YOUR NAME', W / 2, 68, C.dim, 1, 'center');

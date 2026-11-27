@@ -68,6 +68,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle.
 - Pause and leaderboard panels: gold frame with chunky stair-notched corners (3-px steps) and an inner echo step.
 - Pause: maroon panel, gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
+- Name entry: notched maroon panel, WHO IS DEFENDING? ribbon, gold-framed name box with blinking cursor, n/10 counter, red TYPE A NAME FIRST, gold START + crimson BACK buttons (Enter / Esc still work).
 - Leaderboard: maroon panel, gold LEADERBOARD title with red shadow, # NAME WAVE SCORE under a red line, #1 and your own name in gold, back hint (offline warning only when offline).
 - Game over: charcoal panel with the same stair-notched gold corners; 6 stat rows with icons (score, wave, words, gold earned, dartboard for accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s; no selected look, they only grow on mouse hover).
 

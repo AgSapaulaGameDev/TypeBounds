@@ -116,3 +116,11 @@
 #ui .tfoot { text-align: center; font-size: 5.8px; letter-spacing: .4px; font-weight: 500; color: #b89a86; margin: 1px 0 2px; }
 #ui .tgo-space { height: 22px; }
 #ui .tipgo:hover { transform: scale(1.05); }
+
+/* name entry */
+#ui .nm-label { left: 0; right: 0; top: 63px; text-align: center; font-size: 7px; letter-spacing: 1px; color: #cdbca6; text-shadow: 1px 1px 0 #140508; }
+#ui .nm-text { position: absolute; inset: 0 0 1px; display: flex; align-items: center; justify-content: center; font-size: 13px; letter-spacing: 1.5px; color: #fff4dc; text-shadow: 1px 1px 0 #000; }
+#ui .nm-count { right: 80px; top: 98px; font-size: 6px; font-weight: 500; color: #a8907c; }
+#ui .nm-err { left: 0; right: 0; top: 99px; text-align: center; font-size: 6.5px; letter-spacing: .5px; color: #ff5a4a; text-shadow: 1px 1px 0 #140508; }
+#ui .xbtn:hover { transform: scale(1.05); }
+#ui .xbtn:active { transform: scale(1.01); }
