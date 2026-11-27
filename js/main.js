@@ -985,13 +985,14 @@
 
     // Screen coords (no OX shift): left block at the left edge, right block at the right edge.
     drawHUD() {
+      const mid = Math.round(VW / 2);
+      if (!TD.Overlay) { // without the HTML overlay (js/overlay.js) the HUD is drawn here
       F.draw(ctx, 'SCORE ' + this.score, 4, 3, C.white, 1, 'left', C.ink);
       F.draw(ctx, 'GOLD ' + this.gold, 4, 10, C.coin, 1, 'left', C.ink);
       if (this.combo > 0) {
         const m = this.mult;
         F.draw(ctx, 'COMBO ' + this.combo + (m > 1 ? ' X' + m : ''), 4, 17, C.gold, 1, 'left', C.ink);
       }
-      const mid = Math.round(VW / 2);
       if (this.wall.level > 0) {
         const ww = 70, wx = mid - 35, wy = 12, wr = this.wall.hp / this.wall.max;
         ctx.fillStyle = C.ink; ctx.fillRect(wx - 1, wy - 1, ww + 2, 5);
@@ -1006,6 +1007,14 @@
       }
       if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
 
+      const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;
+      ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 9);
+      ctx.fillStyle = '#333c57'; ctx.fillRect(bx, by, bw, 7);
+      ctx.fillStyle = r > 0.5 ? C.green : r > 0.25 ? C.orange : C.red;
+      ctx.fillRect(bx, by, Math.ceil(bw * r), 7);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(bx, by, Math.ceil(bw * r), 1);
+      F.draw(ctx, this.hp + '/' + this.maxHp, mid, by + 1, C.white, 1, 'center', C.ink);
+      }
       // boss health bar, bottom centre
       const boss = this.enemies.find((e) => e.t.boss) || this.splitFrom;
       if (boss) {
@@ -1019,13 +1028,6 @@
         }
       }
 
-      const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;
-      ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 9);
-      ctx.fillStyle = '#333c57'; ctx.fillRect(bx, by, bw, 7);
-      ctx.fillStyle = r > 0.5 ? C.green : r > 0.25 ? C.orange : C.red;
-      ctx.fillRect(bx, by, Math.ceil(bw * r), 7);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(bx, by, Math.ceil(bw * r), 1);
-      F.draw(ctx, this.hp + '/' + this.maxHp, mid, by + 1, C.white, 1, 'center', C.ink);
     },
 
     panel(x, y, w, h) {

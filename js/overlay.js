@@ -80,6 +80,8 @@
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
+    heart: ['.##.##.', '#*#####', '#*#####', '#######', '.#####.', '..###..', '...#...'],
+    swords: ['*.......*', '.*.....*.', '..*...*..', '...*.*...', '....*....', '...#.#...', '..#...#..', '+#.....#+', '+.......+'],
     dropper: ['.....##', '....###', '...###.', '..#*#..', '.#*#...', '#*#....', '#......'],
     chev: ['##....', '###...', '.###..', '..###.', '...###', '..###.', '.###..', '###...', '##....'],
   };
@@ -493,6 +495,97 @@
     board.status.className = 'lb-status ' + st[1];
   }
 
+  // ---- in-game HUD (full canvas width, not just the play area) ----
+  const hud = el('div', '', document.body);
+  hud.id = 'hud';
+  function drawHudBox(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    step(x, 'rgba(0,0,0,.5)', 1, 1, w - 1, h - 1, 2);
+    step(x, '#140a04', 0, 0, w - 1, h - 1, 2);
+    step(x, '#e0a640', 1, 1, w - 3, h - 3, 1);
+    R(x, '#ffe27a', 2, 1, w - 5, 1);
+    step(x, '#3a1408', 2, 2, w - 5, h - 5, 1);
+    step(x, '#5a1622', 3, 3, w - 7, h - 7, 1);
+    R(x, '#6e1c2a', 4, 3, w - 9, 2);
+    R(x, '#3e0e18', 4, h - 6, w - 9, 2);
+  }
+  function drawHpBar(c, ratio) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    x.clearRect(0, 0, w, h);
+    step(x, 'rgba(0,0,0,.5)', 1, 1, w - 1, h - 1, 2);
+    step(x, '#140a04', 0, 0, w - 1, h - 1, 2);
+    step(x, '#e0a640', 1, 1, w - 3, h - 3, 1);
+    R(x, '#ffe27a', 2, 1, w - 5, 1); R(x, '#a86a14', 2, h - 3, w - 5, 1);
+    step(x, '#140a04', 2, 2, w - 5, h - 5, 1);
+    const ix = 3, iy = 3, iw = w - 7, ih = h - 7;
+    R(x, '#2a2430', ix, iy, iw, ih);
+    const col = ratio > 0.5 ? ['#7ee084', '#3fae50', '#2a8a3a'] : ratio > 0.25 ? ['#ffd070', '#f4a640', '#c87a20'] : ['#ff8a7a', '#e83b3b', '#a82424'];
+    const fw = Math.ceil(iw * Math.max(0, Math.min(1, ratio)));
+    if (fw > 0) {
+      R(x, col[1], ix, iy, fw, ih);
+      R(x, col[0], ix, iy, fw, Math.max(1, Math.round(ih * 0.35)));
+      R(x, col[2], ix, iy + ih - 2, fw, 2);
+      R(x, 'rgba(255,255,255,.35)', ix, iy, fw, 1);
+    }
+  }
+  function drawWallBar(c, ratio) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    x.clearRect(0, 0, w, h);
+    step(x, '#140a04', 0, 0, w, h, 1);
+    R(x, '#2a2430', 1, 1, w - 2, h - 2);
+    R(x, '#b07a45', 1, 1, Math.ceil((w - 2) * ratio), h - 2);
+    R(x, '#d8a066', 1, 1, Math.ceil((w - 2) * ratio), 1);
+  }
+  const H_IC = { trophy: GOLD_IC, coin: GOLD_IC, swords: { main: '#ffcd4a', hi: '#e8eef4', shade: '#8a5a2a', ol: '#140a04' },
+    skull: { main: '#f3e2c0', ol: '#140a04' }, heart: { main: '#ff3a5a', hi: '#ffb0c0', ol: '#3a0a10' } };
+  function hudBox(css, rows) {
+    const b = el('div', 'hbox', hud, css);
+    drawHudBox(art(62, 23, b));
+    return rows.map(([ic, cls], i) => {
+      const r = el('div', 'hrow ' + (cls || ''), b, { top: (3 + i * 9) + 'px' });
+      sprite(ic, H_IC[ic], el('div', 'hic', r));
+      return el('span', '', r);
+    });
+  }
+  const HUD = {};
+  [HUD.score, HUD.gold] = hudBox({ left: '3px', top: '2px' }, [['trophy'], ['coin', 'gold']]);
+  [HUD.wave, HUD.left] = hudBox({ right: '3px', top: '2px' }, [['swords'], ['skull']]);
+  HUD.combo = el('div', 'hcombo', hud);
+  HUD.frost = el('div', 'hfrost', hud);
+  HUD.frost.textContent = 'FROST';
+  HUD.esc = el('div', 'hesc', hud);
+  HUD.esc.textContent = 'ESC: PAUSE';
+  HUD.bar = el('div', 'hbar', hud);
+  HUD.barCv = art(96, 15, HUD.bar);
+  const hpRow = el('div', 'hhp', HUD.bar);
+  sprite('heart', H_IC.heart, hpRow);
+  HUD.hp = el('span', '', hpRow);
+  HUD.wall = el('div', 'hwall', hud);
+  HUD.wallCv = art(70, 4, HUD.wall);
+  HUD.last = {};
+  function syncHud(g, r, u, v) {
+    const show = g.inGame;
+    hud.style.display = show ? '' : 'none';
+    if (!show) return;
+    const t = 'translate(' + r.left + 'px,' + r.top + 'px) scale(' + u + ')';
+    if (HUD.last.t !== t) { HUD.last.t = t; hud.style.transform = t; hud.style.width = v.VW + 'px'; }
+    if (HUD.last.vw !== v.VW) { HUD.last.vw = v.VW; HUD.bar.style.left = Math.round(v.VW / 2 - 48) + 'px'; HUD.wall.style.left = Math.round(v.VW / 2 - 35) + 'px'; }
+    setText(HUD.score, 'SCORE ' + g.score);
+    setText(HUD.gold, 'GOLD ' + g.gold);
+    setText(HUD.wave, 'WAVE ' + g.waves.wave);
+    setText(HUD.left, 'LEFT ' + (g.waves.left + g.enemies.length));
+    setText(HUD.hp, g.hp + '/' + g.maxHp);
+    const ratio = g.maxHp ? g.hp / g.maxHp : 0;
+    if (HUD.last.hp !== ratio) { HUD.last.hp = ratio; drawHpBar(HUD.barCv, ratio); }
+    const wr = g.wall.level > 0 ? g.wall.hp / g.wall.max : -1;
+    HUD.wall.style.display = wr >= 0 ? '' : 'none';
+    if (wr >= 0 && HUD.last.wall !== wr) { HUD.last.wall = wr; drawWallBar(HUD.wallCv, wr); }
+    const m = g.mult;
+    setText(HUD.combo, g.combo > 0 ? 'COMBO ' + g.combo + (m > 1 ? ' X' + m : '') : '');
+    HUD.frost.style.display = g.phase !== 'shop' && g.buffs && g.buffs.frost ? '' : 'none';
+    HUD.esc.style.display = g.state === 'over' ? 'none' : '';
+  }
+
   TD.Overlay = {
     sync(g) {
       const c = document.getElementById('game'), r = c.getBoundingClientRect(), v = TD.view;
@@ -502,6 +595,7 @@
         lastBox = box;
         root.style.transform = 'translate(' + (r.left + v.OX * u) + 'px,' + r.top + 'px) scale(' + u + ')';
       }
+      syncHud(g, r, u, v);
 
       const key = g.state === 'play' && g.phase === 'tips' && TD.Tips[g.waves.wave] ? 'tips' : g.state;
       const s = screens[key] ? key : null;
