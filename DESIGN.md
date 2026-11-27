@@ -61,6 +61,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 ## UI style (js/overlay.js + css/ui.css)
 - Main menu, settings, pause and game over are an HTML overlay in the Pixelify Sans font, laid out in play units (320 x 180) and scaled onto the canvas play area. The canvas still draws the world, castle glow and dim behind them; the in-game HUD stays canvas.
 - Keyboard stays with the game (arrows + Enter move game.sel); the mouse sets game.sel and calls game.activate, so both share one selection.
+- Art is real pixel art: small canvases drawn 1 pixel per play unit (stair-step corners, banded fills, outlined sprite icons) and scaled up unsmoothed; only the text is the web font.
 - Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with folded tails and icons.
 - Buttons: chamfered, gold (main action), crimson (secondary), green (resume), brown (restart), with icons (play, restart, gear, home, back arrow).
 - Main menu: hanging crimson pennants with crowns, gold TYPEBOUNDS title, "PROTECT THE TOWER", castle glow, PLAY (gold) / LEADERBOARD / SETTINGS, chevrons beside the selected button.

@@ -1,155 +1,294 @@
-// HTML menu overlay: main menu, settings, pause and game over are drawn as crisp DOM (Pixelify Sans)
-// on top of the canvas. The canvas still draws the world, the castle and the dim behind them.
-// Layout is in play-area units (320 x 180) and the whole box is scaled to sit on the canvas play area.
-// Keyboard stays with the game (game.sel / Enter); the mouse here sets game.sel and calls game.activate.
+// HTML menu overlay: main menu, settings, pause and game over sit on top of the canvas.
+// Art (buttons, panels, ribbons, pennants, icons, sliders) is real pixel art: small canvases drawn at
+// 1 pixel per play unit and scaled up with no smoothing. Text is the Pixelify Sans web font.
+// Layout is in play units (320 x 180); the #ui box is scaled onto the canvas play area.
+// Keyboard stays with the game (game.sel / Enter); the mouse sets game.sel and calls game.activate.
 (function () {
   const TD = (window.TD = window.TD || {});
   const root = document.getElementById('ui');
   if (!root) return;
 
-  // ---- tiny SVG icon set (16x16, currentColor) ----
-  function gearPath() {
-    let d = '';
-    const n = 8, R = 7.6, r = 5.6;
-    for (let i = 0; i < n * 4; i++) {
-      const a = (i / (n * 4)) * Math.PI * 2 - Math.PI / 2;
-      const rad = i % 4 < 2 ? R : r;
-      d += (i ? 'L' : 'M') + (8 + Math.cos(a) * rad).toFixed(2) + ' ' + (8 + Math.sin(a) * rad).toFixed(2);
-    }
-    return d + 'Z M8 5.6 A2.4 2.4 0 1 0 8 10.4 A2.4 2.4 0 1 0 8 5.6Z';
+  // ---- DOM + pixel helpers ----
+  function el(tag, cls, parent, css) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (css) Object.assign(e.style, css);
+    if (parent) parent.appendChild(e);
+    return e;
   }
-  function starPath(cx, cy, R, r) {
-    let d = '';
-    for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * Math.PI * 2 - Math.PI / 2, rad = i % 2 ? r : R;
-      d += (i ? 'L' : 'M') + (cx + Math.cos(a) * rad).toFixed(2) + ' ' + (cy + Math.sin(a) * rad).toFixed(2);
-    }
-    return d + 'Z';
+  const at = (x, y, w, h) => ({ left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px' });
+  function art(w, h, parent, cls) {
+    const c = el('canvas', 'art ' + (cls || ''), parent, { width: w + 'px', height: h + 'px' });
+    c.width = w; c.height = h;
+    return c;
   }
-  const ICON = {
-    gear: '<path fill-rule="evenodd" d="' + gearPath() + '"/>',
-    pause: '<rect x="3.5" y="2.5" width="3.5" height="11" rx=".6"/><rect x="9" y="2.5" width="3.5" height="11" rx=".6"/>',
-    play: '<path d="M4 2.2 L13.5 8 L4 13.8Z"/>',
-    back: '<path d="M12 2.2 L2.5 8 L12 13.8Z"/>',
-    restart: '<path d="M8 2.2a5.8 5.8 0 1 1-5.5 4h2.2A3.7 3.7 0 1 0 8 4.3V6.6L4.4 3.3 8 0Z"/>',
-    home: '<path d="M8 1.6 L15 8 H12.8 V14.4 H9.6 V10.4 H6.4 V14.4 H3.2 V8 H1Z"/>',
-    skull: '<path fill-rule="evenodd" d="M8 1.2C4.2 1.2 1.8 3.8 1.8 7.2c0 2 1 3.3 2.4 4.1V14h1.6v-1.4h1.4V14h1.6v-1.4h1.4V14h1.6v-2.7c1.4-.8 2.4-2.1 2.4-4.1 0-3.4-2.4-6-6.2-6ZM5.3 6.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 1 0 0-3.2Zm5.4 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 1 0 0-3.2ZM8 9.6l-1 1.6h2Z"/>',
-    trophy: '<path d="M4 1.5h8v1.3h2.6v1.6c0 2-1.3 3.4-3.1 3.6-.6 1.2-1.6 2-2.7 2.2V12h2.4v2.5H4.8V12h2.4V10.2C6.1 10 5.1 9.2 4.5 8 2.7 7.8 1.4 6.4 1.4 4.4V2.8H4Zm-1.2 2.6v.4c0 1 .5 1.8 1.3 2.1-.1-.5-.1-1-.1-1.5v-1Zm10.4 0h-1.2v1c0 .5 0 1-.1 1.5.8-.3 1.3-1.1 1.3-2.1Z"/>',
-    flag: '<path d="M3 1.2h1.6v13.6H3Z"/><path d="M5.2 2h8.6l-2.2 3.2 2.2 3.2H5.2Z"/>',
-    coin: '<circle cx="8" cy="8" r="6.6"/><circle cx="8" cy="8" r="4.4" fill="rgba(0,0,0,.28)"/><rect x="7.1" y="5" width="1.8" height="6" fill="rgba(255,255,255,.55)"/>',
-    target: '<path fill-rule="evenodd" d="M8 1.2a6.8 6.8 0 1 0 0 13.6A6.8 6.8 0 1 0 8 1.2Zm0 2.2a4.6 4.6 0 1 1 0 9.2 4.6 4.6 0 1 1 0-9.2Zm0 2.1a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5Z"/>',
-    star: '<path d="' + starPath(8, 8.5, 7.2, 3) + '"/>',
-    music: '<path d="M6 2.4 14 1v9.6a2.2 2.2 0 1 1-1.6-2.1V4.2L7.6 5v7.2a2.2 2.2 0 1 1-1.6-2.1Z"/>',
-    sfx: '<path d="M1.5 5.6h3L8.6 2v12L4.5 10.4h-3Z"/><path d="M10.4 5a3.6 3.6 0 0 1 0 6l-.9-1.2a2.1 2.1 0 0 0 0-3.6Zm1.8-2.4a6.6 6.6 0 0 1 0 10.8l-.9-1.2a5 5 0 0 0 0-8.4Z"/>',
-    fs: '<path d="M1.5 1.5h5v2h-3v3h-2Zm8 0h5v5h-2v-3h-3Zm-8 8h2v3h3v2h-5Zm11 0h2v5h-5v-2h3Z"/>',
-    aa: '<text x="8" y="12.6" text-anchor="middle" font-family="Pixelify Sans, monospace" font-weight="700" font-size="11">Aa</text>',
+  const R = (x, c, X, Y, W, H) => { x.fillStyle = c; x.fillRect(X, Y, W, H); };
+  // rectangle with stair-stepped corners (r pixels)
+  function step(x, c, X, Y, W, H, r) {
+    x.fillStyle = c;
+    for (let i = 0; i < r; i++) {
+      const cut = r - i;
+      x.fillRect(X + cut, Y + i, W - cut * 2, 1);
+      x.fillRect(X + cut, Y + H - 1 - i, W - cut * 2, 1);
+    }
+    x.fillRect(X, Y + r, W, H - r * 2);
+  }
+  // fill a shape by how deep each pixel sits inside it (0 = edge): outlines and borders for free
+  function shape(x, w, h, inside, colorAt) {
+    for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
+      if (!inside(px, py)) continue;
+      let n = 0;
+      for (let k = 1; k <= 3; k++) {
+        let ok = true;
+        for (let dy = -k; dy <= k && ok; dy++) for (let dx = -k; dx <= k; dx++) if (!inside(px + dx, py + dy)) { ok = false; break; }
+        if (!ok) break;
+        n = k;
+      }
+      R(x, colorAt(n, px, py), px, py, 1, 1);
+    }
+  }
+
+  // ---- sprites: '#' = main colour, '+' = shade, '*' = highlight; auto dark outline ----
+  const SPR = {
+    speaker: ['...#...#..', '..##.#..#.', '####..#.#.', '####..#.#.', '..##.#..#.', '...#...#..'],
+    monitor: ['##########', '#********#', '#*++++++*#', '#*++++++*#', '##########', '....##....', '..######..'],
+    gear: ['....#....', '.#.###.#.', '..#####..', '.##...##.', '###...###', '.##...##.', '..#####..', '.#.###.#.', '....#....'],
+    pause: ['##.##', '##.##', '##.##', '##.##', '##.##', '##.##', '##.##'],
+    play: ['#....', '##...', '###..', '####.', '#####', '####.', '###..', '##...', '#....'],
+    back: ['....#', '...##', '..###', '.####', '#####', '.####', '..###', '...##', '....#'],
+    restart: ['..####.#', '.#....##', '#....###', '#.......', '#.......', '#......#', '.#....#.', '..####..'],
+    home: ['....#....', '...###...', '..#####..', '.#######.', '#########', '.##...##.', '.##...##.', '.##...##.'],
+    skull: ['..####..', '.######.', '########', '#..##..#', '#..##..#', '###..###', '.######.', '.#.##.#.'],
+    trophy: ['#.#####.#', '#.#####.#', '.#######.', '..#####..', '...###...', '....#....', '...###...', '..#####..'],
+    flag: ['##......', '######..', '#######.', '######..', '##......', '#.......', '#.......', '#.......', '#.......'],
+    coin: ['..####..', '.##++##.', '##+**+##', '##+*#+##', '##+*#+##', '##+##+##', '.##++##.', '..####..'],
+    target: ['..#####..', '.#.....#.', '#..###..#', '#.#...#.#', '#.#.#.#.#', '#.#...#.#', '#..###..#', '.#.....#.', '..#####..'],
+    star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
+    aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
+    crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
+    chev: ['##....', '###...', '.###..', '..###.', '...###', '..###.', '.###..', '###...', '##....'],
   };
-  const icon = (n, cls) => '<svg class="ic ' + (cls || '') + '" viewBox="0 0 16 16" fill="currentColor">' + ICON[n] + '</svg>';
+  const flipX = (rows) => rows.map((r) => r.split('').reverse().join(''));
+  SPR.chevL = SPR.chev; SPR.chevR = flipX(SPR.chev);
+  // draw a sprite into its own canvas: { main, shade, hi, ol } colours, ol = outline (or null)
+  function sprite(name, pal, parent, cls, scale) {
+    const rows = SPR[name], o = pal.ol ? 1 : 0;
+    const w = rows[0].length + o * 2, h = rows.length + o * 2;
+    const c = art(w, h, parent, 'ic ' + (cls || '')), x = c.getContext('2d');
+    if (scale) Object.assign(c.style, { width: w * scale + 'px', height: h * scale + 'px' });
+    const filled = (px, py) => py >= 0 && py < rows.length && px >= 0 && px < rows[0].length && rows[py][px] !== '.';
+    if (o) for (let py = -1; py <= rows.length; py++) for (let px = -1; px <= rows[0].length; px++) {
+      if (filled(px, py)) continue;
+      if (filled(px - 1, py) || filled(px + 1, py) || filled(px, py - 1) || filled(px, py + 1)) R(x, pal.ol, px + o, py + o, 1, 1);
+    }
+    rows.forEach((r, py) => r.split('').forEach((ch, px) => {
+      if (ch === '.') return;
+      R(x, ch === '+' ? pal.shade || pal.main : ch === '*' ? pal.hi || pal.main : pal.main, px + o, py + o, 1, 1);
+    }));
+    return c;
+  }
+  const GOLD_IC = { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0', ol: '#2a1404' };
 
-  // Crimson ribbon banner with folded tails, w x h in units
-  function ribbon(w, h, text, left, right) {
-    const t = Math.round(h * 0.55), tailY = h * 0.22, mh = h - 5; // main body height
-    const svg =
-      '<svg class="rib-bg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
-      // tails (behind), with a V notch
-      '<path d="M0 ' + (tailY) + 'H' + t + 'V' + (h) + 'H0L' + (t * 0.45) + ' ' + ((tailY + h) / 2) + 'Z" fill="#5a1422" stroke="#c9893a" stroke-width=".8"/>' +
-      '<path d="M' + w + ' ' + (tailY) + 'H' + (w - t) + 'V' + (h) + 'H' + w + 'L' + (w - t * 0.45) + ' ' + ((tailY + h) / 2) + 'Z" fill="#5a1422" stroke="#c9893a" stroke-width=".8"/>' +
-      // fold shadows
-      '<path d="M' + (t * 0.7) + ' ' + (mh) + 'L' + t + ' ' + h + 'V' + (mh) + 'Z" fill="#2e0910"/>' +
-      '<path d="M' + (w - t * 0.7) + ' ' + (mh) + 'L' + (w - t) + ' ' + h + 'V' + (mh) + 'Z" fill="#2e0910"/>' +
-      // body
-      '<defs><linearGradient id="rg' + w + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c23a50"/><stop offset=".5" stop-color="#9c2b3f"/><stop offset="1" stop-color="#6a1b2b"/></linearGradient></defs>' +
-      '<rect x="' + (t * 0.7) + '" y=".6" width="' + (w - t * 1.4) + '" height="' + (mh - 0.6) + '" fill="url(#rg' + w + ')" stroke="#e0a640" stroke-width="1.2"/>' +
-      '<rect x="' + (t * 0.7 + 2) + '" y="2.4" width="' + (w - t * 1.4 - 4) + '" height="' + (mh - 4.4) + '" fill="none" stroke="#f0c46a" stroke-opacity=".45" stroke-width=".5"/>' +
-      '</svg>';
-    return svg + '<div class="rib-txt" style="height:' + mh + 'px">' + (left || '') + '<span>' + text + '</span>' + (right || '') + '</div>';
+  // ---- button themes ----
+  const THEME = {
+    gold:    { o: '#2a1404', b: '#a8640c', hi: '#fff3a0', f: ['#ffe066', '#fbcd3a', '#eaa82a'], sh: '#b8700f', rv: '#c98a1c', tx: '#3a1e06', ts: 'rgba(255,243,176,.7)', ic: { main: '#4a2a08' } },
+    crimson: { o: '#1e0a06', b: '#e0a640', hi: '#c4495c', f: ['#a93248', '#8e2639', '#721c2e'], sh: '#4e1220', rv: '#ffd36a', tx: '#fbe9d0', ts: '#2a0a10', ic: { main: '#fbe9d0', ol: '#2a0a10' } },
+    green:   { o: '#0e2210', b: '#e0a640', hi: '#b4f5b0', f: ['#7ee084', '#5fd068', '#3fae50'], sh: '#237a33', rv: '#ffd36a', tx: '#fbfff0', ts: '#174a1e', ic: { main: '#fbfff0', ol: '#174a1e' } },
+    brown:   { o: '#1a0e04', b: '#e0a640', hi: '#a88040', f: ['#8e6428', '#7a5420', '#5e3e16'], sh: '#3e2808', rv: '#ffd36a', tx: '#ffe9b0', ts: '#2a1a06', ic: { main: '#ffe9b0', ol: '#2a1a06' } },
+    navy:    { o: '#0a0a10', b: '#4a4658', hi: '#46434f', f: ['#34323e', '#2b2933', '#232129'], sh: '#18161d', rv: '#4a4658', tx: '#d8d2e4', ts: '#000', ic: { main: '#d8d2e4' } },
+  };
+  function drawButton(c, t, sel) { // sel: bright outline (main menu uses chevrons instead)
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    x.clearRect(0, 0, w, h);
+    step(x, 'rgba(0,0,0,.55)', 0, 1, w, h - 1, 2); // drop shadow
+    step(x, sel ? '#fff1b0' : t.o, 0, 0, w, h - 1, 2); // outline (bright when selected)
+    step(x, t.b, 1, 1, w - 2, h - 3, 1); // border
+    const ix = 2, iy = 2, iw = w - 4, ih = h - 5;
+    step(x, t.f[1], ix, iy, iw, ih, 1);
+    const band = Math.max(2, Math.round(ih * 0.3));
+    R(x, t.f[0], ix + 1, iy + 1, iw - 2, band);
+    R(x, t.f[2], ix + 1, iy + ih - 1 - band, iw - 2, band);
+    R(x, t.hi, ix + 1, iy, iw - 2, 1); // top highlight
+    R(x, t.sh, ix + 1, iy + ih - 1, iw - 2, 1); // bottom shade
+    for (const [px, py] of [[ix + 1, iy + 1], [ix + iw - 2, iy + 1], [ix + 1, iy + ih - 2], [ix + iw - 2, iy + ih - 2]]) R(x, t.rv, px, py, 1, 1); // rivets
   }
 
-  // hanging pennant: rod, crimson cloth with gold edge, crown, V notch
-  const PENNANT =
-    '<svg viewBox="0 0 21 65"><defs><linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#7a1e30"/><stop offset=".5" stop-color="#a8304a"/><stop offset="1" stop-color="#6a1b2b"/></linearGradient></defs>' +
-    '<path d="M1.5 0H19.5V64L10.5 55.5 1.5 64Z" fill="url(#pg)" stroke="#e0a640" stroke-width="1.2"/>' +
-    '<path d="M4 0V58.5L10.5 52.6 17 58.5V0" fill="none" stroke="#f0c46a" stroke-opacity=".5" stroke-width=".6"/>' +
-    '<path d="M5 40.5 6.2 33.5 8.4 37 10.5 31.8 12.6 37 14.8 33.5 16 40.5Z" fill="#ffcd4a" stroke="#7a4a10" stroke-width=".5"/>' +
-    '<rect x="5" y="41.2" width="11" height="1.6" fill="#e09a1c"/>' +
-    '<rect x="0" y="0" width="21" height="3" rx="1" fill="#e0a640" stroke="#7a4a10" stroke-width=".5"/></svg>';
+  // ---- panel, ribbon, pennant ----
+  function drawPanel(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    step(x, 'rgba(0,0,0,.5)', 1, 2, w - 1, h - 2, 3);
+    step(x, '#140a04', 0, 0, w - 1, h - 1, 3);
+    step(x, '#e0a640', 1, 1, w - 3, h - 3, 2);
+    R(x, '#ffe27a', 3, 1, w - 7, 1); R(x, '#ffe27a', 1, 3, 1, h - 7);
+    R(x, '#a86a14', 3, h - 3, w - 7, 1); R(x, '#a86a14', w - 3, 3, 1, h - 7);
+    step(x, '#3a2410', 3, 3, w - 7, h - 7, 1);
+    step(x, '#1c1a22', 4, 4, w - 9, h - 9, 1);
+    R(x, '#24212b', 5, 4, w - 11, 2);
+    // gold corner pieces
+    const corner = (cx, cy, sx, sy) => {
+      const p = (dx, dy, col) => R(x, col, cx + sx * dx, cy + sy * dy, 1, 1);
+      for (let i = 0; i < 9; i++) { p(i, 0, '#140a04'); p(0, i, '#140a04'); }
+      for (let i = 0; i < 8; i++) { p(i + 1, 1, '#ffd36a'); p(1, i + 1, '#ffd36a'); p(i + 1, 2, '#c98a2a'); p(2, i + 1, '#c98a2a'); }
+      p(1, 1, '#fff3b0');
+      // little diamond stud
+      p(5, 5, '#fff3b0'); p(4, 5, '#e0a640'); p(6, 5, '#e0a640'); p(5, 4, '#e0a640'); p(5, 6, '#e0a640');
+      p(3, 5, '#140a04'); p(7, 5, '#140a04'); p(5, 3, '#140a04'); p(5, 7, '#140a04');
+      p(4, 4, '#140a04'); p(6, 4, '#140a04'); p(4, 6, '#140a04'); p(6, 6, '#140a04');
+    };
+    corner(0, 0, 1, 1); corner(w - 2, 0, -1, 1); corner(0, h - 2, 1, -1); corner(w - 2, h - 2, -1, -1);
+  }
+  function drawRibbon(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height, bh = h - 5, m = (4 + h - 1) / 2;
+    const cut = (py) => Math.max(0, Math.round(5 - Math.abs(py - m)));
+    shape(x, w, h, (px, py) => py >= 4 && py < h && px >= 0 && px < w && ((px < 15 && px >= cut(py)) || (px >= w - 15 && px < w - cut(py))),
+      (n) => (n === 0 ? '#1e0a06' : n === 1 ? '#c98a2a' : '#6a1b2b'));
+    R(x, '#2a0810', 9, bh, 6, 3); R(x, '#2a0810', w - 15, bh, 6, 3); // folds
+    step(x, '#1e0a06', 9, 0, w - 18, bh, 1);
+    R(x, '#e0a640', 10, 1, w - 20, bh - 2);
+    R(x, '#ffe27a', 10, 1, w - 20, 1);
+    R(x, '#9c2b3f', 11, 2, w - 22, bh - 4);
+    R(x, '#b8394c', 11, 2, w - 22, 2);
+    R(x, '#7a2032', 11, bh - 4, w - 22, 2);
+    R(x, '#c98a2a', 11, bh - 2, w - 22, 1);
+  }
+  function drawPennant(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    shape(x, w, h, (px, py) => px >= 2 && px < w - 2 && py >= 2 && py < h && !(py >= h - 12 && Math.abs(px - (w - 1) / 2) < (py - (h - 12)) * 0.9),
+      (n, px) => (n === 0 ? '#1e0a06' : n === 1 ? '#e0a640' : n === 2 ? '#5e1624'
+        : px < 8 ? '#7a1f30' : px > w - 9 ? '#651a2a' : px === 9 ? '#b8394c' : '#9c2b3f'));
+    step(x, '#1e0a06', 0, 0, w, 5, 1);
+    R(x, '#e0a640', 1, 1, w - 2, 3); R(x, '#ffe27a', 1, 1, w - 2, 1); R(x, '#a86a14', 1, 3, w - 2, 1);
+  }
 
   // ---- screens ----
-  const btn = (id, cls, x, y, w, h, label, ic) =>
-    '<div class="btn ' + cls + '" data-id="' + id + '" style="left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px">' +
-    '<div class="face"><span>' + (ic ? icon(ic) : '') + label + '</span></div></div>';
-  const panel = (x, y, w, h) =>
-    '<div class="panel" style="left:' + x + 'px;top:' + y + 'px;width:' + w + 'px;height:' + h + 'px">' +
-    '<i class="orn tl"></i><i class="orn tr"></i><i class="orn bl"></i><i class="orn br"></i></div>';
+  const screens = {}, buttons = [];
+  const scr = (name) => (screens[name] = el('div', 'scr', root));
+  function button(s, id, theme, X, Y, W, H, label, ic, size) {
+    const wrap = el('div', 'btn', s, at(X, Y, W, H));
+    wrap.dataset.id = id;
+    const cv = art(W, H, wrap);
+    const t = THEME[theme];
+    const lab = el('span', 'lbl', wrap, { fontSize: (size || 9) + 'px', color: t.tx, textShadow: '0 1px 0 ' + t.ts });
+    if (ic) sprite(ic, t.ic, lab, '', H >= 22 ? 1.25 : 1);
+    lab.appendChild(document.createTextNode(label));
+    const b = { wrap, cv, theme, sel: null, id };
+    buttons.push(b);
+    return b;
+  }
+  function panel(s, X, Y, W, H) { const c = art(W, H, s, 'pnl'); Object.assign(c.style, at(X, Y, W, H)); drawPanel(c); }
+  function ribbon(s, X, Y, W, H, text, icL, icR, size) {
+    const r = el('div', 'ribbon', s, at(X, Y, W, H));
+    drawRibbon(art(W, H, r));
+    const t = el('div', 'rib-txt', r, { height: (H - 5) + 'px', fontSize: (size || 11) + 'px' });
+    if (icL) sprite(icL, GOLD_IC, t, '', 1.5);
+    el('span', '', t).textContent = text;
+    if (icR) sprite(icR, GOLD_IC, t, '', 1.5);
+  }
 
-  const statRows = [
-    ['score', 'trophy', 'SCORE'], ['wave', 'flag', 'WAVE'], ['words', 'aa', 'WORDS'],
-    ['gold', 'coin', 'GOLD EARNED'], ['acc', 'target', 'ACCURACY'], ['best', 'star', 'BEST SCORE'],
-  ];
-  const STAT_Y = [49, 64, 78, 93, 108, 122];
+  // MAIN MENU
+  {
+    const s = scr('menu');
+    for (const px of [14, 280]) drawPennant(art(26, 66, el('div', 'pennant', s, at(px, 0, 26, 66))));
+    s.querySelectorAll('.pennant').forEach((p) => { const c = sprite('crown', { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0', ol: '#1e0a06' }, p); Object.assign(c.style, { position: 'absolute', left: '7px', top: '38px' }); });
+    el('div', 'title', s).textContent = 'TYPEBOUNDS';
+    const sub = el('div', 'subtitle', s);
+    el('i', '', sub); el('span', '', sub).textContent = 'PROTECT THE TOWER'; el('i', '', sub);
+    button(s, 'play', 'gold', 95, 99, 131, 23, 'PLAY', null, 12.5);
+    button(s, 'board', 'crimson', 95, 126, 131, 20, 'LEADERBOARD', null, 10);
+    button(s, 'settings', 'crimson', 95, 150, 131, 20, 'SETTINGS', null, 10);
+    for (const side of ['L', 'R']) {
+      const ch = el('div', 'chev', s); ch.dataset.side = side;
+      sprite('chev' + side, { main: '#ffcd4a', shade: '#d98a1c', ol: '#2a1404' }, ch);
+    }
+  }
 
-  root.innerHTML =
-    // MAIN MENU
-    '<div class="scr" data-s="menu">' +
-      '<div class="pennant" style="left:39px">' + PENNANT + '</div>' +
-      '<div class="pennant" style="left:265px">' + PENNANT + '</div>' +
-      '<div class="title">TYPEBOUNDS</div>' +
-      '<div class="subtitle"><i></i>PROTECT THE TOWER<i></i></div>' +
-      btn('play', 'gold big', 104, 101, 112, 20, 'PLAY') +
-      btn('board', 'crimson', 104, 127, 112, 18, 'LEADERBOARD') +
-      btn('settings', 'crimson', 104, 151, 112, 18, 'SETTINGS') +
-      '<div class="chev l">&#9654;</div><div class="chev r">&#9664;</div>' +
-    '</div>' +
-    // SETTINGS
-    '<div class="scr" data-s="settings">' +
-      panel(58, 31, 206, 118) +
-      '<div class="ribbon" style="left:96px;top:16px;width:129px;height:24px">' +
-        ribbon(129, 24, 'SETTINGS', icon('gear', 'ri'), icon('gear', 'ri')) + '</div>' +
-      ['music', 'sfx', 'fs'].map((id, i) => {
-        const y = 60 + i * 24;
-        const lab = id === 'music' ? 'MUSIC' : id === 'sfx' ? 'SFX' : 'FULLSCREEN';
-        const ctl = id === 'fs'
-          ? '<div class="tog on" data-v="1" style="left:178px;top:' + (y - 8.5) + 'px">ON</div>' +
-            '<div class="tog off" data-v="0" style="left:216px;top:' + (y - 8.5) + 'px">OFF</div>'
-          : '<div class="track" style="left:147px;top:' + (y - 3) + 'px"><b></b><i></i></div>';
-        return '<div class="row" data-id="' + id + '" style="top:' + (y - 10) + 'px">' +
-          '<div class="rowhit"></div>' +
-          '<div class="ricon" style="left:68px">' + icon(id) + '</div>' +
-          '<div class="rlab" style="left:96px">' + lab + '</div></div>' + ctl.replace(/class="(tog|track)/g, 'data-row="' + id + '" class="$1');
-      }).join('') +
-      btn('back', 'crimson', 118, 129, 86, 24, 'BACK', 'back') +
-    '</div>' +
-    // PAUSE
-    '<div class="scr" data-s="paused">' +
-      panel(89, 40, 145, 130) +
-      '<div class="ribbon" style="left:103px;top:26px;width:116px;height:28px">' + ribbon(116, 28, 'PAUSED', icon('pause', 'ri')) + '</div>' +
-      btn('resume', 'green', 115, 62, 95, 21, 'RESUME', 'play') +
-      btn('restart', 'brown', 115, 88, 95, 21, 'RESTART', 'restart') +
-      btn('settings', 'crimson', 115, 115, 95, 20, 'SETTINGS', 'gear') +
-      btn('quit', 'crimson', 115, 142, 95, 19, 'MAIN MENU', 'home') +
-    '</div>' +
-    // GAME OVER
-    '<div class="scr" data-s="over">' +
-      panel(64, 27, 194, 110) +
-      '<div class="ribbon" style="left:89px;top:10px;width:147px;height:25px">' +
-        ribbon(147, 25, 'GAME OVER', icon('skull', 'ri'), icon('skull', 'ri')) + '</div>' +
-      statRows.map(([k, ic, lab], i) =>
-        '<div class="stat" style="top:' + (STAT_Y[i] - 6) + 'px">' + icon(ic, 'st-' + k) +
-        '<span class="sl">' + lab + '</span><span class="sv" data-k="' + k + '">0</span></div>' +
-        (i < statRows.length - 1 ? '<div class="sep" style="top:' + ((STAT_Y[i] + STAT_Y[i + 1]) / 2) + 'px"></div>' : '')).join('') +
-      '<div class="rank"></div>' +
-      btn('again', 'gold', 75, 149, 81, 21, 'PLAY AGAIN', 'restart') +
-      btn('quit', 'crimson', 167, 149, 84, 21, 'MAIN MENU', 'home') +
-    '</div>';
+  // SETTINGS
+  const rows = {};
+  {
+    const s = scr('settings');
+    panel(s, 39, 28, 245, 98);
+    ribbon(s, 82, 11, 159, 28, 'SETTINGS', 'gear', 'gear', 13);
+    ['music', 'sfx', 'fs'].forEach((id, i) => {
+      const Y = 49 + i * 24;
+      const row = el('div', 'row', s, at(52, Y, 219, 21));
+      row.dataset.id = id;
+      const cv = art(219, 21, row);
+      const ib = el('div', 'ibox', row, at(4, 2, 25, 17));
+      sprite(id === 'fs' ? 'monitor' : 'speaker', GOLD_IC, ib, '', 1.5);
+      el('div', 'rlab', row, { left: '33px' }).textContent = id === 'music' ? 'MUSIC' : id === 'sfx' ? 'SFX' : 'FULLSCREEN';
+      rows[id] = { row, cv, sel: null };
+      if (id === 'fs') {
+        for (const [v, X, W, lab] of [['1', 183, 42, 'ON'], ['0', 226, 43, 'OFF']]) {
+          const t = el('div', 'tog', s, at(X, Y + 2, W, 18));
+          t.dataset.v = v; t.dataset.row = 'fs';
+          const c = art(W, 18, t);
+          el('span', 'lbl', t, { fontSize: '8.5px' }).textContent = lab;
+          rows['tog' + v] = { t, c, act: null };
+        }
+      } else {
+        const tr = el('div', 'track', s, at(146, Y + 6, 123, 9));
+        tr.dataset.row = id;
+        rows[id].track = art(123, 9, tr);
+        rows[id].lv = null;
+      }
+    });
+    button(s, 'back', 'crimson', 111, 129, 102, 25, 'BACK', 'back', 12);
+  }
+  function drawRow(c, sel) {
+    const x = c.getContext('2d'), w = c.width, h = c.height;
+    x.clearRect(0, 0, w, h);
+    step(x, sel ? '#e0a640' : '#2e2a36', 0, 0, w, h, 2);
+    step(x, sel ? '#2a2430' : '#1a1720', 1, 1, w - 2, h - 2, 1);
+    step(x, '#2e2a36', 4, 2, 25, 17, 1);
+    step(x, '#121017', 5, 3, 23, 15, 1);
+  }
+  function drawTrack(c, lv, max) {
+    const x = c.getContext('2d'), w = c.width;
+    x.clearRect(0, 0, w, 9);
+    step(x, '#0c0a10', 0, 2, w, 5, 1);
+    R(x, '#2b2733', 1, 3, w - 2, 3);
+    R(x, '#3a3542', 1, 5, w - 2, 1);
+    const k = 3 + Math.round((lv / max) * (w - 7)); // knob centre
+    R(x, '#f6c12f', 1, 3, k - 1, 3); R(x, '#ffe27a', 1, 3, k - 1, 1); R(x, '#c98a1c', 1, 5, k - 1, 1);
+    step(x, '#2a1404', k - 3, 0, 7, 9, 1);
+    R(x, '#f0dfbc', k - 2, 1, 5, 7); R(x, '#fffaf0', k - 2, 1, 5, 2); R(x, '#c8ac7a', k - 2, 6, 5, 1);
+  }
+
+  // PAUSE
+  {
+    const s = scr('paused');
+    panel(s, 89, 40, 146, 130);
+    ribbon(s, 99, 26, 125, 27, 'PAUSED', 'pause', null, 12);
+    button(s, 'resume', 'green', 112, 60, 100, 22, 'RESUME', 'play', 9.5);
+    button(s, 'restart', 'brown', 112, 87, 100, 22, 'RESTART', 'restart', 9.5);
+    button(s, 'settings', 'crimson', 112, 114, 100, 22, 'SETTINGS', 'gear', 9.5);
+    button(s, 'quit', 'crimson', 112, 141, 100, 22, 'MAIN MENU', 'home', 9.5);
+  }
+
+  // GAME OVER
+  const vals = {};
+  let rankEl;
+  {
+    const s = scr('over');
+    panel(s, 62, 27, 198, 110);
+    ribbon(s, 83, 9, 156, 27, 'GAME OVER', 'skull', 'skull', 12);
+    const STAT = [['score', 'trophy', 'SCORE'], ['wave', 'flag', 'WAVE'], ['words', 'aa', 'WORDS'],
+      ['gold', 'coin', 'GOLD EARNED'], ['acc', 'target', 'ACCURACY'], ['best', 'star', 'BEST SCORE']];
+    const PAL = { target: { main: '#ef5a4a', ol: '#2a0a08' }, aa: { main: '#f3e2c0', ol: '#1e140a' } };
+    STAT.forEach(([k, ic, lab], i) => {
+      const Y = 43 + i * 15;
+      const r = el('div', 'stat', s, at(78, Y, 166, 12));
+      sprite(ic, PAL[ic] || GOLD_IC, el('div', 'sic', r));
+      el('span', 'sl', r).textContent = lab;
+      (vals[k] = el('span', 'sv', r)).textContent = '0';
+      if (i < STAT.length - 1) el('div', 'sep', s, at(80, Y + 13, 162, 1));
+    });
+    rankEl = el('div', 'rank', s);
+    button(s, 'again', 'gold', 70, 147, 88, 23, 'PLAY AGAIN', 'restart', 9);
+    button(s, 'quit', 'crimson', 164, 147, 88, 23, 'MAIN MENU', 'home', 9);
+  }
 
   const SCREEN_MENU = { menu: 'main', settings: 'settings', paused: 'pause', over: 'over' };
-  const scr = {};
-  root.querySelectorAll('.scr').forEach((el) => (scr[el.dataset.s] = el));
-  const vals = {};
-  root.querySelectorAll('.sv').forEach((el) => (vals[el.dataset.k] = el));
-  const rankEl = root.querySelector('.rank');
-
-  // index of an id in the game's current menu (so keyboard and mouse share game.sel)
   const indexOf = (g, id) => {
     const mn = SCREEN_MENU[g.state];
     return mn ? TD.menuButtons(mn).findIndex((b) => b.id === id) : -1;
@@ -161,8 +300,8 @@
 
   // ---- mouse ----
   root.addEventListener('pointerover', (ev) => {
-    const el = ev.target.closest('[data-id],[data-row]');
-    if (el) select(el.dataset.id || el.dataset.row);
+    const e = ev.target.closest('[data-id],[data-row]');
+    if (e) select(e.dataset.id || e.dataset.row);
   });
   root.addEventListener('pointerdown', (ev) => {
     const g = TD.game;
@@ -170,35 +309,32 @@
     const b = ev.target.closest('.btn');
     if (b) { ev.preventDefault(); select(b.dataset.id); g.activate(b.dataset.id); return; }
     const tog = ev.target.closest('.tog');
-    if (tog) { select('fs'); g.setFullscreen(tog.dataset.v === '1'); return; } // inside the gesture
+    if (tog) { select('fs'); g.setFullscreen(tog.dataset.v === '1'); return; } // inside the click gesture
     const tr = ev.target.closest('.track');
     if (tr) { select(tr.dataset.row); dragTrack(tr, ev); return; }
     const row = ev.target.closest('.row');
     if (row) select(row.dataset.id);
   });
   function dragTrack(tr, ev) {
-    const id = tr.dataset.row;
+    const id = tr.dataset.row, A = TD.Audio;
     const set = (e) => {
       const r = tr.getBoundingClientRect();
-      const lv = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * TD.Audio.MAX_LEVEL);
-      const cur = id === 'music' ? TD.Audio.musicLevel : TD.Audio.sfxLevel;
-      if (lv === cur) return;
-      if (id === 'music') TD.Audio.setMusicLevel(lv); else TD.Audio.setSfxLevel(lv);
-      TD.Audio.hover();
+      const lv = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * A.MAX_LEVEL);
+      if (lv === (id === 'music' ? A.musicLevel : A.sfxLevel)) return;
+      if (id === 'music') A.setMusicLevel(lv); else A.setSfxLevel(lv);
+      A.hover();
     };
     set(ev);
-    const move = (e) => set(e);
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
-    window.addEventListener('pointermove', move);
+    const up = () => { window.removeEventListener('pointermove', set); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', set);
     window.addEventListener('pointerup', up);
   }
 
   // ---- per-frame sync ----
   let lastState = null, lastBox = '';
-  const setText = (el, t) => { t = String(t); if (el.textContent !== t) el.textContent = t; };
+  const setText = (e, t) => { t = String(t); if (e.textContent !== t) e.textContent = t; };
   TD.Overlay = {
     sync(g) {
-      // place the 320x180 box over the canvas play area
       const c = document.getElementById('game'), r = c.getBoundingClientRect(), v = TD.view;
       const u = r.width / v.VW;
       const box = (r.left + v.OX * u).toFixed(2) + ',' + r.top.toFixed(2) + ',' + u.toFixed(4);
@@ -207,33 +343,51 @@
         root.style.transform = 'translate(' + (r.left + v.OX * u) + 'px,' + r.top + 'px) scale(' + u + ')';
       }
 
-      const s = scr[g.state] ? g.state : null;
+      const s = screens[g.state] ? g.state : null;
       if (s !== lastState) {
-        for (const k in scr) scr[k].classList.toggle('on', k === s);
+        for (const k in screens) screens[k].classList.toggle('on', k === s);
         lastState = s;
       }
       if (!s) return;
-      const el = scr[s];
       const list = TD.menuButtons(SCREEN_MENU[s]);
       const selId = list[g.sel] && list[g.sel].id;
-      el.querySelectorAll('[data-id]').forEach((b) => b.classList.toggle('sel', b.dataset.id === selId));
+      for (const b of buttons) {
+        if (!screens[s].contains(b.wrap)) continue;
+        const on = b.id === selId;
+        if (b.sel !== on) { b.sel = on; b.wrap.classList.toggle('sel', on); drawButton(b.cv, THEME[b.theme], on && s !== 'menu'); }
+      }
 
       if (s === 'menu') {
-        // the chevrons follow the selected button
-        const b = el.querySelector('.btn.sel');
-        el.querySelectorAll('.chev').forEach((ch) => {
+        const b = screens.menu.querySelector('.btn.sel');
+        screens.menu.querySelectorAll('.chev').forEach((ch) => {
           ch.style.display = b ? '' : 'none';
-          if (b) ch.style.top = (parseFloat(b.style.top) + parseFloat(b.style.height) / 2) + 'px';
+          if (!b) return;
+          const top = parseFloat(b.style.top) + (parseFloat(b.style.height) - 1) / 2 - 5.5;
+          ch.style.top = top + 'px';
+          ch.style.left = (ch.dataset.side === 'L' ? parseFloat(b.style.left) - 13 : parseFloat(b.style.left) + parseFloat(b.style.width) + 5) + 'px';
         });
       } else if (s === 'settings') {
-        const A = TD.Audio, M = A.MAX_LEVEL;
-        el.querySelectorAll('.track').forEach((tr) => {
-          const lv = tr.dataset.row === 'music' ? A.musicLevel : A.sfxLevel, pct = (lv / M) * 100 + '%';
-          tr.children[0].style.width = pct; tr.children[1].style.left = pct;
-        });
+        const A = TD.Audio;
+        for (const id of ['music', 'sfx', 'fs']) {
+          const rw = rows[id], on = id === selId;
+          if (rw.sel !== on) { rw.sel = on; rw.row.classList.toggle('sel', on); drawRow(rw.cv, on); }
+          if (rw.track) {
+            const lv = id === 'music' ? A.musicLevel : A.sfxLevel;
+            if (rw.lv !== lv) { rw.lv = lv; drawTrack(rw.track, lv, A.MAX_LEVEL); }
+          }
+        }
         const fsOn = !!document.fullscreenElement, canFs = !!document.documentElement.requestFullscreen;
-        el.querySelectorAll('.tog').forEach((t) => t.classList.toggle('act', (t.dataset.v === '1') === fsOn));
-        el.querySelectorAll('[data-row="fs"],.row[data-id="fs"]').forEach((t) => (t.style.display = canFs ? '' : 'none'));
+        for (const v of ['1', '0']) {
+          const t = rows['tog' + v], act = (v === '1') === fsOn;
+          if (t.act !== act) {
+            t.act = act;
+            const th = THEME[act ? 'gold' : 'navy'];
+            drawButton(t.c, th, false);
+            Object.assign(t.t.lastChild.style, { color: th.tx, textShadow: '0 1px 0 ' + th.ts });
+          }
+          t.t.style.display = canFs ? '' : 'none';
+        }
+        rows.fs.row.style.display = canFs ? '' : 'none';
       } else if (s === 'over') {
         const acc = g.correct + g.typos ? Math.round((g.correct / (g.correct + g.typos)) * 100) : 0;
         setText(vals.score, g.score); setText(vals.wave, g.waves.wave); setText(vals.words, g.kills);
@@ -244,7 +398,7 @@
           : LB.improved ? 'RANK #' + g.lastRank + ' ON THE LEADERBOARD' + (g.newBest ? ' - NEW BEST!' : '')
           : 'YOUR BEST ' + LB.bestScore + ' STAYS AT RANK #' + g.lastRank);
         rankEl.classList.toggle('good', !!g.lastRank);
-        el.classList.toggle('ready', g.time - g.overAt > 0.8);
+        screens.over.classList.toggle('over-wait', g.time - g.overAt <= 0.8);
       }
     },
   };
