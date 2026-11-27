@@ -69,7 +69,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Pause and leaderboard panels: gold frame with chunky stair-notched corners (3-px steps) and an inner echo step.
 - Pause: maroon panel, gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
 - Leaderboard: maroon panel, gold LEADERBOARD title with red shadow, # NAME WAVE SCORE under a red line, #1 and your own name in gold, back hint (offline warning only when offline).
-- Game over: 6 stat rows with icons (score, wave, words, gold earned, accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s).
+- Game over: charcoal panel with the same stair-notched gold corners; 6 stat rows with icons (score, wave, words, gold earned, dartboard for accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s).
 
 ## Tip cards
 - Before a wave that brings new enemies (waves 1, 3, 5, 6, 8, 10), the game shows a tip card: each new enemy's sprite at 2x, name, tag, rules and a coloured example (e.g. PURPLE in green ink -> type GREEN). Text lives in `js/tips.js`.

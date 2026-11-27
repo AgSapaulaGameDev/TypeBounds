@@ -62,7 +62,21 @@
     trophy: ['#.#####.#', '#.#####.#', '.#######.', '..#####..', '...###...', '....#....', '...###...', '..#####..'],
     flag: ['##......', '######..', '#######.', '######..', '##......', '#.......', '#.......', '#.......', '#.......'],
     coin: ['..####..', '.##++##.', '##+**+##', '##+*#+##', '##+*#+##', '##+##+##', '.##++##.', '..####..'],
-    target: ['..#####..', '.#.....#.', '#..###..#', '#.#...#.#', '#.#.#.#.#', '#.#...#.#', '#..###..#', '.#.....#.', '..#####..'],
+    target: (() => { // dartboard: orange / red rings with a dart stuck in the middle
+      const rows = [];
+      for (let y = 0; y < 10; y++) {
+        let r = '';
+        for (let x = 0; x < 11; x++) {
+          const d = Math.hypot(x - 4, y - 5);
+          r += d < 1.5 ? '+' : d < 2.6 ? '#' : d < 3.6 ? '+' : d < 4.7 ? '#' : '.';
+        }
+        rows.push(r.split(''));
+      }
+      for (let i = 1; i <= 4; i++) rows[5 - i][4 + i] = 'd'; // shaft
+      rows[0][9] = '*'; rows[0][10] = '*'; rows[1][10] = '*'; // fletching
+      rows[5][4] = 'd'; // tip
+      return rows.map((r) => r.join(''));
+    })(),
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
@@ -83,7 +97,7 @@
     }
     rows.forEach((r, py) => r.split('').forEach((ch, px) => {
       if (ch === '.') return;
-      R(x, ch === '+' ? pal.shade || pal.main : ch === '*' ? pal.hi || pal.main : pal.main, px + o, py + o, 1, 1);
+      R(x, ch === '+' ? pal.shade || pal.main : ch === '*' ? pal.hi || pal.main : ch === 'd' ? pal.d || pal.main : pal.main, px + o, py + o, 1, 1);
     }));
     return c;
   }
@@ -115,7 +129,7 @@
 
   // ---- panel, ribbon, pennant ----
   // pause / leaderboard frame: gold border with chunky stair-notched corners and an inner echo step
-  function drawNotchPanel(c) {
+  function drawNotchPanel(c, dark) { // dark: charcoal fill (game over) instead of maroon
     const x = c.getContext('2d'), w = c.width - 1, h = c.height - 2; // room for the drop shadow
     const corner = (px, py) => [Math.min(px, w - 1 - px), Math.min(py, h - 1 - py)];
     const inside = (px, py) => {
@@ -130,12 +144,13 @@
       if (n === 0) return '#140a04';
       if (n === 1) return (px < w / 2 && dx === 1) || (py < h / 2 && dy === 1) ? '#ffe27a' : '#c98a2a';
       if (n === 2) return '#e0a640';
-      if (n === 3) return '#3a1408';
+      if (n === 3) return dark ? '#3a2410' : '#3a1408';
+      if (dark) return py < 6 ? '#26232c' : '#1c1a22';
       return py < 6 ? '#36141e' : '#2a0f16';
     }, 4);
   }
   function drawPanel(c, maroon) { // maroon: notched dark red frame (pause, leaderboard)
-    if (maroon) return drawNotchPanel(c);
+    if (maroon) return drawNotchPanel(c, maroon === 'dark');
     const x = c.getContext('2d'), w = c.width, h = c.height;
     step(x, 'rgba(0,0,0,.5)', 1, 2, w - 1, h - 2, 3);
     step(x, '#140a04', 0, 0, w - 1, h - 1, 3);
@@ -313,11 +328,11 @@
   let rankEl;
   {
     const s = scr('over');
-    panel(s, 62, 27, 198, 110);
+    panel(s, 62, 27, 198, 110, 'dark');
     ribbon(s, 83, 9, 156, 27, 'GAME OVER', 'skull', 'skull', 12);
     const STAT = [['score', 'trophy', 'SCORE'], ['wave', 'flag', 'WAVE'], ['words', 'aa', 'WORDS'],
       ['gold', 'coin', 'GOLD EARNED'], ['acc', 'target', 'ACCURACY'], ['best', 'star', 'BEST SCORE']];
-    const PAL = { target: { main: '#ef5a4a', ol: '#2a0a08' }, aa: { main: '#f3e2c0', ol: '#1e140a' } };
+    const PAL = { target: { main: '#f5a23a', shade: '#e0403a', hi: '#fff3d0', d: '#6a3a14', ol: '#2a0a08' }, aa: { main: '#f3e2c0', ol: '#1e140a' } };
     STAT.forEach(([k, ic, lab], i) => {
       const Y = 43 + i * 15;
       const r = el('div', 'stat', s, at(78, Y, 166, 12));
