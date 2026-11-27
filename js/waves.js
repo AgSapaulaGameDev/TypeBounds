@@ -17,11 +17,11 @@
       this.boss = bossFor(n);
       this.bossPending = !!this.boss;
       this.bossTimer = 1.2;
-      this.total = this.boss ? 0 : 6 + 2 * n; // boss waves: no runners or tanks
+      this.total = this.boss ? 0 : Math.min(18, 6 + 2 * n); // boss waves: no runners or tanks. Never more than 18
       this.spawned = 0;
       this.timer = this.boss ? 4 : 0.6;
-      this.interval = Math.max(0.55, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1);
-      this.tankChance = Math.min(0.45, 0.12 + 0.04 * n);
+      this.interval = Math.max(1.0, 2.3 - 0.13 * n) * (this.boss ? 2.5 : 1); // at least 1 s between spawns
+      this.tankChance = Math.min(0.35, 0.12 + 0.04 * n);
       // 1-2 Calculator + Chalkboard, 3-4 Chalkboard + maths imps, 5 Mathematician,
       // 6-7 colour (Word Color slime + tank colour slime), 8-9 tank colour slime + eyedropper slime, 10 Rainbow Slime,
       // 11-12 Rabbit + Tortoise, 13-14 Chameleon + Tortoise, 15 Golden Goose

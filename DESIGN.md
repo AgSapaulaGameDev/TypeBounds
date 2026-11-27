@@ -16,7 +16,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 - Enemies that reach the tower stop and attack it on a timer. Tower HP 0 = game over.
 - Score per kill = word length × 10 × combo multiplier (+0.25 per 10 combo, max ×3).
 - A wave with zero typos gives a PERFECT bonus (50 × wave).
-- Each wave: 6 + 2 x wave enemies, spawning faster (2.3 s gap - 0.13 s per wave, min 0.55 s), more tanks (12% + 4% per wave, max 45%), and every enemy walks 2% faster per wave (wave 11 = x1.20, wave 15 = x1.28).
+- Each wave: 6 + 2 x wave enemies, **capped at 18** (reached at wave 6), spawning faster (2.3 s gap - 0.13 s per wave, **min 1.0 s**, reached at wave 10), more tanks (12% + 4% per wave, max 35%), and every enemy walks 2% faster per wave (wave 11 = x1.20, wave 15 = x1.28). After wave 10 the difficulty comes from speed, new enemy tricks and bosses, not from more enemies.
 
 ## Enemies
 ### Wave themes (repeat every 15 waves, faster each loop)
@@ -26,7 +26,7 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | 3-4 | Maths | Chalkboard tank + **maths imps** (the Mathematician's minions: `7+5=__`, type the answer). Banner: "MATHS IMPS: TYPE THE ANSWER!" |
 | 5 | Maths | Mathematician boss |
 | 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
-| 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour). Easier mix: ~40% fewer enemies (13 instead of 22 on wave 8), spawns 1.4x further apart, eyedropper slimes at 75% speed |
+| 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour). Easier mix: ~40% fewer enemies (11 instead of 18), spawns 1.4x further apart, eyedropper slimes at 75% speed |
 | 10 | Colour | Rainbow Slime boss |
 | 11-12 | Animals | **Rabbit** (fast, short animals: CAT, OWL, FOX; moves in quick hops with pauses) + **Tortoise** tank (long animals: CROCODILE, KANGAROO; very slow, 3 damage; a typo on it makes it hide in its shell for 1 s: word shows ???, it stops, keys on it do nothing). Banner: "ANIMALS: RABBITS HOP FAST!" |
 | 13-14 | Animals | Tortoise + **Chameleon** (medium animals: PANTHER, GECKO). ~20% fewer enemies, 1.15x further apart. Banner: "CHAMELEONS: TYPE THEM WHILE YOU CAN SEE THEM!" |
