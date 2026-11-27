@@ -63,7 +63,7 @@
   }
 
   const HOP = { every: 0.62, air: 0.32, height: 5 }; // rabbit: hop for 0.32 s, sit for 0.3 s
-  const CAMO = { seen: 2.0, period: 3.5 };            // chameleon: visible 2 s, camouflaged 1.5 s
+  const CAMO = { seen: 3.0, period: 4.2 };            // chameleon: visible 3 s, camouflaged 1.2 s
   const clampField = (e) => { e.x = Math.max(10, Math.min(310, e.x)); e.y = Math.max(28, Math.min(170, e.y)); };
 
   let nextId = 1;
@@ -100,7 +100,7 @@
         this.hue = 0; this.hueT = 0;
       }
       if (kind === 'goose') { this.mode = 'walk'; this.layCd = 1.2; this.layN = 0; this.anger = 0; this.finalCd = 0; }
-      if (kind === 'chameleon') { this.camoT = Math.random() * 1.8; this.camo = false; }
+      if (kind === 'chameleon') { this.camoT = Math.random() * 2.8; this.camo = false; }
       if (kind === 'rabbit') this.hopT = Math.random() * HOP.every;
       this.shell = 0; this.lift = 0;
     }

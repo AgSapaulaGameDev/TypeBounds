@@ -450,11 +450,12 @@
       let e = this.locked;
       if (e && e.hidden) return; // locked tortoise is hiding in its shell: keys do nothing until it comes out
       if (!e) {
-        const cands = this.enemies.filter((en) => !en.hidden && en.word[0] === ch);
+        // next letter to type: the first one, or where you left off (a tortoise that hid keeps your letters)
+        const cands = this.enemies.filter((en) => !en.hidden && en.word[en.progress] === ch);
         // a camouflaged chameleon can't be locked onto, but aiming at it isn't a typo either
         if (!cands.length && this.enemies.some((en) => en.camo && en.hidden && en.word[0] === ch)) return;
         if (!cands.length) return this.miss(null);
-        cands.sort((a, b) => distToBase(a) - distToBase(b));
+        cands.sort((a, b) => (b.progress > 0) - (a.progress > 0) || distToBase(a) - distToBase(b));
         e = this.locked = cands[0];
         A.lock();
       } else if (e.word[e.progress] !== ch) {
@@ -646,7 +647,11 @@
       this.typoFlash = 0.2;
       this.shake = Math.max(this.shake, 1.5);
       if (e) e.shake = 0.25;
-      if (e && e.kind === 'tortoise') { e.shell = 1; e.hidden = true; } // pulls into its shell, word hidden ~1 s
+      if (e && e.kind === 'tortoise') {
+        // pulls into its shell for ~1 s: word hidden, you're released to type others, your letters stay
+        e.shell = 1; e.hidden = true;
+        if (this.locked === e) this.locked = null;
+      }
       A.typo();
     },
 

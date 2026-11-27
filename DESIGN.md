@@ -28,8 +28,8 @@ Double-click `index.html`. No build step, no server. Scripts are classic `<scrip
 | 6-7 | Colour | Word Color slime + **tank colour slime** (medium slime, slower, long colour word like CRIMSON in a different ink) |
 | 8-9 | Colour | tank colour slime + **eyedropper slime** (type its ink colour). Easier mix: ~40% fewer enemies (11 instead of 18), spawns 1.4x further apart, eyedropper slimes at 75% speed |
 | 10 | Colour | Rainbow Slime boss |
-| 11-12 | Animals | **Rabbit** (fast, short animals: CAT, OWL, FOX; moves in quick hops with pauses) + **Tortoise** tank (long animals: CROCODILE, KANGAROO; very slow, 3 damage; a typo on it makes it hide in its shell for 1 s: word shows ???, it stops, keys on it do nothing). Banner: "ANIMALS: RABBITS HOP FAST!" |
-| 13-14 | Animals | Tortoise + **Chameleon** (medium animals: PANTHER, GECKO). ~20% fewer enemies, 1.15x further apart. Banner: "CHAMELEONS: TYPE THEM WHILE YOU CAN SEE THEM!" |
+| 11-12 | Animals | **Rabbit** (fast, short animals: CAT, OWL, FOX; moves in quick hops with pauses) + **Tortoise** tank (long animals: CROCODILE, KANGAROO; very slow, 3 damage; a typo on it makes it hide in its shell for 1 s: word shows ???, it stops, and you're released to type other enemies; your typed letters stay, so when it comes out you continue where you left off by typing its next letter). Banner: "ANIMALS: RABBITS HOP FAST!" |
+| 13-14 | Animals | Tortoise + **Chameleon** (medium animals: PANTHER, GECKO). ~20% fewer enemies, 1.15x further apart, tortoises max 20% of spawns. Banner: "CHAMELEONS: TYPE THEM WHILE YOU CAN SEE THEM!" |
 | 15 | Animals | Golden Goose boss |
 
 Runner and Tank below are **archived** (code and sprites kept, not spawned) for later use.
@@ -57,7 +57,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Rewards: 5 gold per hit, 25 gold + 500 score on kill. Minions give 1 gold.
 
 ### Chameleon
-- Camouflage cycle per chameleon (own random phase): ~2 s visible (bright orange), ~1.5 s camouflaged (grass colours, faded, a faint green leaf shimmer near it).
+- Camouflage cycle per chameleon (own random phase): ~3 s visible (bright orange), ~1.2 s camouflaged (grass colours, faded, a faint green leaf shimmer near it).
 - Camouflaged and not started: label `???`, can't be locked onto, and pressing its first letter is NOT a typo.
 - Camouflaged but already started: you keep your progress and the lock; the label shows your letters + blanks (type it blind).
 

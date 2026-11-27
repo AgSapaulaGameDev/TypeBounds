@@ -34,6 +34,7 @@
         11: ['rabbit', 'tortoise'], 13: ['chameleon', 'tortoise'] };
       const key = [13, 11, 8, 6, 3, 1].find((k) => pos >= k);
       [this.light, this.heavy] = MIX[key];
+      if (pos === 13 || pos === 14) this.tankChance = Math.min(this.tankChance, 0.2); // fewer tortoises with chameleons
       this.speedMul = 1 + 0.02 * (n - 1); // +2% speed per wave
     }
 

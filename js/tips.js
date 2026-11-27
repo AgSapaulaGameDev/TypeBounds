@@ -77,7 +77,7 @@
       ] },
       { name: 'TORTOISE', tag: 'TANK', sprite: () => S().tortoise[0], lines: [
         'VERY SLOW. HITS HARD: 3 DAMAGE.',
-        [['TYPO: ', RED], ['IT HIDES IN ITS SHELL FOR 1 SECOND.', WHITE]],
+        [['TYPO: ', RED], ['IT HIDES 1 S. YOUR LETTERS STAY.', WHITE]],
         [['EXAMPLE: ', DIM], ['CROCODILE  KANGAROO', WHITE]],
       ] },
     ] },
