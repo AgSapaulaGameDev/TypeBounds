@@ -829,7 +829,8 @@
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       for (const e of this.enemies) { const f = e.frames[0]; ctx.fillRect(Math.round(e.x - f.w / 2) + 2, Math.round(e.y) - 1, f.w - 4, 2); }
 
-      const items = [{ y: B.sortY, draw: () => this.drawCastle() }];
+      // the HTML main menu has its own tower in the logo, so the world one stays hidden there
+      const items = this.state === 'menu' && TD.Overlay ? [] : [{ y: B.sortY, draw: () => this.drawCastle() }];
       for (const e of this.enemies) items.push({ y: e.y, draw: () => this.drawEnemy(e) });
       if (this.inGame) items.push(...this.wall.items(ctx));
       items.sort((a, b) => a.y - b.y).forEach((i) => i.draw());
@@ -1146,6 +1147,11 @@
     },
 
     drawMenu() {
+      if (TD.Overlay) { // logo, title, buttons and banners are HTML (js/overlay.js); the logo has its own tower
+        this.dim(0.45);
+        if (A.blocked && Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 173, C.gold, 1, 'center', C.ink);
+        return;
+      }
       this.dim(0.35);
       // the castle stands out: warm torch glow behind it, drawn again on top of the dim
       const gx = B.cx, gy = B.drawY + 26;
@@ -1157,10 +1163,6 @@
         }
       }
       this.drawCastle();
-      if (TD.Overlay) { // title, buttons and banners are HTML (js/overlay.js)
-        if (A.blocked && Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'CLICK OR PRESS ANY KEY FOR SOUND', W / 2, 173, C.gold, 1, 'center', C.ink);
-        return;
-      }
       TD.Title.draw(ctx, W / 2, 14);
       F.draw(ctx, 'PROTECT THE TOWER', W / 2, 42, C.dim, 1, 'center', C.ink);
       this.drawButtons(buttons('main'));

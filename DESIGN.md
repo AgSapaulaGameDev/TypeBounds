@@ -64,7 +64,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Art is real pixel art: small canvases drawn 1 pixel per play unit (stair-step corners, banded fills, outlined sprite icons) and scaled up unsmoothed; only the text is the web font.
 - Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with folded tails and icons.
 - Buttons: chamfered, gold (main action), crimson (secondary), green (resume), brown (restart), with icons (play, restart, gear, home, back arrow).
-- Main menu: hanging crimson pennants with crowns, gold TYPEBOUNDS title, "PROTECT THE TOWER", castle glow, PLAY (gold) / LEADERBOARD / SETTINGS, chevrons beside the selected button.
+- Main menu: hanging crimson pennants with crowns and a pixel logo (js/overlay.js drawLogo): stone tower with flag and glowing window on a stepped brick mound with light rays, red ribbon tails, dark maroon title plate with a gold bar and crown shield, gold TYPEBOUNDS title, gold-framed "PROTECT THE TOWER" plaque; PLAY (gold) / LEADERBOARD / SETTINGS below, chevrons beside the selected button. The world castle is hidden behind the menu.
 - Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle.
 - Pause and leaderboard panels: gold frame with chunky stair-notched corners (3-px steps) and an inner echo step.
 - Pause: maroon panel, gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
@@ -108,7 +108,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Esc in game opens PAUSE: Resume, Settings, Main Menu (quits the run, no score saved). Esc again resumes. Losing window focus also pauses.
 - Backspace drops the current target (Esc no longer does). In the shop, Backspace deletes a letter.
 - SETTINGS (from main menu or pause): compact rows, label left and control right. MUSIC / SFX = small volume sliders 0-10 ([-] 10 orange segments [+]; click -, +, or a segment; Left/Right; Enter mutes). FULLSCREEN = ON/OFF pill (click a side, or Left = ON / Right = OFF). Saved in the browser.
-- Main menu: castle gets a warm glow and is drawn above the dim; buttons sit below it.
+- Main menu (canvas fallback only): castle gets a warm glow and is drawn above the dim; buttons sit below it.
 - Music: two looping chiptunes made in code. Menu = calm (Am-F-G-Em, 96 BPM). In game (playing, shop, paused) = battle track (Dm-Bb-C-A, 140 BPM, kick/snare/pumping bass). Game over goes back to the calm track. Audio starts on page load; if the browser blocks autoplay (most do until the first click/tap/key anywhere on the page), the menu shows "CLICK OR PRESS ANY KEY FOR SOUND".
 
 ## Main menu, name, leaderboard
