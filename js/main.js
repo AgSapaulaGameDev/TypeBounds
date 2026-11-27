@@ -1140,7 +1140,7 @@
     },
 
     drawBanner() {
-      if (this.phase === 'fight') return;
+      if (this.phase === 'fight' || TD.Overlay) return; // HTML royal-red banner (js/overlay.js)
       const w = Math.max(F.width(this.bannerText, 2), F.width(this.bannerSub)) + 16;
       this.panel(Math.round((W - w) / 2), 36, w, 28);
       F.draw(ctx, this.bannerText, W / 2, 41, C.gold, 2, 'center', C.ink);

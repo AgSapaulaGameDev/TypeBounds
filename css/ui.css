@@ -142,3 +142,19 @@
 #hud .hbadge { position: absolute; left: 0; top: 0; width: 17px; height: 17px; display: flex; align-items: center; justify-content: center; padding-bottom: 1px; }
 #hud .hhp { position: absolute; left: 16px; right: 1px; top: 2px; height: 13px; display: flex; align-items: center; justify-content: center; }
 #hud .hwall { top: 21px; width: 70px; height: 4px; }
+
+/* wave banner: royal-red ribbon + plaque (js/overlay.js syncBanner) */
+#ui .wban { position: absolute; inset: 0; pointer-events: none; }
+#ui .wban.pop { animation: wbpop .25s steps(4); }
+@keyframes wbpop { 0% { transform: translateY(-6px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+#ui .wban > div { position: absolute; }
+#ui .wb-title {
+  position: absolute; left: 0; right: 0; top: 0; height: 23px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; line-height: 14px; font-weight: 500; letter-spacing: 1.5px; white-space: nowrap; padding-top: 1px;
+}
+#ui .wb-title { left: 50%; right: auto; transform: translateX(-50%); color: #ffd65a; text-shadow: 0 1px 0 #7a3a0a, 1px 1px 0 #2a0a10, -1px 0 0 #2a0a10, 0 -1px 0 #2a0a10, 1px 0 0 #2a0a10, 0 2px 0 #2a0a10; }
+#ui .wb-sub {
+  position: absolute; left: 50%; top: 0; height: 13px; transform: translateX(-50%); display: flex; align-items: center; white-space: nowrap;
+  font-size: 6.5px; font-weight: 500; letter-spacing: 1px; color: #f3e2c0; text-shadow: 1px 1px 0 #140508;
+}
+#ui .wb-sub.gold { color: #ffcd4a; }

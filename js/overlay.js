@@ -667,6 +667,35 @@
     HUD.esc.style.display = g.state === 'over' ? 'none' : '';
   }
 
+  // wave banner (start / clear): royal-red ribbon with the title, small gold-framed plaque under it
+  function drawPlaque(c) {
+    const x = c.getContext('2d'), w = c.width, h = c.height, m = (h - 1) / 2;
+    shape(x, w, h, (px, py) => { const e = Math.round(Math.abs(py - m) * 0.9); return py >= 0 && py < h && px >= e && px < w - e; },
+      (n, px, py) => (n === 0 ? '#140806' : n === 1 ? (py <= 1 ? '#ffe27a' : '#e0a640') : n === 2 ? '#5a3010' : py < 5 ? '#3c2018' : '#2e1610'), 3);
+  }
+  const WB = { el: el('div', 'wban', root), key: '' };
+  WB.rib = el('div', 'wb-rib', WB.el); WB.ribCv = art(10, 28, WB.rib);
+  WB.title = el('div', 'wb-title', WB.rib);
+  WB.plq = el('div', 'wb-plq', WB.el); WB.plqCv = art(10, 13, WB.plq);
+  WB.sub = el('div', 'wb-sub', WB.plq);
+  function syncBanner(g) {
+    const show = g.state === 'play' && (g.phase === 'banner' || g.phase === 'clear');
+    WB.el.style.display = show ? '' : 'none';
+    if (!show) { WB.key = ''; return; }
+    const key = g.phase + '|' + g.bannerText + '|' + g.bannerSub;
+    if (WB.key === key) return;
+    WB.key = key;
+    WB.title.textContent = g.bannerText;
+    WB.sub.textContent = g.bannerSub;
+    WB.sub.classList.toggle('gold', g.phase === 'clear');
+    const rw = Math.max(96, Math.ceil(WB.title.offsetWidth) + 46), pw = Math.max(70, Math.ceil(WB.sub.offsetWidth) + 26);
+    Object.assign(WB.rib.style, at(160 - rw / 2, 33, rw, 28));
+    WB.ribCv.width = rw; WB.ribCv.style.width = rw + 'px'; drawRibbon(WB.ribCv);
+    Object.assign(WB.plq.style, at(160 - pw / 2, 59, pw, 13));
+    WB.plqCv.width = pw; WB.plqCv.style.width = pw + 'px'; drawPlaque(WB.plqCv);
+    WB.el.classList.remove('pop'); void WB.el.offsetWidth; WB.el.classList.add('pop');
+  }
+
   TD.Overlay = {
     sync(g) {
       const c = document.getElementById('game'), r = c.getBoundingClientRect(), v = TD.view;
@@ -677,6 +706,7 @@
         root.style.transform = 'translate(' + (r.left + v.OX * u) + 'px,' + r.top + 'px) scale(' + u + ')';
       }
       syncHud(g, r, u, v);
+      syncBanner(g);
 
       const key = g.state === 'play' && g.phase === 'tips' && TD.Tips[g.waves.wave] ? 'tips' : g.state;
       const s = screens[key] ? key : null;
