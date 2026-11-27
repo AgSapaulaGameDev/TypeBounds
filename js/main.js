@@ -12,7 +12,7 @@
   // The canvas is always 180 px tall. Its width follows the window's shape (320 to 640),
   // so wide screens show more forest at the sides instead of black bars.
   // OX = how far the 320-wide play area is shifted right to sit in the middle.
-  let VW = W, OX = 0, bg = null;
+  let VW = W, OX = 0, bg = null, bgMenu = null;
   const VW_MIN = W, VW_MAX = 640;
 
   function fit() {
@@ -26,6 +26,7 @@
       OX = Math.floor((VW - W) / 2);
       TD.view = { OX, VW, W, H }; // the HTML menu overlay lines itself up with the play area
       bg = S.buildBackground(7, VW);
+      bgMenu = S.buildBackground(7, VW, true); // same forest, no stone plaza: the menu logo has its own tower
     }
     ctx.imageSmoothingEnabled = false;
     if (raw >= VW_MIN && raw <= VW_MAX) {
@@ -823,7 +824,7 @@
       const sx = shaking ? Math.round(rand(-this.shake, this.shake)) : 0;
       const sy = shaking ? Math.round(rand(-this.shake, this.shake)) : 0;
       ctx.translate(OX + sx, sy);
-      ctx.drawImage(bg, -OX, 0);
+      ctx.drawImage(this.state === 'menu' && TD.Overlay ? bgMenu : bg, -OX, 0);
       this.drawFireflies();
 
       ctx.fillStyle = 'rgba(0,0,0,0.35)';

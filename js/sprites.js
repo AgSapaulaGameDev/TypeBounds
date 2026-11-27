@@ -305,7 +305,7 @@
 
   // width = view width in pixels (320 for 16:9, wider on wide screens). The clearing, plaza
   // and castle area stay centred; extra width is filled with forest.
-  function buildBackground(seed, width) {
+  function buildBackground(seed, width, noPlaza) { // noPlaza: plain clearing (behind the HTML main menu)
     const W = Math.round(width || 320), H = 180, cx = W / 2, wk = W / 320;
     const c = makeCanvas(W, H), x = c.getContext('2d');
     const rnd = mulberry32(seed || 7);
@@ -335,7 +335,7 @@
 
         // cobblestone plaza around the castle
         const qx = (px - cx) / 32, qy = (py - 100) / 19, pd = qx * qx + qy * qy;
-        if (pd < 1 && !(pd > 0.7 && rnd() < 0.35)) {
+        if (pd < 1 && !(pd > 0.7 && rnd() < 0.35) && !noPlaza) {
           const row = Math.floor(py / 3), off = row % 2 ? 2 : 0;
           const cell = Math.floor((px + off) / 4);
           if (py % 3 === 2 || (px + off) % 4 === 3) col = MORTAR;
@@ -358,7 +358,7 @@
 
     // castle shadow
     x.fillStyle = 'rgba(0,0,0,0.35)';
-    x.fillRect(Math.round(cx) - 14, 103, 29, 3);
+    if (!noPlaza) x.fillRect(Math.round(cx) - 14, 103, 29, 3);
 
     // grass tufts
     for (let i = 0; i < 240 * wk; i++) {

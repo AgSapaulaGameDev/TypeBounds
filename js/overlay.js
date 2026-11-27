@@ -199,85 +199,96 @@
     R(x, '#e0a640', 1, 1, w - 2, 3); R(x, '#ffe27a', 1, 1, w - 2, 1); R(x, '#a86a14', 1, 3, w - 2, 1);
   }
 
-  // main menu logo: tower on a brick mound with light rays, red ribbon banner with a dark title plate,
-  // crown shield on top and a gold-framed PROTECT THE TOWER plaque below. 232 x 90, centre x 116.
-  function drawLogo(c) {
-    const x = c.getContext('2d'), W = c.width, cx = 116;
+  // main menu logo (184 x 72, centre x 92): stone tower with flag on a stepped brick mound, gold rail,
+  // dark title plate with hanging red ribbons and swallowtail ends, crown shield, chunky pixel
+  // TYPEBOUNDS title drawn here (not a web font) and the PROTECT THE TOWER plaque.
+  const LOGO_FONT = {
+    T: ['######', '######', '..##..', '..##..', '..##..', '..##..', '..##..', '..##..', '..##..'],
+    Y: ['##..##', '##..##', '##..##', '.####.', '..##..', '..##..', '..##..', '..##..', '..##..'],
+    P: ['#####.', '######', '##..##', '##..##', '######', '#####.', '##....', '##....', '##....'],
+    E: ['######', '######', '##....', '##....', '#####.', '#####.', '##....', '######', '######'],
+    B: ['#####.', '######', '##..##', '##..##', '#####.', '######', '##..##', '######', '#####.'],
+    O: ['.####.', '######', '##..##', '##..##', '##..##', '##..##', '##..##', '######', '.####.'],
+    U: ['##..##', '##..##', '##..##', '##..##', '##..##', '##..##', '##..##', '######', '.####.'],
+    N: ['##..##', '###.##', '###.##', '######', '##.###', '##.###', '##..##', '##..##', '##..##'],
+    D: ['#####.', '######', '##..##', '##..##', '##..##', '##..##', '##..##', '######', '#####.'],
+    S: ['.#####', '######', '##....', '#####.', '.#####', '....##', '....##', '######', '#####.'],
+  };
+  function drawLogo(c) { // canvas is 200 wide: 8 px margins each side for the swallowtails
+    const x = c.getContext('2d'), W = 184, H = c.height, cx = 92;
+    const red = (n, py, dark) => (n === 0 ? '#1e0a06' : n === 1 ? '#e0a640' : dark ? '#6a1626' : n === 2 ? '#8a1e2c' : py % 5 === 0 ? '#c43444' : '#b02838');
+    for (const side of [-1, 1]) { // swallowtails, in real canvas pixels before the shift
+      const mx = (px) => (side < 0 ? px : c.width - 1 - px);
+      shape(x, c.width, H, (px, py) => { const ox = mx(px); return ox >= 0 && ox <= 20 && py >= 35 && py <= 57 && ox >= 7 - Math.abs(py - 46) * 0.6; },
+        (n, px, py) => red(n, py, mx(px) > 16), 3);
+    }
+    x.translate(8, 0);
     const P = (col, X, Y) => R(x, col, X, Y, 1, 1);
-    // light rays fanning out from behind the tower
-    for (let py = 0; py < 46; py++) for (let px = 20; px < W - 20; px++) {
-      const dx = px - cx, dy = (py - 30) * 1.4, d = Math.hypot(dx, dy);
-      if (d > 74) continue;
-      const a = Math.atan2(dy, dx), ray = Math.floor(((a + Math.PI) / (2 * Math.PI)) * 28) % 2 === 0;
-      const k = Math.round((1 - d / 74) * 5) / 5 * (ray ? 0.42 : 0.16);
-      if (k > 0) { x.fillStyle = 'rgba(255,200,70,' + k.toFixed(2) + ')'; x.fillRect(px, py, 1, 1); }
+    // --- flag + tower ---
+    R(x, '#1a1c26', 90, 0, 3, 7); R(x, '#d8d2e4', 91, 0, 1, 7);
+    for (let fy = 0; fy < 6; fy++) R(x, '#1e0a06', 92, fy, 9 - Math.abs(fy - 2.5) * 1.5 | 0, 1);
+    for (let fy = 1; fy < 5; fy++) R(x, fy < 2 ? '#f0606a' : '#d02c3c', 93, fy, 7 - Math.abs(fy - 2.5) * 1.5 | 0, 1);
+    R(x, '#1a1c26', 79, 11, 27, 20); // body outline
+    R(x, '#5e687c', 80, 12, 25, 19);
+    for (let by = 12; by < 30; by += 3) {
+      R(x, '#454c5e', 80, by + 2, 25, 1);
+      for (let bx = 80 + ((by / 3) % 2 ? 3 : 0); bx < 105; bx += 6) { R(x, '#6c7689', bx + 1, by, 4, 1); R(x, '#454c5e', bx, by, 1, 2); }
     }
-    // brick mound: four stepped layers widening downwards
-    for (let i = 0; i < 4; i++) {
-      const top = 24 + i * 5, hw = 24 + i * 18, X0 = cx - hw, Wd = hw * 2;
-      R(x, '#1a0e08', X0 - 1, top - 1, Wd + 2, 7);
-      R(x, '#4e3226', X0, top, Wd, 5);
-      R(x, '#6e4a36', X0, top, Wd, 1);
-      R(x, '#2e1c14', X0, top + 4, Wd, 1);
-      for (let bx = X0 + (i % 2 ? 4 : 0); bx < X0 + Wd; bx += 9) { R(x, '#2a1810', bx, top + 1, 1, 3); R(x, '#7a5440', bx + 1, top + 1, 3, 1); }
-    }
-    // tower
-    const tx = cx - 14, tw = 28;
-    R(x, '#14161e', tx - 1, 17, tw + 2, 28);
-    R(x, '#6c7689', tx, 18, tw, 27);
-    R(x, '#8a95a8', tx, 18, 3, 27); R(x, '#4c5466', tx + tw - 3, 18, 3, 27);
-    for (let by = 21; by < 44; by += 5) { R(x, '#454c5e', tx + 3, by, tw - 6, 1); for (let bx = tx + ((by / 5) % 2 ? 5 : 9); bx < tx + tw - 3; bx += 8) R(x, '#454c5e', bx, by + 1, 1, 4); }
-    // parapet + merlons
-    R(x, '#14161e', tx - 4, 13, tw + 8, 6); R(x, '#7c869a', tx - 3, 14, tw + 6, 4); R(x, '#a0aabb', tx - 3, 14, tw + 6, 1); R(x, '#4c5466', tx - 3, 17, tw + 6, 1);
-    for (const mx of [tx - 3, tx + 6, tx + 16, tx + 25]) { R(x, '#14161e', mx - 1, 7, 8, 7); R(x, '#7c869a', mx, 8, 6, 6); R(x, '#a0aabb', mx, 8, 6, 1); R(x, '#5a6276', mx + 5, 9, 1, 5); }
-    // glowing window
-    R(x, '#14161e', cx - 4, 22, 8, 10); R(x, '#ffcd4a', cx - 3, 23, 6, 8); R(x, '#fff3b0', cx - 3, 23, 2, 3); R(x, '#d98a1c', cx - 3, 30, 6, 1);
-    // flag
-    R(x, '#14161e', cx - 1, 0, 3, 8); R(x, '#d8d2e4', cx, 0, 1, 8);
-    for (let fy = 0; fy < 6; fy++) { const len = 10 - Math.abs(fy - 2.5) * 1.6 | 0; R(x, '#1e0a06', cx + 1, fy, len + 2, 1); }
-    for (let fy = 1; fy < 5; fy++) { const len = 9 - Math.abs(fy - 2.5) * 1.6 | 0; R(x, fy < 2 ? '#f0606a' : '#d02c3c', cx + 2, fy, len, 1); }
-    // ribbon tails behind the plate: run outwards and down, forked ends
-    const tail = (side) => {
-      const inside = (px, py) => {
-        const ox = side < 0 ? px : W - 1 - px; // distance from the outer canvas edge
-        if (ox < 0 || ox > 30) return false;
-        const drop = (30 - ox) * 0.35, y0 = 48 + drop, y1 = 72 + drop;
-        if (py < y0 || py > y1) return false;
-        const mid = (y0 + y1) / 2;
-        return ox > 6 - Math.abs(py - mid) * 0.55; // forked notch at the outer end
-      };
-      shape(x, W, 90, inside, (n, px, py) => {
-        if (n === 0) return '#1e0a06';
-        if (n === 1) return '#e0a640';
-        const ox = side < 0 ? px : W - 1 - px;
-        return ox > 24 ? '#6a1626' : n === 2 ? '#7a1f30' : py % 6 === 0 ? '#9c2b3f' : '#b8283a';
-      }, 3);
+    R(x, '#1a1c26', 76, 7, 33, 6); R(x, '#7c869a', 77, 8, 31, 4); R(x, '#a0aabb', 77, 8, 31, 1); R(x, '#4c5466', 77, 11, 31, 1); // parapet
+    for (const mx of [77, 85, 95, 103]) { R(x, '#1a1c26', mx - 1, 3, 7, 5); R(x, '#7c869a', mx, 4, 5, 4); R(x, '#a0aabb', mx, 4, 5, 1); }
+    R(x, '#1a1c26', 89, 14, 7, 7); R(x, '#ffcd4a', 90, 15, 5, 5); R(x, '#fff3b0', 90, 15, 2, 2); R(x, '#d98a1c', 90, 19, 5, 1); // window
+    // --- brick mound: three steps down each side of the tower ---
+    const bricks = (X0, X1, Y) => {
+      R(x, '#1a0e08', X0 - 1, Y - 1, X1 - X0 + 2, 6);
+      R(x, '#4a2e24', X0, Y, X1 - X0, 4);
+      R(x, '#24140e', X0, Y + 3, X1 - X0, 1);
+      for (let bx = X0 + ((Y / 4) % 2 ? 3 : 0); bx < X1; bx += 7) { R(x, '#24140e', bx, Y, 1, 3); R(x, '#6a4434', bx + 1, Y, 5, 1); }
     };
-    tail(-1); tail(1);
-    // title plate: gold bar on top, dark maroon face, gold frame
-    const L = 24, Rr = 208;
-    shape(x, W, 90, (px, py) => py >= 42 && py <= 73 && px >= L && px <= Rr, (n, px, py) => {
+    bricks(65, 79, 18); bricks(106, 120, 18);
+    bricks(52, 79, 22); bricks(106, 133, 22);
+    bricks(40, 79, 26); bricks(106, 145, 26);
+    // --- ribbons: swallowtail ends going outwards, then a hanging ribbon each side ---
+    for (const side of [-1, 1]) {
+      const mx = (px) => (side < 0 ? px : W - 1 - px); // distance from the outer edge
+      shape(x, W, H, (px, py) => { const ox = mx(px); return ox >= 10 && ox <= 22 && py >= 30 && py <= 70 && py <= 70 - Math.max(0, 5 - Math.abs(ox - 16) * 1.2); },
+        (n, px, py) => red(n, py, false), 3);
+    }
+    // --- title plate + gold rail ---
+    shape(x, W, H, (px, py) => px >= 19 && px <= 164 && py >= 31 && py <= 58, (n, px, py) => {
       if (n === 0) return '#140806';
-      if (n === 1) return py === 43 ? '#ffe27a' : '#e0a640';
-      if (n === 2) return '#7a4a14';
-      return py < 50 ? '#4a1a1c' : py > 66 ? '#2a0c10' : '#3a1216';
+      if (n === 1) return py === 31 ? '#ffe27a' : px === 19 || py === 58 ? '#a86a14' : '#e0a640';
+      if (n === 2) return '#5a3010';
+      return py < 36 ? '#4a2a22' : py > 52 ? '#2e1610' : '#3c2018';
     }, 3);
-    step(x, '#140806', L - 6, 38, Rr - L + 13, 7, 1); R(x, '#e0a640', L - 5, 39, Rr - L + 11, 5); R(x, '#ffe27a', L - 4, 39, Rr - L + 9, 1); R(x, '#a86a14', L - 4, 43, Rr - L + 9, 1);
-    for (const ex of [L - 5, Rr + 3]) { R(x, '#ffe27a', ex + 1, 40, 2, 1); R(x, '#c98a2a', ex, 41, 3, 2); }
-    // crown shield on the top bar
-    const sx = cx - 8, sy = 32;
-    shape(x, W, 90, (px, py) => { const dx = Math.abs(px - (cx - 0.5)); return py >= sy && py <= sy + 18 && dx <= 8 - Math.max(0, py - (sy + 11)) * 1.1; },
-      (n, px, py) => (n === 0 ? '#1e0a06' : n === 1 ? (py < sy + 3 ? '#ffe27a' : '#e0a640') : n === 2 ? '#7a1f30' : py < sy + 6 ? '#d0384a' : '#b8283a'), 3);
-    const crown = ['#...#...#', '##.###.##', '#########', '#.#.#.#.#', '#########'];
-    crown.forEach((r, py) => r.split('').forEach((ch, px) => { if (ch === '#') P(py === 0 ? '#fff3b0' : py >= 3 ? '#d98a1c' : '#ffcd4a', sx + 4 + px, sy + 6 + py); }));
-    // PROTECT THE TOWER plaque with pointed ends and a little point underneath
-    const pl = 58, pr = 174, pt = 72, pb = 86, pm = (pt + pb) / 2;
-    shape(x, W, 90, (px, py) => {
+    step(x, '#140806', 9, 27, 166, 6, 1); R(x, '#e0a640', 10, 28, 164, 4); R(x, '#ffe27a', 10, 28, 164, 1); R(x, '#a86a14', 10, 31, 164, 1);
+    for (const ex of [9, 172]) { R(x, '#140806', ex, 24, 3, 4); R(x, '#e0a640', ex + 1, 25, 1, 3); } // curled rail ends
+    // --- title ---
+    const word = 'TYPEBOUNDS', gW = 6, gH = 9, k = 2, tw = (word.length * (gW + 1) - 1) * k, tx = cx - tw / 2, ty = 34;
+    const mask = new Set();
+    [...word].forEach((ch, i) => LOGO_FONT[ch].forEach((row, ry) => [...row].forEach((v, rx) => {
+      if (v !== '#') return;
+      for (let a = 0; a < k; a++) for (let b = 0; b < k; b++) mask.add((tx + (i * (gW + 1) + rx) * k + a) + ',' + (ty + ry * k + b));
+    })));
+    const pts = [...mask].map((s) => s.split(',').map(Number));
+    const ext = new Set(); pts.forEach(([px, py]) => { ext.add(px + ',' + (py + 1)); ext.add(px + ',' + (py + 2)); });
+    const body = new Set([...mask, ...ext]);
+    body.forEach((s) => { const [px, py] = s.split(',').map(Number); for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) P('#2a1006', px + dx, py + dy); });
+    ext.forEach((s) => { if (mask.has(s)) return; const [px, py] = s.split(',').map(Number); P('#8a3e0a', px, py); });
+    const grad = ['#fff3a0', '#ffe066', '#ffe066', '#ffd84a', '#ffd040', '#ffcd3a', '#ffc232', '#fbb82e', '#f6ae2a', '#f2a52a', '#ec9a24', '#e68e1e', '#e08a1a', '#d97e16', '#d07414', '#c86c12', '#c06410', '#b85c0e'];
+    pts.forEach(([px, py]) => P(grad[py - ty] || '#b85c0e', px, py));
+    // --- crown shield ---
+    shape(x, W, H, (px, py) => py >= 24 && py <= 41 && Math.abs(px - 92) <= 8 - Math.max(0, py - 33) * 1.05,
+      (n, px, py) => (n === 0 ? '#1e0a06' : n === 1 ? (py < 27 ? '#ffe27a' : '#e0a640') : n === 2 ? '#7a1f30' : py < 29 ? '#d0384a' : '#b8283a'), 3);
+    ['#...#...#', '##.###.##', '#########', '#.#.#.#.#', '#########'].forEach((r, py) =>
+      [...r].forEach((ch, px) => { if (ch === '#') P(py === 0 ? '#fff3b0' : py >= 3 ? '#d98a1c' : '#ffcd4a', 88 + px, 29 + py); }));
+    // --- PROTECT THE TOWER plaque: pointed ends, little point underneath ---
+    const pl = 40, pr = 144, pt = 57, pb = 67, pm = (pt + pb) / 2;
+    shape(x, W, H, (px, py) => {
       if (py < pt || py > pb + 3) return false;
-      if (py > pb) return Math.abs(px - (cx - 0.5)) <= 4 - (py - pb);
-      const e = Math.round(Math.abs(py - pm) * 0.9); // pointed left and right ends
+      if (py > pb) return Math.abs(px - 92) <= 4 - (py - pb);
+      const e = Math.round(Math.abs(py - pm) * 0.9);
       return px >= pl + e && px <= pr - e;
-    }, (n, px, py) => (n === 0 ? '#140806' : n === 1 ? (py <= pt + 1 ? '#ffe27a' : '#e0a640') : n === 2 ? '#5a3010' : py < pt + 5 ? '#3a1c16' : '#2a120e'), 3);
+    }, (n, px, py) => (n === 0 ? '#140806' : n === 1 ? (py <= pt + 1 ? '#ffe27a' : '#e0a640') : n === 2 ? '#5a3010' : py < pt + 4 ? '#3c2018' : '#2e1610'), 3);
   }
 
   // ---- screens ----
@@ -315,13 +326,12 @@
     const s = scr('menu');
     for (const px of [14, 280]) drawPennant(art(26, 66, el('div', 'pennant', s, at(px, 0, 26, 66))));
     s.querySelectorAll('.pennant').forEach((p) => { const c = sprite('crown', { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0', ol: '#1e0a06' }, p); Object.assign(c.style, { position: 'absolute', left: '7px', top: '38px' }); });
-    drawLogo(art(232, 90, el('div', 'logo', s, at(44, 0, 232, 90))));
-    el('div', 'title', s).textContent = 'TYPEBOUNDS';
+    drawLogo(art(200, 72, el('div', 'logo', s, at(60, 3, 200, 72))));
     const sub = el('div', 'subtitle', s);
     el('i', '', sub); el('span', '', sub).textContent = 'PROTECT THE TOWER'; el('i', '', sub);
-    button(s, 'play', 'gold', 95, 95, 131, 23, 'PLAY', null, 12.5);
-    button(s, 'board', 'crimson', 95, 122, 131, 20, 'LEADERBOARD', null, 10);
-    button(s, 'settings', 'crimson', 95, 146, 131, 20, 'SETTINGS', null, 10);
+    button(s, 'play', 'gold', 95, 90, 131, 23, 'PLAY', null, 12.5);
+    button(s, 'board', 'crimson', 95, 117, 131, 20, 'LEADERBOARD', null, 10);
+    button(s, 'settings', 'crimson', 95, 141, 131, 20, 'SETTINGS', null, 10);
     for (const side of ['L', 'R']) {
       const ch = el('div', 'chev', s); ch.dataset.side = side;
       sprite('chev' + side, { main: '#ffcd4a', shade: '#d98a1c', ol: '#2a1404' }, ch);
