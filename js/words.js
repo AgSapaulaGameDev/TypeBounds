@@ -55,10 +55,13 @@
   TD.Words.animalMed = ['panther', 'gecko', 'hamster', 'monkey', 'iguana', 'lizard', 'donkey', 'jaguar', 'walrus',
     'badger', 'beaver', 'falcon', 'otter', 'weasel', 'ferret', 'turtle', 'toucan', 'lobster', 'koala', 'zebra',
     'camel', 'llama', 'raccoon', 'buffalo', 'pelican', 'vulture'];
-// Golden Goose (wave 15): white eggs (and the chicks that hatch) get short farm words,
+// Golden Goose (wave 15): white eggs get long farm words, the chicks that hatch get short ones,
 // golden eggs get gold words
-  TD.Words.eggWords = ['egg', 'hen', 'nest', 'corn', 'seed', 'hay', 'barn', 'coop', 'peck', 'yolk', 'farm', 'wing',
-    'beak', 'chirp', 'quack', 'honk', 'mud', 'pond', 'grain', 'straw', 'down', 'tail', 'oats'];
+  TD.Words.eggWords = ['chicken', 'rooster', 'feather', 'haystack', 'eggshell', 'barnyard', 'henhouse', 'cornfield',
+    'scramble', 'omelette', 'incubate', 'farmyard', 'pitchfork', 'meadow', 'harvest', 'tractor', 'scarecrow',
+    'windmill', 'paddock', 'gosling', 'duckling', 'birdseed', 'nesting', 'poultry'];
+  TD.Words.chickWords = ['peep', 'beak', 'fuzz', 'hop', 'pip', 'yip', 'nib', 'bud', 'dot', 'zip', 'tot', 'wee',
+    'jot', 'fig', 'nub', 'cub', 'kit', 'gum', 'lil', 'vim'];
   TD.Words.goldWords = ['golden', 'nugget', 'jewel', 'crown', 'riches', 'honey', 'amber', 'coins', 'shiny', 'treasure',
     'fortune', 'bullion', 'sparkle', 'glitter', 'wealth', 'ingot'];
   TD.Inks = {

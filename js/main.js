@@ -719,8 +719,10 @@
 
     eggExpire(e) {
       if (e.kind === 'egg') {
-        // hatches: same word (and typed letters), now a fast chick running at the tower
+        // hatches: a fast chick with a new short word runs at the tower
         e.kind = 'chick'; e.t = TD.EnemyTypes.chick; e.speed = e.t.speed * e.mul * (this.buffs.frost ? 0.8 : 1);
+        e.word = this.pickWord('chickWords', e); e.progress = 0;
+        if (this.locked === e) this.locked = null;
         e.life = null; e.state = 'walk'; e.flash = 0.15;
         this.burst(e.x, e.y - 3, ['#f4f4f4', '#c2c3c7'], 10, 30, 80);
         this.floats.push({ x: e.x, y: e.y - 14, text: 'HATCHED!', color: C.red, life: 0.9, align: 'center' });

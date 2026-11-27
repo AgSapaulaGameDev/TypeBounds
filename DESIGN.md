@@ -63,7 +63,7 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 
 ### Golden Goose (boss)
 - Waves 15, 30, 45, ... 5 HP. No word, can't be typed. Runs fast round the oval, zig-zagging, laying eggs (max 3 + anger on the field).
-- **White egg**: short farm word (NEST, CORN, YOLK) and a 4 s hatch bar. If it runs out the egg cracks (wobbles in the last 1.5 s) and hatches a **chick** (same word) that runs at the tower. A chick that arrives pecks once (2 damage) and the goose **steals 5 gold**.
+- **White egg**: long farm word (HAYSTACK, ROOSTER, OMELETTE) and a 4 s hatch bar. If it runs out the egg cracks (wobbles in the last 1.5 s) and hatches a **chick** with a new short word (PEEP, FUZZ, HOP) that runs fast at the tower (typed egg letters are lost). A chick that arrives pecks once (2 damage) and the goose **steals 5 gold**.
 - **Golden egg** (glowing gold ring): gold word (NUGGET, JEWEL, TREASURE) with a 4 s bar; if it runs out the goose snatches it back. Typing it throws it from the tower at the goose: -1 HP, 5 gold, and the goose gets angrier (+10% speed, lays faster, more eggs). At most one golden egg at a time: every 4th egg, the rest are white.
 - **Last life**: lays white eggs for a few seconds, then flies up and drops **3 golden eggs** at once (7 s each). Type all 3 = BOSS DEFEATED (500 score, 25 gold); its eggs and chicks vanish with it. Miss one = the others vanish, the goose lands and tries again ~6 s later.
 

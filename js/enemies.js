@@ -50,7 +50,7 @@
       gore: ['#f4f4f4', '#c2c3c7', '#ffe762'] },
     gegg: { sprite: 'gegg', speed: 0, dmg: 0, atkEvery: 1, list: 'goldWords', animFps: 0, gold: 2,
       gore: ['#ffd541', '#f9a31b', '#fff4a3'] },
-    chick: { sprite: 'chick', speed: 22, dmg: 2, atkEvery: 1, list: 'eggWords', animFps: 10, gold: 1,
+    chick: { sprite: 'chick', speed: 36, dmg: 2, atkEvery: 1, list: 'chickWords', animFps: 10, gold: 1,
       gore: ['#ffe762', '#ef7d57'] },
   };
   const RAINBOW = TD.EnemyTypes.rainbow.gore;
