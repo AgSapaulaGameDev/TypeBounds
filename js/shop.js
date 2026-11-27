@@ -252,9 +252,20 @@
 
       // info row
       const iy = py + 7;
-      F.draw(ctx, 'GOLD ' + g.gold, x0, iy, COL.coin, 1, 'left');
-      const wallTxt = g.wall.level ? g.wall.hp + '/' + g.wall.max : 'NONE';
-      F.draw(ctx, 'TOWER ' + g.hp + '/' + g.maxHp + '  WALL ' + wallTxt, x1, iy, COL.dim, 1, 'right');
+      // label: value pairs, labels in tan, each value in its own colour
+      const pair = (x, label, val, col) => {
+        F.draw(ctx, label, x, iy, COL.dim, 1, 'left', COL.ink);
+        x += F.advance(label) + 3;
+        F.draw(ctx, val, x, iy, col, 1, 'left', COL.ink);
+        return x + F.advance(val);
+      };
+      pair(x0, 'GOLD:', String(g.gold), COL.coin);
+      const towerTxt = g.hp + '/' + g.maxHp, wallTxt = g.wall.level ? g.wall.hp + '/' + g.wall.max : 'NONE';
+      const r1 = g.hp / g.maxHp, towerCol = r1 > 0.6 ? '#7ee06a' : r1 > 0.3 ? '#ffa040' : '#ff5a5a'; // matches the HP bar
+      const wallCol = g.wall.level ? '#e0a060' : COL.faint; // wood brown, or faded when there is no wall
+      const rowW = F.advance('TOWER:') + 3 + F.advance(towerTxt) + 8 + F.advance('WALL:') + 3 + F.width(wallTxt);
+      const tx = pair(x1 - rowW, 'TOWER:', towerTxt, towerCol);
+      pair(tx + 8, 'WALL:', wallTxt, wallCol);
 
       for (let i = 0; i < 3; i++) this.drawCard(ctx, g, i);
 
