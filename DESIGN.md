@@ -146,6 +146,15 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Keyboard Smash: combo-charged; for ~5 s every key removes that letter from all enemies
 - Editable base: out of scope for v1
 
+### Late-game difficulty (saved idea, not built yet)
+Problem: after wave 15 only walk speed keeps rising (enemy count, tanks and spawn gap all cap by wave 10, themes repeat, bosses stay the same).
+Plan (recommended start: 1, 2 and 5):
+1. **Loop upgrades (waves 16+)**: each theme returns with a twist. Maths: harder sums (`14×3`). Colour: more eyedropper slimes. Animals: chameleons hide longer, golden eggs vanish faster. Bosses: +1 HP per loop.
+2. **Harder words each loop**: loop 2 swaps in longer word lists (fast enemies get 5-letter words instead of 3).
+3. **Mixed waves in loop 2**: themes combine (rabbits with colour slimes...) so you can't settle into one rule.
+4. **New themes**: each adds 5 waves before the loop repeats. Ideas: bee swarm, mole, frog; Chimera as a climax boss.
+5. **Speed cap**: stop the +2% per wave at about ×1.5 so it never turns into a pure reflex test.
+
 ## Art
 - 320×180 internal resolution, integer-scaled with sharp pixels.
 - Every sprite, tile, tree and the font are drawn in code (`js/sprites.js`, `js/font.js`). No image files.
