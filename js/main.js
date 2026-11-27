@@ -517,6 +517,7 @@
 
     onClick(x, y) {
       A.unlock();
+      if (this.state === 'play' && this.phase === 'shop') { TD.Shop.click(x - OX, y); return; } // cards are bought by typing
       const mn = this.menuName;
       if (mn && TD.Overlay) return;
       if (mn) {

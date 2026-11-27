@@ -79,7 +79,7 @@
     buf: '', msg: '', msgCol: COL.white, msgT: 0,
     cards: [], t: 0, rerolls: 0, lastTick: 0,
 
-    open(g) { this.rerolls = 0; this.roll(g); },
+    open(g) { this.rerolls = 0; this.nudge = 0; this.roll(g); },
 
     roll(g) {
       const avail = shuffle(ITEMS.filter((it) => it.avail(g)));
@@ -150,8 +150,20 @@
 
     say(t, c) { this.msg = t; this.msgCol = c; this.msgT = 1.6; },
 
+    // clicking a card does not buy it: flash the "type a card" hint so the player knows what to do
+    click(x, y) {
+      for (let i = 0; i < 3; i++) {
+        const cx = cardX(i);
+        if (x >= cx && x < cx + CARD_W && y >= CARD_Y && y < CARD_Y + CARD_H) {
+          this.msgT = 0; this.nudge = 1.6; this.nudgeCard = i; A.hover();
+          return;
+        }
+      }
+    },
+
     update(dt) {
       if (this.msgT > 0) this.msgT -= dt;
+      if (this.nudge > 0) this.nudge -= dt;
       const was = this.spinning;
       this.t += dt;
       if (this.spinning && this.t - this.lastTick >= TICK) { this.lastTick = this.t; A.hover(); }
@@ -249,6 +261,17 @@
       // message line: shows the last message, or the hint
       const my = CARD_Y + CARD_H + 5;
       if (this.msgT > 0) F.draw(ctx, this.msg, 160, my, this.msgCol, 1, 'center');
+      else if (this.nudge > 0 && !this.spinning) {
+        // after a click on a card: the hint lights up gold and blinks, with arrows pointing at it
+        const on = Math.floor(this.nudge * 6) % 2 === 0;
+        const txt = 'TYPE ' + this.cards[this.nudgeCard].item.word.toUpperCase() + ' TO BUY IT';
+        const hw = Math.ceil(F.width(txt) / 2) + 6;
+        r(160 - hw, my - 2, hw * 2, 9, on ? '#5a1a26' : '#3a1218');
+        r(160 - hw, my - 2, hw * 2, 1, '#e0a640'); r(160 - hw, my + 6, hw * 2, 1, '#a86a14');
+        F.draw(ctx, txt, 160, my, on ? '#fff3b0' : COL.gold, 1, 'center', COL.ink);
+        F.draw(ctx, '>', 160 - hw - 5 + (on ? 1 : 0), my, COL.gold, 1, 'center', COL.ink);
+        F.draw(ctx, '<', 160 + hw + 4 - (on ? 1 : 0), my, COL.gold, 1, 'center', COL.ink);
+      }
       else F.draw(ctx, this.spinning ? 'SPINNING...' : 'TYPE A CARD TO BUY IT', 160, my, COL.faint, 1, 'center');
 
       // bottom row: the two always-there words
