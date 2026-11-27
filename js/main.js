@@ -3,7 +3,7 @@
   'use strict';
   const TD = window.TD;
   const W = 320, H = 180; // the play area; everything gameplay uses these coords
-  const F = TD.Font, S = TD.Sprites, B = TD.BASE, A = TD.Audio;
+  const F = TD.Font, S = TD.Sprites, B = TD.BASE, A = TD.Audio, UI = TD.UI;
 
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
@@ -81,7 +81,7 @@
   // Spawn point on the visible screen edge, along a random ray from the base.
   function edgePoint() {
     const a = Math.random() * Math.PI * 2, dx = Math.cos(a), dy = Math.sin(a);
-    const x0 = -OX + 10, x1 = W + OX - 10, y0 = 28, y1 = H - 14;
+    const x0 = -OX + 10, x1 = W + OX - 10, y0 = 36, y1 = H - 36; // clear of the top bar and bottom bar
     let t = Infinity;
     if (dx > 0) t = Math.min(t, (x1 - B.cx) / dx); else if (dx < 0) t = Math.min(t, (x0 - B.cx) / dx);
     if (dy > 0) t = Math.min(t, (y1 - B.cy) / dy); else if (dy < 0) t = Math.min(t, (y0 - B.cy) / dy);
@@ -92,50 +92,54 @@
   const canFullscreen = !!document.documentElement.requestFullscreen;
   const MENUS = {
     main: { x: 104, y: 113, w: 112, h: 15, gap: 17, items: () => [
-      { id: 'play', label: 'PLAY', key: 'p' },
-      { id: 'board', label: 'LEADERBOARD', key: 'l' },
-      { id: 'settings', label: 'SETTINGS', key: 's' },
+      { id: 'play', label: 'PLAY', key: 'p', style: 'gold', arrows: true },
+      { id: 'board', label: 'LEADERBOARD', key: 'l', arrows: true },
+      { id: 'settings', label: 'SETTINGS', key: 's', arrows: true },
     ] },
-    pause: { x: 100, y: 66, w: 120, h: 16, gap: 20, items: () => [
-      { id: 'resume', label: 'RESUME', key: 'r' },
-      { id: 'settings', label: 'SETTINGS', key: 's' },
-      { id: 'quit', label: 'MAIN MENU', key: 'm' },
+    pause: { x: 100, y: 56, w: 120, h: 15, gap: 18, items: () => [
+      { id: 'resume', label: 'RESUME', key: 'r', style: 'green', icon: 'play' },
+      { id: 'restart', label: 'RESTART', key: 't', style: 'gold', icon: 'restart' },
+      { id: 'settings', label: 'SETTINGS', key: 's', icon: 'gear' },
+      { id: 'quit', label: 'MAIN MENU', key: 'm', icon: 'home' },
     ] },
-    // MUSIC / SFX are volume sliders: label on top, [-] [##########] [+] below.
-    // Settings = compact rows: label on the left, control on the right. BACK is a normal button.
+    // Settings = rows: icon + label on the left, slider or ON/OFF on the right. BACK is a normal button.
     settings: { x: 120, y: 0, w: 80, h: 16, gap: 0, items: () => {
       const rows = [
-        { id: 'music', slider: true, label: 'MUSIC' },
-        { id: 'sfx', slider: true, label: 'SFX' },
-        ...(canFullscreen ? [{ id: 'fs', toggle: true, label: 'FULLSCREEN', on: !!document.fullscreenElement }] : []),
+        { id: 'music', slider: true, label: 'MUSIC', icon: 'speaker' },
+        { id: 'sfx', slider: true, label: 'SFX', icon: 'speaker' },
+        ...(canFullscreen ? [{ id: 'fs', toggle: true, label: 'FULLSCREEN', icon: 'monitor', on: !!document.fullscreenElement }] : []),
       ];
-      rows.forEach((r, i) => Object.assign(r, { x: 80, y: 60 + i * 17, w: 160, h: 14 }));
-      return [...rows, { id: 'back', label: 'BACK', x: 120, y: 64 + rows.length * 17, w: 80, h: 16 }];
+      rows.forEach((r, i) => Object.assign(r, { x: 70, y: 54 + i * 18, w: 180, h: 14 }));
+      return [...rows, { id: 'back', label: 'BACK', icon: 'left', x: 116, y: 60 + rows.length * 18, w: 88, h: 15 }];
     } },
+    // game over: two buttons side by side
+    over: { x: 0, y: 0, w: 0, h: 0, gap: 0, items: () => [
+      { id: 'again', label: 'PLAY AGAIN', key: 'p', style: 'gold', icon: 'restart', x: 52, y: 142, w: 104, h: 16 },
+      { id: 'quit', label: 'MAIN MENU', key: 'm', icon: 'home', x: 164, y: 142, w: 104, h: 16 },
+    ] },
   };
   function buttons(name) {
     const m = MENUS[name];
     let row = 0; // only plain buttons use the column layout
     return m.items().map((it) => (it.x != null ? it : Object.assign({ x: m.x, y: m.y + row++ * m.gap, w: m.w, h: m.h }, it)));
   }
-  // slider pieces, right-aligned in the row: [-] [segments] [+]
-  const SEG = 10, SEG_W = 6, SEG_GAP = 1;
+  // slider: a gold track on the right of the row (the old -/+ boxes are gone; they stay as empty rects)
+  const SEG = 10;
   function sliderParts(b) {
-    const y = b.y + 2, h = 10;
-    const plus = { x: b.x + b.w - 4 - 10, y, w: 10, h };
-    const bw = SEG * (SEG_W + SEG_GAP) + 1;
-    const bar = { x: plus.x - 2 - bw, y, w: bw, h };
-    return { minus: { x: bar.x - 2 - 10, y, w: 10, h }, bar, plus };
+    const bar = { x: b.x + 88, y: b.y + 2, w: b.w - 96, h: 10 };
+    const none = { x: -99, y: -99, w: 0, h: 0 };
+    return { minus: none, bar, plus: none };
   }
   // ON / OFF pill, right-aligned in the row
   function toggleParts(b) {
-    const y = b.y + 2, x = b.x + b.w - 4 - 40;
-    return { on: { x, y, w: 20, h: 10 }, off: { x: x + 20, y, w: 20, h: 10 } };
+    const y = b.y + 2, x = b.x + b.w - 8 - 50;
+    return { on: { x, y, w: 25, h: 10 }, off: { x: x + 25, y, w: 25, h: 10 } };
   }
   const levelOf = (id) => (id === 'music' ? A.musicLevel : A.sfxLevel);
   const setLevel = (id, n) => (id === 'music' ? A.setMusicLevel(n) : A.setSfxLevel(n));
 
   const NAME_MAX = 10;
+  const HUD_Y = 152; // top of the bottom HUD bar
 
   const game = {
     state: 'menu', // menu | name | board | settings | play | paused | spam | over
@@ -157,7 +161,8 @@
     },
     get frozen() { return this.state === 'paused' || this.state === 'spam' || (this.state === 'settings' && this.settingsFrom === 'paused'); },
     get menuName() {
-      return this.state === 'menu' ? 'main' : this.state === 'paused' ? 'pause' : this.state === 'settings' ? 'settings' : null;
+      return this.state === 'menu' ? 'main' : this.state === 'paused' ? 'pause' : this.state === 'settings' ? 'settings'
+        : this.state === 'over' ? 'over' : null;
     },
 
     get mult() { return Math.min(3, 1 + Math.floor(this.combo / 10) * 0.25); },
@@ -171,6 +176,7 @@
         gold: 0, goldEarned: 0, armorLv: 0, wall: new TD.Barricade(),
         buffs: {}, // one-wave shop buffs: frost
         tipsSeen: {}, // tip cards already shown this run
+        runTime: 0, // seconds spent fighting (TIME and WPM in the HUD)
       });
       this.waves = new TD.WaveManager();
       this.state = 'play';
@@ -233,6 +239,7 @@
     },
 
     activate(id) {
+      if (this.state === 'over' && this.time - this.overAt < 0.8) return; // don't skip game over by accident
       A.lock();
       switch (id) {
         case 'play':
@@ -243,6 +250,8 @@
         case 'board': this.state = 'board'; TD.Leaderboard.refresh(); break;
         case 'settings': this.openSettings(this.state); break;
         case 'resume': this.resume(); break;
+        case 'restart': this.reset(); break; // fresh run, same name (an abandoned run is not posted)
+        case 'again': this.reset(); break;
         case 'quit': this.toMenu(); break;
         case 'sfx': case 'music': { // Enter = mute / unmute
           const lv = levelOf(id);
@@ -397,7 +406,7 @@
       for (let i = 0; i < n; i++) {
         const side = sides[i], k = seen[side]++, c = count[side];
         const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
-        const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 30, H - 14);
+        const y = clamp(B.cy + (k - (c - 1) / 2) * 34, 36, H - 36);
         if (boss.t.minion === 'color') {
           // Rainbow Slime: Word Color slimes
           // slower than normal slimes; the first one (and ~35% of the rest) are drop-tagged ink-rule slimes
@@ -503,6 +512,7 @@
 
     onClick(x, y) {
       A.unlock();
+      if (this.state === 'play' && this.pauseBtn && inRect(x, y, this.pauseBtn)) return this.pause();
       const mn = this.menuName;
       if (mn) {
         const list = buttons(mn), px = x - OX;
@@ -514,7 +524,9 @@
           const p = sliderParts(b);
           if (inRect(px, y, p.minus)) this.adjust(-1);
           else if (inRect(px, y, p.plus)) this.adjust(1);
-          else if (inRect(px, y, p.bar)) { setLevel(b.id, Math.min(SEG, Math.floor((px - p.bar.x) / (SEG_W + SEG_GAP)) + 1)); A.hover(); }
+          else if (inRect(px, y, { x: p.bar.x - 3, y: p.bar.y, w: p.bar.w + 6, h: p.bar.h })) {
+            setLevel(b.id, clamp(Math.round(((px - p.bar.x) / p.bar.w) * SEG), 0, SEG)); A.hover();
+          }
         } else if (b && b.toggle) {
           this.sel = i;
           const p = toggleParts(b);
@@ -575,7 +587,7 @@
       names.forEach((word, i) => {
         const side = i % 2 ? -1 : 1, k = Math.floor(i / 2);
         const x = clamp(B.cx + side * (126 + k * 10), 8, W - 8);
-        const y = clamp(B.cy + (k - 0.5) * 40, 30, H - 14);
+        const y = clamp(B.cy + (k - 0.5) * 40, 36, H - 36);
         this.burst(x, y - 4, e.gore, 12, 30, 0); // slime splash where each one lands
         const m = new TD.Enemy('medslime', word, x, y, mul);
         m.ink = pick(TD.Words.tertiary.filter((c) => c !== word));
@@ -685,6 +697,7 @@
 
     gameOver() {
       this.state = 'over';
+      this.sel = 0;
       this.overAt = this.time;
       this.locked = null;
       this.lastRank = null; // null = still saving
@@ -692,7 +705,7 @@
       else TD.Leaderboard.submit(this.playerName || 'PLAYER', this.score, this.waves.wave)
         .then((rank) => { this.lastRank = rank; })
         .catch(() => { this.lastRank = 0; });
-      if (this.score > this.best) {
+      if (this.score > this.best && !this.debugRun) {
         this.best = this.score;
         this.newBest = true;
         store.set('td_best', String(this.best));
@@ -731,6 +744,7 @@
         this.banner -= dt;
         if (this.banner <= 0) this.phase = 'fight';
       } else if (this.phase === 'fight') {
+        this.runTime += dt;
         this.waves.update(dt, this);
         if (this.waves.done && this.enemies.length === 0) this.clearWave();
       } else if (this.phase === 'clear') {
@@ -769,7 +783,7 @@
       const xMin = -OX + 1, xMax = W + OX - 1;
       const Ls = this.enemies.map((e) => {
         const w = F.width(e.labelText()) + 4, h = 9;
-        return { e, w, h, x: clamp(Math.round(e.x - w / 2), xMin, xMax - w), y: clamp(e.y + 2, 14, H - h - 1) };
+        return { e, w, h, x: clamp(Math.round(e.x - w / 2), xMin, xMax - w), y: clamp(e.y + 2, 32, HUD_Y - h - 2) };
       });
       Ls.sort((a, b) => a.y - b.y);
       for (let it = 0; it < 8; it++) {
@@ -785,7 +799,7 @@
             }
           }
         }
-        for (const l of Ls) l.y = clamp(l.y, 14, H - l.h - 1);
+        for (const l of Ls) l.y = clamp(l.y, 32, HUD_Y - l.h - 2);
         if (!moved) break;
       }
       const k = Math.min(1, dt * 14);
@@ -969,116 +983,152 @@
     },
 
     // Screen coords (no OX shift): left block at the left edge, right block at the right edge.
+    // HUD in screen coords: top bar (score, combo, time, WPM, pause), wave pips, boss bar,
+    // bottom bar (HP + fence, knight, the word being typed, gold / armour / frost).
     drawHUD() {
-      F.draw(ctx, 'SCORE ' + this.score, 4, 3, C.white, 1, 'left', C.ink);
-      F.draw(ctx, 'GOLD ' + this.gold, 4, 10, C.coin, 1, 'left', C.ink);
-      if (this.combo > 0) {
-        const m = this.mult;
-        F.draw(ctx, 'COMBO ' + this.combo + (m > 1 ? ' X' + m : ''), 4, 17, C.gold, 1, 'left', C.ink);
-      }
+      const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
       const mid = Math.round(VW / 2);
-      if (this.wall.level > 0) {
-        const ww = 70, wx = mid - 35, wy = 12, wr = this.wall.hp / this.wall.max;
-        ctx.fillStyle = C.ink; ctx.fillRect(wx - 1, wy - 1, ww + 2, 5);
-        ctx.fillStyle = '#333c57'; ctx.fillRect(wx, wy, ww, 3);
-        ctx.fillStyle = '#b07a45'; ctx.fillRect(wx, wy, Math.ceil(ww * wr), 3);
-      }
-      F.draw(ctx, 'WAVE ' + this.waves.wave, VW - 4, 3, C.white, 1, 'right', C.ink);
-      F.draw(ctx, 'LEFT ' + (this.waves.left + this.enemies.length), VW - 4, 10, C.dim, 1, 'right', C.ink);
-      if (this.phase !== 'shop') {
-        const active = [['frost', 'FROST', '#73eff7']].filter((b) => this.buffs[b[0]]);
-        active.forEach(([, txt, col], i) => F.draw(ctx, txt, VW - 4, 17 + i * 7, col, 1, 'right', C.ink));
-      }
-      if (this.state !== 'over') F.draw(ctx, 'ESC: PAUSE', VW - 4, H - 8, C.faint, 1, 'right');
 
-      // boss health bar, bottom centre
+      // ---- top bar ----
+      r(0, 0, VW, 12, 'rgba(20,18,30,0.92)');
+      r(0, 12, VW, 1, UI.COL.gold); r(0, 13, VW, 1, C.ink);
+      UI.pennant(ctx, 3, 0, 13, 20);
+      const pad = (n) => String(n).padStart(6, '0');
+      let x = 21;
+      F.draw(ctx, 'SCORE', x, 4, '#e8c87a'); x += F.advance('SCORE') + 3;
+      F.draw(ctx, pad(this.score), x, 4, C.white); x += F.advance(pad(this.score)) + 4;
+      r(x, 3, 1, 7, '#4a4458'); x += 5;
+      F.draw(ctx, 'COMBO', x, 4, '#e8c87a'); x += F.advance('COMBO') + 3;
+      F.draw(ctx, this.combo + (this.mult > 1 ? ' X' + this.mult : ''), x, 4, this.mult > 1 ? C.gold : C.white);
+      // timer box in the middle
+      const t = Math.floor(this.runTime), time = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+      const tw = F.advance(time) + 14, tx = mid - Math.round(tw / 2);
+      UI.frame(ctx, tx, 0, tw + 4, 14, { corners: false, fill: '#1a1622' });
+      UI.icon(ctx, 'clock', tx + 3, 3, C.gold, '#3a2410');
+      F.draw(ctx, time, tx + 13, 4, C.white);
+      // WPM: correct letters / 5 per minute of fighting
+      const wpm = this.runTime > 3 ? Math.round(this.correct / 5 / (this.runTime / 60)) : 0;
+      const wv = wpm ? String(wpm) : '--', wx = VW - 20 - F.width(wv);
+      F.draw(ctx, wv, wx, 4, C.white);
+      F.draw(ctx, 'WPM', wx - 4, 4, '#e8c87a', 1, 'right');
+      // pause button
+      this.pauseBtn = { x: VW - 14, y: 0, w: 14, h: 14 };
+      if (this.state !== 'over') {
+        UI.frame(ctx, VW - 13, 1, 12, 11, { corners: false, fill: '#2a2232' });
+        UI.icon(ctx, 'pause', VW - 10, 3, C.gold);
+      }
+
+      // ---- wave pips: position inside the 5-wave chapter (5th = boss) ----
+      const n = this.waves.wave, pos = ((n - 1) % 5) + 1;
+      const wl = 'WAVE ' + n;
+      F.draw(ctx, '-', mid - F.width(wl) / 2 - 7, 17, C.gold);
+      F.draw(ctx, wl, mid, 17, C.gold, 1, 'center', C.ink);
+      F.draw(ctx, '-', mid + F.width(wl) / 2 + 4, 17, C.gold);
+      for (let i = 0; i < 5; i++) {
+        const px = mid - 27 + i * 11, done = i < pos, boss = i === 4;
+        r(px - 1, 23, 10, 6, C.ink);
+        r(px, 24, 8, 4, done ? (boss ? '#e83b3b' : '#f4b41b') : '#2a2838');
+        if (done) r(px, 24, 8, 1, boss ? '#ff8a8a' : '#ffd541');
+      }
+      const left = this.waves.left + this.enemies.length;
+      if (this.phase === 'fight' && left) F.draw(ctx, left + ' LEFT', mid + 32, 24, C.dim, 1, 'left', C.ink);
+
+      // ---- boss health bar under the pips ----
       const boss = this.enemies.find((e) => e.t.boss) || this.splitFrom;
       if (boss) {
-        const segs = boss.t.maxHp, sw = 14, bw = segs * (sw + 1) - 1, bx = mid - Math.floor(bw / 2), by = H - 9;
-        F.draw(ctx, boss.t.name, mid, by - 8, C.red, 1, 'center', C.ink);
-        ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 6);
+        const segs = boss.t.maxHp, sw = 14, bw = segs * (sw + 1) - 1, bx = mid - Math.floor(bw / 2), by = 39;
+        F.draw(ctx, boss.t.name, mid, 32, C.red, 1, 'center', C.ink);
+        r(bx - 1, by - 1, bw + 2, 6, C.ink);
         for (let i = 0; i < segs; i++) {
-          ctx.fillStyle = i < boss.hp ? (boss.hp === 1 ? C.red : '#b13e53') : '#333c57';
-          ctx.fillRect(bx + i * (sw + 1), by, sw, 4);
-          if (i < boss.hp) { ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(bx + i * (sw + 1), by, sw, 1); }
+          r(bx + i * (sw + 1), by, sw, 4, i < boss.hp ? (boss.hp === 1 ? C.red : '#b13e53') : '#333c57');
+          if (i < boss.hp) r(bx + i * (sw + 1), by, sw, 1, 'rgba(255,255,255,0.3)');
         }
       }
 
-      const bw = 70, bx = mid - 35, by = 3, r = this.hp / this.maxHp;
-      ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, bw + 2, 9);
-      ctx.fillStyle = '#333c57'; ctx.fillRect(bx, by, bw, 7);
-      ctx.fillStyle = r > 0.5 ? C.green : r > 0.25 ? C.orange : C.red;
-      ctx.fillRect(bx, by, Math.ceil(bw * r), 7);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(bx, by, Math.ceil(bw * r), 1);
-      F.draw(ctx, this.hp + '/' + this.maxHp, mid, by + 1, C.white, 1, 'center', C.ink);
+      // ---- bottom bar (hidden behind the game over screen) ----
+      if (this.state === 'over') return;
+      const by0 = HUD_Y, bh = H - HUD_Y - 2;
+      UI.frame(ctx, 3, by0, VW - 6, bh);
+      // HP
+      UI.icon(ctx, 'heart', 9, by0 + 5, '#e83b3b');
+      const hpw = 58, hx = 19, hy = by0 + 4, hr = this.hp / this.maxHp;
+      r(hx - 1, hy - 1, hpw + 2, 9, C.ink);
+      r(hx, hy, hpw, 7, '#3a1a24');
+      r(hx, hy, Math.ceil(hpw * hr), 7, hr > 0.25 ? '#b13e53' : '#e83b3b');
+      r(hx, hy, Math.ceil(hpw * hr), 1, '#ef7d57');
+      F.draw(ctx, this.hp + ' / ' + this.maxHp, hx + hpw / 2, hy + 1, C.white, 1, 'center', C.ink);
+      // fence: 5 gold segments for the barricade's HP
+      if (this.wall.level > 0) {
+        UI.icon(ctx, 'fence', 9, by0 + 15, '#b07a45');
+        const fr = this.wall.alive ? this.wall.hp / this.wall.max : 0;
+        for (let i = 0; i < 5; i++) {
+          const fx = hx + i * 12, lit = fr * 5 > i;
+          r(fx - 1, by0 + 16, 12, 6, C.ink);
+          r(fx, by0 + 17, 10, 4, lit ? '#f4b41b' : '#2a2838');
+          if (lit) r(fx, by0 + 17, 10, 1, '#ffd541');
+        }
+      } else F.draw(ctx, 'NO FENCE', hx, by0 + 17, C.faint);
+      r(83, by0 + 4, 1, bh - 8, '#4a4458');
+      UI.knight(ctx, 89, by0 + 7);
+      r(105, by0 + 4, 1, bh - 8, '#4a4458');
+      // the word being typed
+      const boxX = 111, boxW = VW - 111 - 66;
+      F.draw(ctx, this.locked ? 'TYPE THE WORD:' : 'TYPE A FIRST LETTER:', boxX, by0 + 3, '#e8c87a');
+      r(boxX - 1, by0 + 9, boxW + 2, 16, C.ink);
+      r(boxX, by0 + 10, boxW, 14, '#12101a');
+      r(boxX, by0 + 10, boxW, 1, UI.COL.goldMid); r(boxX, by0 + 23, boxW, 1, UI.COL.goldDark);
+      r(boxX, by0 + 10, 1, 14, UI.COL.goldMid); r(boxX + boxW - 1, by0 + 10, 1, 14, UI.COL.goldMid);
+      const e = this.locked, typed = e ? e.word.slice(0, e.progress).toUpperCase() : '';
+      let cx = boxX + 4;
+      // big letters while they fit, small ones for very long words
+      const ts = F.advance(typed, 2) < boxW - 10 ? 2 : 1;
+      if (typed) { F.draw(ctx, typed, cx, by0 + (ts === 2 ? 12 : 15), this.typoFlash > 0 ? C.red : C.white, ts); cx += F.advance(typed, ts); }
+      if (Math.floor(this.time * 3) % 2 === 0) r(cx, by0 + 12, 1, 10, C.gold);
+      r(VW - 62, by0 + 4, 1, bh - 8, '#4a4458');
+      // gold / armour / frost
+      UI.icon(ctx, 'coin', VW - 57, by0 + 4, '#b86f12', C.gold);
+      F.draw(ctx, String(this.gold), VW - 47, by0 + 5, C.coin);
+      const slot = (sx, ic, on, label, col, col2) => {
+        r(sx - 1, by0 + 13, 15, 12, C.ink);
+        r(sx, by0 + 14, 13, 10, on ? '#2c2440' : '#17151f');
+        r(sx, by0 + 14, 13, 1, on ? UI.COL.gold : '#3a3446');
+        UI.icon(ctx, ic, sx + 3, by0 + 15, on ? col : '#3a3446', on ? col2 : '#3a3446');
+        if (label) F.draw(ctx, label, sx + 12, by0 + 19, C.white, 1, 'right', C.ink);
+      };
+      slot(VW - 57, 'shield', this.armorLv > 0, this.armorLv ? String(this.armorLv) : '', '#c2c3c7', '#566c86');
+      slot(VW - 40, 'snow', !!this.buffs.frost, '', '#73eff7', '#73eff7');
+      slot(VW - 23, 'fence', this.wall.level > 0, this.wall.level ? String(this.wall.level) : '', '#b07a45', '#b07a45');
     },
 
-    panel(x, y, w, h) {
-      ctx.fillStyle = 'rgba(10,14,22,0.9)';
-      ctx.fillRect(x, y, w, h);
-      ctx.fillStyle = C.gold;
-      ctx.fillRect(x, y, w, 1); ctx.fillRect(x, y + h - 1, w, 1);
-    },
+    panel(x, y, w, h) { UI.frame(ctx, x, y, w, h); },
 
-    // Settings row: label on the left, slider or ON/OFF pill on the right.
+    // Settings row: icon + label on the left, slider or ON/OFF pill on the right.
     drawRow(b, sel) {
       const r = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(x, y, w, h); };
+      r(b.x, b.y, b.w, b.h, sel ? 'rgba(255,205,117,0.10)' : 'rgba(255,255,255,0.03)');
+      r(b.x, b.y + b.h, b.w, 1, '#2c2838');
       if (sel) {
-        r(b.x, b.y, b.w, b.h, 'rgba(255,205,117,0.08)');
         r(b.x, b.y, 1, b.h, C.gold);
         F.draw(ctx, '>', b.x - 6 - (Math.floor(this.time * 4) % 2), b.y + 5, C.gold, 1, 'left', C.ink);
       }
-      F.draw(ctx, b.label, b.x + 5, b.y + 5, sel ? C.gold : C.white, 1, 'left', C.ink);
-
-      if (b.toggle) {
-        const p = toggleParts(b);
-        r(p.on.x - 1, p.on.y - 1, 42, 12, C.ink);
-        for (const [box, txt, active] of [[p.on, 'ON', b.on], [p.off, 'OFF', !b.on]]) {
-          r(box.x, box.y, box.w, box.h, active ? '#f4a640' : '#2a3148');
-          r(box.x, box.y, box.w, 1, active ? '#ffcd75' : '#3d4b6b');
-          r(box.x, box.y + box.h - 1, box.w, 1, active ? '#c86a1e' : '#1e2436');
-          F.draw(ctx, txt, box.x + box.w / 2, box.y + 3, active ? C.ink : C.faint, 1, 'center');
-        }
-        return;
-      }
-
-      const p = sliderParts(b), lv = levelOf(b.id), bar = p.bar;
-      r(bar.x - 1, bar.y - 1, bar.w + 2, bar.h + 2, C.ink);
-      r(bar.x, bar.y, bar.w, bar.h, '#2a3148');
-      for (let i = 0; i < SEG; i++) {
-        const sx = bar.x + 1 + i * (SEG_W + SEG_GAP), sy = bar.y + 2;
-        if (i < lv) { r(sx, sy, SEG_W, 6, '#f4a640'); r(sx, sy, SEG_W, 1, '#ffcd75'); r(sx, sy + 5, SEG_W, 1, '#c86a1e'); }
-        else r(sx, sy + 2, SEG_W, 2, '#333c57');
-      }
-      for (const [box, sign] of [[p.minus, '-'], [p.plus, '+']]) {
-        r(box.x - 1, box.y - 1, box.w + 2, box.h + 2, C.ink);
-        r(box.x, box.y, box.w, box.h, '#f4a640');
-        r(box.x, box.y, box.w, 1, '#ffcd75');
-        r(box.x, box.y + box.h - 1, box.w, 1, '#c86a1e');
-        F.draw(ctx, sign, box.x + 4, box.y + 3, C.ink, 1, 'left');
-      }
-      if (lv === 0) F.draw(ctx, 'OFF', p.minus.x - 4, b.y + 5, C.red, 1, 'right', C.ink);
+      const ic = b.slider && levelOf(b.id) === 0 ? 'mute' : b.icon;
+      UI.icon(ctx, ic, b.x + 4, b.y + 4, C.gold, '#3b5dc9');
+      F.draw(ctx, b.label, b.x + 16, b.y + 5, sel ? C.gold : C.white, 1, 'left', C.ink);
+      if (b.toggle) return UI.toggle(ctx, toggleParts(b), b.on);
+      const lv = levelOf(b.id);
+      UI.slider(ctx, sliderParts(b).bar, lv, SEG, sel);
+      if (lv === 0) F.draw(ctx, 'OFF', b.x + 84, b.y + 5, C.red, 1, 'right', C.ink);
     },
 
     drawButtons(list) {
       list.forEach((b, i) => {
         const sel = i === this.sel;
         if (b.slider || b.toggle) { this.drawRow(b, sel); return; }
-        const ty = b.y + Math.floor((b.h - 10) / 2);
-        ctx.fillStyle = C.ink;
-        ctx.fillRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
-        ctx.fillStyle = sel ? '#3b2a12' : '#16202e';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.fillStyle = sel ? C.gold : '#333c57';
-        ctx.fillRect(b.x, b.y, b.w, 1); ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1);
-        ctx.fillRect(b.x, b.y, 1, b.h); ctx.fillRect(b.x + b.w - 1, b.y, 1, b.h);
-        ctx.fillStyle = 'rgba(255,255,255,0.08)';
-        ctx.fillRect(b.x + 1, b.y + 1, b.w - 2, 1);
-        F.draw(ctx, b.label, b.x + b.w / 2, ty, sel ? C.gold : C.white, 2, 'center', C.ink);
-        if (sel) {
-          const bob = Math.floor(this.time * 4) % 2;
-          F.draw(ctx, '>', b.x - 8 - bob, ty, C.gold, 2, 'left', C.ink);
-          F.draw(ctx, '<', b.x + b.w + 3 + bob, ty, C.gold, 2, 'left', C.ink);
+        UI.button(ctx, b, { style: b.style || 'red', icon: b.icon, sel, label: b.label });
+        if (sel && b.arrows) {
+          const bob = Math.floor(this.time * 4) % 2, ty = b.y + Math.floor((b.h - 10) / 2);
+          F.draw(ctx, '>', b.x - 10 - bob, ty, C.gold, 2, 'left', C.ink);
+          F.draw(ctx, '<', b.x + b.w + 5 + bob, ty, C.gold, 2, 'left', C.ink);
         }
       });
     },
@@ -1138,8 +1188,14 @@
         }
       }
       this.drawCastle();
-      TD.Title.draw(ctx, W / 2, 14);
-      F.draw(ctx, 'PROTECT THE TOWER', W / 2, 42, C.dim, 1, 'center', C.ink);
+      UI.pennant(ctx, 24, 0, 15, 46);
+      UI.pennant(ctx, W - 39, 0, 15, 46);
+      TD.Title.draw(ctx, W / 2, 12);
+      const sub = 'PROTECT THE TOWER', sw = F.width(sub);
+      F.draw(ctx, sub, W / 2, 40, '#e8c87a', 1, 'center', C.ink);
+      ctx.fillStyle = '#e8c87a';
+      ctx.fillRect(W / 2 - sw / 2 - 16, 42, 11, 1);
+      ctx.fillRect(W / 2 + sw / 2 + 5, 42, 11, 1);
       this.drawButtons(buttons('main'));
 
       if (A.blocked) {
@@ -1151,8 +1207,8 @@
 
     drawSpam() {
       this.dim(0.65);
-      this.panel(70, 40, 180, 96);
-      F.draw(ctx, 'NO SPAMMING!', W / 2, 50, C.red, 2, 'center', C.ink);
+      this.panel(70, 44, 180, 92);
+      UI.ribbon(ctx, W / 2, 34, 'NO SPAMMING!', { icon: 'skull' });
       F.draw(ctx, 'KEYBOARD SMASH DETECTED', W / 2, 72, C.white, 1, 'center');
       F.draw(ctx, 'TYPE THE WORDS - DONT MASH KEYS', W / 2, 82, C.dim, 1, 'center');
       F.draw(ctx, 'WAVE ' + this.waves.wave + ' STARTS OVER', W / 2, 98, C.gold, 1, 'center');
@@ -1163,27 +1219,27 @@
 
     drawPause() {
       this.dim(0.55);
-      this.panel(88, 38, 144, 104);
-      F.draw(ctx, 'PAUSED', W / 2, 45, C.gold, 2, 'center', C.ink);
+      UI.frame(ctx, 86, 40, 148, 102);
+      UI.ribbon(ctx, W / 2, 30, 'PAUSED', { icon: 'pause' });
       this.drawButtons(buttons('pause'));
-      F.draw(ctx, 'ESC TO RESUME', W / 2, 128, C.faint, 1, 'center');
+      F.draw(ctx, 'ESC TO RESUME', W / 2, 131, C.faint, 1, 'center');
     },
 
     drawSettings() {
       this.dim(this.settingsFrom === 'paused' ? 0.55 : 0.45);
       const list = buttons('settings');
       const last = list[list.length - 1];
-      const top = 30, h = last.y + last.h + 18 - top;
-      this.panel(66, top, 188, h);
-      F.draw(ctx, 'SETTINGS', W / 2, top + 8, C.gold, 2, 'center', C.ink);
+      const top = 40, h = last.y + last.h + 16 - top;
+      UI.frame(ctx, 58, top, 204, h);
+      UI.ribbon(ctx, W / 2, top - 11, 'SETTINGS', { icon: 'gear' });
       this.drawButtons(list);
       F.draw(ctx, 'ARROWS: CHOOSE / CHANGE   ESC: BACK', W / 2, top + h - 10, C.faint, 1, 'center');
     },
 
     drawName() {
       this.dim(0.5);
-      F.draw(ctx, 'WHO IS DEFENDING?', W / 2, 40, C.gold, 2, 'center', C.ink);
-      this.panel(60, 62, 200, 62);
+      this.panel(60, 58, 200, 66);
+      UI.ribbon(ctx, W / 2, 46, 'WHO IS DEFENDING?');
       F.draw(ctx, 'ENTER YOUR NAME', W / 2, 68, C.dim, 1, 'center');
       const bx = 80, by = 78, bw = 160, bh = 18;
       ctx.fillStyle = C.ink; ctx.fillRect(bx, by, bw, bh);
@@ -1198,8 +1254,8 @@
 
     drawBoard() {
       this.dim(0.55);
-      this.panel(56, 14, 208, 152);
-      F.draw(ctx, 'LEADERBOARD', W / 2, 20, C.gold, 2, 'center', C.ink);
+      this.panel(56, 22, 208, 146);
+      UI.ribbon(ctx, W / 2, 10, 'LEADERBOARD', { icon: 'trophy' });
       const cols = { rank: 70, name: 86, wave: 196, score: 250 };
       const hy = 38;
       F.draw(ctx, '#', cols.rank, hy, C.faint);
@@ -1232,27 +1288,29 @@
 
     drawGameOver() {
       this.dim(0.55);
-      F.draw(ctx, 'GAME OVER', W / 2, 30, C.red, 3, 'center', C.ink);
+      UI.frame(ctx, 66, 26, 188, 108);
+      UI.ribbon(ctx, W / 2, 14, 'GAME OVER', { icon: 'skull' });
       const acc = this.correct + this.typos ? Math.round((this.correct / (this.correct + this.typos)) * 100) : 0;
-      this.panel(90, 58, 140, 72);
       const rows = [
-        ['SCORE', this.score], ['WAVE', this.waves.wave], ['WORDS', this.kills], ['GOLD EARNED', this.goldEarned],
-        ['ACCURACY', acc + '%'], ['BEST COMBO', this.bestCombo], ['BEST SCORE', this.best],
+        ['trophy', 'SCORE', this.score, C.gold], ['flag', 'WAVE', this.waves.wave, C.gold],
+        ['letters', 'WORDS', this.kills, C.gold], ['coin', 'GOLD EARNED', this.goldEarned, '#b86f12'],
+        ['target', 'ACCURACY', acc + '%', '#e83b3b'], ['star', 'BEST SCORE', this.best, C.gold],
       ];
-      rows.forEach(([k, v], i) => {
-        F.draw(ctx, k, 100, 63 + i * 9, C.dim);
-        F.draw(ctx, v, 220, 63 + i * 9, C.white, 1, 'right');
+      rows.forEach(([ic, k, v, col], i) => {
+        const y = 38 + i * 12;
+        UI.icon(ctx, ic, 78, y - 1, col, ic === 'coin' ? C.gold : ic === 'target' ? C.gold : col);
+        F.draw(ctx, k, 92, y, C.white);
+        F.draw(ctx, String(v), 242, y, C.white, 1, 'right');
+        ctx.fillStyle = '#2c2838'; ctx.fillRect(78, y + 8, 164, 1);
       });
       const LB = TD.Leaderboard;
       const note = this.lastRank === null ? 'SAVING SCORE...'
         : !this.lastRank ? 'NOT IN THE TOP 10 THIS TIME'
         : LB.improved ? 'RANK #' + this.lastRank + ' ON THE LEADERBOARD' + (this.newBest ? ' - NEW BEST!' : '')
         : 'YOUR BEST ' + LB.bestScore + ' STAYS AT RANK #' + this.lastRank;
-      F.draw(ctx, note, W / 2, 135, this.lastRank ? C.gold : C.dim, 1, 'center', C.ink);
-      if (this.time - this.overAt > 0.8) {
-        if (Math.floor(this.time * 2) % 2 === 0) F.draw(ctx, 'ENTER: PLAY AGAIN', W / 2, 148, C.white, 2, 'center', C.ink);
-        F.draw(ctx, 'ESC: MAIN MENU', W / 2, 164, C.dim, 1, 'center', C.ink);
-      }
+      F.draw(ctx, note, W / 2, 122, this.lastRank ? C.gold : C.dim, 1, 'center', C.ink);
+      if (this.time - this.overAt > 0.8) this.drawButtons(buttons('over'));
+      F.draw(ctx, 'ARROWS + ENTER / ESC: MAIN MENU', W / 2, 166, C.faint, 1, 'center');
     },
   };
 
