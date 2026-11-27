@@ -80,7 +80,7 @@
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
-    key: ['.###.........', '#*..#########', '#...#++++++++', '.###.....#.#.', '.........#.#.'],
+    key: ['.####.......', '#****#......', '#*..*#######', '#+..+#++++++', '#++++#..#.##', '.####...#.#.'],
     heart: ['.##.##.', '#*#####', '#*#####', '#######', '.#####.', '..###..', '...#...'],
     swords: ['*.......*', '.*.....*.', '..*...*..', '...*.*...', '....*....', '...#.#...', '..#...#..', '+#.....#+', '+.......+'],
     dropper: ['.....##', '....###', '...###.', '..#*#..', '.#*#...', '#*#....', '#......'],
@@ -266,11 +266,11 @@
     button(s, 'board', 'crimson', 95, 117, 131, 20, 'LEADERBOARD', null, 10);
     button(s, 'settings', 'crimson', 95, 141, 131, 20, 'SETTINGS', null, 10);
     { // ACCOUNT pill: key + LOG IN, or crown + your name when logged in
-      const wrap = el('div', 'btn pill', s, at(3, 160, 80, 17));
+      const wrap = el('div', 'btn pill', s, at(3, 160, 58, 17));
       wrap.dataset.id = 'account';
-      const cv = art(80, 17, wrap);
+      const cv = art(58, 17, wrap);
       const key = sprite('key', GOLD_IC, wrap, 'pic'), crown = sprite('crown', GOLD_IC, wrap, 'pic');
-      const lab = el('span', 'lbl', wrap, { fontSize: '8px', color: '#fbe9d0', textShadow: '0 1px 0 #2a0a10', paddingLeft: '15px' });
+      const lab = el('span', 'lbl', wrap, { fontSize: '8px', color: '#fbe9d0', textShadow: '0 1px 0 #2a0a10', paddingLeft: '17px' });
       lab.appendChild(document.createTextNode('LOG IN'));
       buttons.push({ wrap, cv, theme: 'crimson', sel: null, id: 'account', pill: true, key, crown, lab });
     }
@@ -523,6 +523,9 @@
     ab.lab.lastChild.textContent = u ? u.name : 'LOG IN';
     ab.key.style.display = u ? 'none' : '';
     ab.crown.style.display = u ? '' : 'none';
+    // short for LOG IN, wider only when a long name needs it
+    const pw = u ? Math.max(58, Math.ceil(28 + u.name.length * 5.5)) : 58;
+    if (ab.cv.width !== pw) { ab.cv.width = pw; ab.cv.style.width = ab.wrap.style.width = pw + 'px'; ab.sel = null; }
   }
 
   // TIP CARDS (before a wave with new enemies): built per wave by syncTips
