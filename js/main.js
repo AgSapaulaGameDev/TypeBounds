@@ -1219,6 +1219,7 @@
 
     drawBoard() {
       this.dim(0.55);
+      if (TD.Overlay) return; // drawn by js/overlay.js
       this.panel(56, 14, 208, 152);
       F.draw(ctx, 'LEADERBOARD', W / 2, 20, C.gold, 2, 'center', C.ink);
       const cols = { rank: 70, name: 86, wave: 196, score: 250 };

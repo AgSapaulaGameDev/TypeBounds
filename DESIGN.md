@@ -65,7 +65,9 @@ Runner and Tank below are **archived** (code and sprites kept, not spawned) for 
 - Ornate panels: dark fill, gold border, gold corner brackets. Titles sit on a crimson ribbon with folded tails and icons.
 - Buttons: chamfered, gold (main action), crimson (secondary), green (resume), brown (restart), with icons (play, restart, gear, home, back arrow).
 - Main menu: hanging crimson pennants with crowns, gold TYPEBOUNDS title, "PROTECT THE TOWER", castle glow, PLAY (gold) / LEADERBOARD / SETTINGS, chevrons beside the selected button.
-- Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle. Pause: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
+- Settings: icon rows; gold slider track with a knob (click or drag); ON / OFF toggle.
+- Pause: maroon panel, big gold icons pinned left: RESUME / RESTART (new run) / SETTINGS / MAIN MENU.
+- Leaderboard: maroon panel, gold LEADERBOARD title with red shadow, # NAME WAVE SCORE under a red line, #1 and your own name in gold, online status + back hint.
 - Game over: 6 stat rows with icons (score, wave, words, gold earned, accuracy, best score), rank note, PLAY AGAIN / MAIN MENU (live after 0.8 s).
 
 ## Tip cards

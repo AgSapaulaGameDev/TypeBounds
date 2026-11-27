@@ -60,8 +60,35 @@
 #ui .stat { display: flex; align-items: center; font-size: 8px; letter-spacing: .4px; }
 #ui .sic { width: 13px; display: flex; justify-content: center; }
 #ui .stat .sl { margin-left: 5px; color: #e6d3b0; text-shadow: 1px 1px 0 #000; }
-#ui .stat .sv { margin-left: auto; color: #fff4dc; text-shadow: 1px 1px 0 #000; }
+#ui .stat .sv { font-weight: 500; margin-left: auto; color: #fff4dc; text-shadow: 1px 1px 0 #000; }
 #ui .sep { background: #3a3442; box-shadow: 0 1px 0 #121017; }
 #ui .rank { left: 0; right: 0; top: 139px; text-align: center; font-size: 5.5px; letter-spacing: .4px; color: #94b0c2; text-shadow: 1px 1px 0 #000; }
 #ui .rank.good { color: #ffcd4a; }
 #ui .scr.over-wait .btn { opacity: .4; }
+
+/* pause: big icon pinned left */
+#ui .btn .lic { z-index: 1; }
+
+/* leaderboard */
+#ui .lb-title {
+  left: 0; right: 0; top: 14px; text-align: center; font-size: 18px; line-height: 18px; letter-spacing: 1px;
+  background: linear-gradient(#fff2b0 0 35%, #ffd65a 35% 70%, #f2a52a 70%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #b8283a) drop-shadow(0 1px 0 #2a0a10);
+}
+#ui .lb-rows { pointer-events: none; }
+#ui .lb-row { font-weight: 500; position: absolute; left: 0; width: 320px; height: 10px; font-size: 8.5px; line-height: 10px; color: #f4ece0; text-shadow: 1px 1px 0 #140508; }
+#ui .lb-row span { position: absolute; top: 0; white-space: nowrap; }
+#ui .lb-row .n { left: 67px; }
+#ui .lb-row .nm { left: 84px; }
+#ui .lb-row .w { right: 123px; text-align: right; }
+#ui .lb-row .sc { right: 69px; text-align: right; }
+#ui .lb-head { color: #c8bfb0; font-size: 8px; }
+#ui .lb-line { height: 1px; background: #d8303f; box-shadow: 0 1px 0 #7a1420; }
+#ui .lb-row.first { color: #ffcd4a; }
+#ui .lb-row.mine { color: #ffcd4a; }
+#ui .lb-row.mine::before { content: ''; position: absolute; left: 62px; width: 196px; top: 0; bottom: 0; background: rgba(255, 205, 74, .12); }
+#ui .lb-msg { left: 0; right: 0; top: 90px; text-align: center; font-size: 8px; color: #c8bfb0; }
+#ui .lb-status { left: 0; right: 0; top: 145px; text-align: center; font-size: 8px; letter-spacing: .6px; text-shadow: 1px 1px 0 #140508; }
+#ui .lb-status.on { color: #ffcd4a; } #ui .lb-status.off { color: #ef5a4a; } #ui .lb-status.wait { color: #94b0c2; }
+#ui .lb-hint { left: 0; right: 0; top: 154px; text-align: center; font-size: 7px; letter-spacing: .6px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }

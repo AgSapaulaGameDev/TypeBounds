@@ -93,7 +93,7 @@
   const THEME = {
     gold:    { o: '#2a1404', b: '#a8640c', hi: '#fff3a0', f: ['#ffe066', '#fbcd3a', '#eaa82a'], sh: '#b8700f', rv: '#c98a1c', tx: '#3a1e06', ts: 'rgba(255,243,176,.7)', ic: { main: '#4a2a08' } },
     crimson: { o: '#1e0a06', b: '#e0a640', hi: '#c4495c', f: ['#a93248', '#8e2639', '#721c2e'], sh: '#4e1220', rv: '#ffd36a', tx: '#fbe9d0', ts: '#2a0a10', ic: { main: '#fbe9d0', ol: '#2a0a10' } },
-    green:   { o: '#0e2210', b: '#e0a640', hi: '#b4f5b0', f: ['#7ee084', '#5fd068', '#3fae50'], sh: '#237a33', rv: '#ffd36a', tx: '#fbfff0', ts: '#174a1e', ic: { main: '#fbfff0', ol: '#174a1e' } },
+    green:   { o: '#0e2210', b: '#e0a640', hi: '#8fe486', f: ['#62c75c', '#45a842', '#348a34'], sh: '#1f5e22', rv: '#ffd36a', tx: '#fbfff0', ts: '#174a1e', ic: { main: '#fbfff0', ol: '#174a1e' } },
     brown:   { o: '#1a0e04', b: '#e0a640', hi: '#a88040', f: ['#8e6428', '#7a5420', '#5e3e16'], sh: '#3e2808', rv: '#ffd36a', tx: '#ffe9b0', ts: '#2a1a06', ic: { main: '#ffe9b0', ol: '#2a1a06' } },
     navy:    { o: '#0a0a10', b: '#4a4658', hi: '#46434f', f: ['#34323e', '#2b2933', '#232129'], sh: '#18161d', rv: '#4a4658', tx: '#d8d2e4', ts: '#000', ic: { main: '#d8d2e4' } },
   };
@@ -114,7 +114,7 @@
   }
 
   // ---- panel, ribbon, pennant ----
-  function drawPanel(c) {
+  function drawPanel(c, maroon) { // maroon: dark red fill (pause, leaderboard)
     const x = c.getContext('2d'), w = c.width, h = c.height;
     step(x, 'rgba(0,0,0,.5)', 1, 2, w - 1, h - 2, 3);
     step(x, '#140a04', 0, 0, w - 1, h - 1, 3);
@@ -122,8 +122,8 @@
     R(x, '#ffe27a', 3, 1, w - 7, 1); R(x, '#ffe27a', 1, 3, 1, h - 7);
     R(x, '#a86a14', 3, h - 3, w - 7, 1); R(x, '#a86a14', w - 3, 3, 1, h - 7);
     step(x, '#3a2410', 3, 3, w - 7, h - 7, 1);
-    step(x, '#1c1a22', 4, 4, w - 9, h - 9, 1);
-    R(x, '#24212b', 5, 4, w - 11, 2);
+    step(x, maroon ? '#2a0f16' : '#1c1a22', 4, 4, w - 9, h - 9, 1);
+    R(x, maroon ? '#36141e' : '#24212b', 5, 4, w - 11, 2);
     // gold corner pieces
     const corner = (cx, cy, sx, sy) => {
       const p = (dx, dy, col) => R(x, col, cx + sx * dx, cy + sy * dy, 1, 1);
@@ -163,19 +163,24 @@
   // ---- screens ----
   const screens = {}, buttons = [];
   const scr = (name) => (screens[name] = el('div', 'scr', root));
-  function button(s, id, theme, X, Y, W, H, label, ic, size) {
+  // leftIc: icon palette -> big icon pinned to the left edge, label centred (pause style)
+  function button(s, id, theme, X, Y, W, H, label, ic, size, leftIc) {
     const wrap = el('div', 'btn', s, at(X, Y, W, H));
     wrap.dataset.id = id;
     const cv = art(W, H, wrap);
     const t = THEME[theme];
     const lab = el('span', 'lbl', wrap, { fontSize: (size || 9) + 'px', color: t.tx, textShadow: '0 1px 0 ' + t.ts });
-    if (ic) sprite(ic, t.ic, lab, '', H >= 22 ? 1.25 : 1);
+    if (ic && leftIc) {
+      const c = sprite(ic, leftIc, wrap, 'lic', 1.5);
+      Object.assign(c.style, { position: 'absolute', left: '10px', top: (H - 1 - parseFloat(c.style.height)) / 2 + 'px' });
+      lab.style.paddingLeft = '16px'; // centre the label in the space right of the icon
+    } else if (ic) sprite(ic, t.ic, lab, '', H >= 22 ? 1.25 : 1);
     lab.appendChild(document.createTextNode(label));
     const b = { wrap, cv, theme, sel: null, id };
     buttons.push(b);
     return b;
   }
-  function panel(s, X, Y, W, H) { const c = art(W, H, s, 'pnl'); Object.assign(c.style, at(X, Y, W, H)); drawPanel(c); }
+  function panel(s, X, Y, W, H, maroon) { const c = art(W, H, s, 'pnl'); Object.assign(c.style, at(X, Y, W, H)); drawPanel(c, maroon); }
   function ribbon(s, X, Y, W, H, text, icL, icR, size) {
     const r = el('div', 'ribbon', s, at(X, Y, W, H));
     drawRibbon(art(W, H, r));
@@ -254,15 +259,32 @@
     R(x, '#f0dfbc', k - 2, 1, 5, 7); R(x, '#fffaf0', k - 2, 1, 5, 2); R(x, '#c8ac7a', k - 2, 6, 5, 1);
   }
 
-  // PAUSE
+  // PAUSE: maroon panel, big gold icons on the left of each button
   {
     const s = scr('paused');
-    panel(s, 89, 40, 146, 130);
-    ribbon(s, 99, 26, 125, 27, 'PAUSED', 'pause', null, 12);
-    button(s, 'resume', 'green', 112, 60, 100, 22, 'RESUME', 'play', 9.5);
-    button(s, 'restart', 'brown', 112, 87, 100, 22, 'RESTART', 'restart', 9.5);
-    button(s, 'settings', 'crimson', 112, 114, 100, 22, 'SETTINGS', 'gear', 9.5);
-    button(s, 'quit', 'crimson', 112, 141, 100, 22, 'MAIN MENU', 'home', 9.5);
+    panel(s, 77, 37, 170, 135, true);
+    ribbon(s, 102, 23, 120, 28, 'PAUSED', 'pause', null, 13);
+    const PLAY_IC = { main: '#ffb02e', shade: '#d9801a', ol: '#2a1404' };
+    button(s, 'resume', 'green', 107, 61, 111, 22, 'RESUME', 'play', 10, PLAY_IC);
+    button(s, 'restart', 'brown', 107, 88, 111, 22, 'RESTART', 'restart', 10, GOLD_IC);
+    button(s, 'settings', 'crimson', 107, 115, 111, 22, 'SETTINGS', 'gear', 10, GOLD_IC);
+    button(s, 'quit', 'crimson', 107, 142, 111, 22, 'MAIN MENU', 'home', 10, GOLD_IC);
+  }
+
+  // LEADERBOARD (rows filled in by sync; any click / Enter / Esc goes back, handled by the game)
+  const board = {};
+  {
+    const s = scr('board');
+    panel(s, 52, 12, 216, 154, true);
+    el('div', 'lb-title', s).textContent = 'LEADERBOARD';
+    const head = el('div', 'lb-row lb-head', s, { top: '36px' });
+    for (const [c, t] of [['n', '#'], ['nm', 'NAME'], ['w', 'WAVE'], ['sc', 'SCORE']]) el('span', c, head).textContent = t;
+    el('div', 'lb-line', s, at(62, 45, 196, 1));
+    board.rows = el('div', 'lb-rows', s, at(0, 48, 320, 100));
+    board.msg = el('div', 'lb-msg', s);
+    board.status = el('div', 'lb-status', s);
+    el('div', 'lb-hint', s).textContent = 'ENTER / ESC / CLICK TO GO BACK';
+    board.key = null;
   }
 
   // GAME OVER
@@ -333,6 +355,22 @@
   // ---- per-frame sync ----
   let lastState = null, lastBox = '';
   const setText = (e, t) => { t = String(t); if (e.textContent !== t) e.textContent = t; };
+  function syncBoard() {
+    const LB = TD.Leaderboard, list = LB.list();
+    const key = LB.status + '|' + list.map((e) => e.name + ':' + e.wave + ':' + e.score + ':' + (LB.isMine(e) ? 1 : 0)).join(',');
+    if (key === board.key) return;
+    board.key = key;
+    board.rows.textContent = '';
+    list.forEach((e, i) => {
+      const r = el('div', 'lb-row' + (i === 0 ? ' first' : '') + (LB.isMine(e) ? ' mine' : ''), board.rows, { top: i * 10 + 'px' });
+      for (const [c, t] of [['n', i + 1], ['nm', e.name], ['w', e.wave], ['sc', e.score]]) el('span', c, r).textContent = String(t);
+    });
+    board.msg.textContent = list.length ? '' : LB.status === 'loading' ? 'LOADING...' : 'NO SCORES YET - GO PLAY!';
+    const st = LB.status === 'online' ? ['ONLINE - ALL PLAYERS', 'on'] : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', 'off'] : ['LOADING...', 'wait'];
+    board.status.textContent = st[0];
+    board.status.className = 'lb-status ' + st[1];
+  }
+
   TD.Overlay = {
     sync(g) {
       const c = document.getElementById('game'), r = c.getBoundingClientRect(), v = TD.view;
@@ -349,6 +387,7 @@
         lastState = s;
       }
       if (!s) return;
+      if (s === 'board') return syncBoard();
       const list = TD.menuButtons(SCREEN_MENU[s]);
       const selId = list[g.sel] && list[g.sel].id;
       for (const b of buttons) {
