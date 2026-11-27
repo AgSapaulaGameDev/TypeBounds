@@ -5,6 +5,8 @@ Pixel-art typing tower defense. Protect the tower in the center. Enemies walk in
 ## How to run
 Double-click `index.html`. No build step, no server. Scripts are classic `<script>` tags (not ES modules) so `file://` works.
 
+**Desktop .exe (Electron, in `desktop/`):** `cd desktop`, `npm install` once, then `npm start` to open it in a window or `npm run dist` to build `desktop/dist/TypeBounds.exe` (portable, about 110 MB; `dist/win-unpacked/` is the folder you would upload to Steam). `build.js` copies the game into `desktop/app/` and swaps Google Fonts for a bundled Pixelify Sans so it runs offline; the website files are untouched. F11 toggles fullscreen.
+
 **Temporary debug panel:** add `?debug` to the URL (e.g. `index.html?debug`). A box at the bottom left jumps to any wave and gives +500 gold. Those runs never post to the leaderboard. Remove `js/debug.js` when done testing.
 
 ## Core rules
