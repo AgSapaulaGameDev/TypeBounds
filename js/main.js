@@ -153,7 +153,7 @@
     playerName: '', nameErrT: 0, lastRank: 0,
     gold: 0, armorLv: 0, wall: new TD.Barricade(), buffs: {},
     best: parseInt(store.get('td_best', '0'), 10) || 0,
-    enemies: [], particles: [], bolts: [], floats: [],
+    enemies: [], particles: [], bolts: [], floats: [], throws: [],
     hp: 20, maxHp: 20, score: 0, combo: 0, locked: null,
     shake: 0, baseFlash: 0, typoFlash: 0,
     phase: 'banner', banner: 0, bannerText: '', bannerSub: '',
@@ -235,7 +235,7 @@
     addGold(n) { this.gold += n; this.goldEarned += n; },
 
     // ---- screens ----
-    toMenu() { this.state = 'menu'; this.sel = 0; this.locked = null; this.enemies = []; this.particles = []; this.floats = []; this.bolts = []; },
+    toMenu() { this.state = 'menu'; this.sel = 0; this.locked = null; this.enemies = []; this.throws = []; this.particles = []; this.floats = []; this.bolts = []; },
     pause() { if (this.state === 'play') { this.state = 'paused'; this.sel = 0; A.lock(); } },
     resume() { this.state = 'play'; },
     openSettings(from) { this.settingsFrom = from; this.state = 'settings'; this.sel = 0; },
@@ -1135,7 +1135,7 @@
     // golden eggs thrown from the tower at the goose (arc, homing on where it is now)
     drawThrows() {
       const img = S.gegg[0].r;
-      for (const t of this.throws) {
+      for (const t of this.throws || []) {
         const p = Math.min(1, t.t / t.dur), g = t.goose;
         const x = t.x0 + (g.x - t.x0) * p, y = t.y0 + (g.y - 10 - t.y0) * p - Math.sin(p * Math.PI) * 26;
         ctx.drawImage(img, Math.round(x - 3), Math.round(y - 3));
