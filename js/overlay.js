@@ -315,7 +315,6 @@
       }
     });
     button(s, 'back', 'crimson', 272, 31, 19, 18, '', 'x', 8).wrap.classList.add('xclose'); // X close (keyboard: the last item)
-    escHint(s, 150);
   }
   function drawRow(c, sel) {
     const x = c.getContext('2d'), w = c.width, h = c.height;
@@ -389,7 +388,6 @@
   }
   // X close button on a panel's top-right corner (replaces the old BACK bars)
   function closeX(s, id, X, Y) { const b = xbtn(s, id, 'crimson', X, Y, 19, 18, '', 'x', 8); b.wrap.classList.add('xclose'); return b; }
-  function escHint(s, Y, text) { el('div', 'esc-hint', s, { top: Y + 'px' }).textContent = text || 'ESC TO CLOSE'; }
 
   // gold-framed dark text box (name entry, account fields)
   function drawField(c) {
@@ -442,17 +440,15 @@
     closeX(s, 'acback', 251, 22);
     acct.msg = el('div', 'ac-msg', s);
     el('div', 'ac-hint', s).textContent = 'NO ACCOUNT NEEDED TO PLAY  -  FORGOT YOUR PASSWORD? ASK THE DEV';
-    escHint(s, 143);
 
     acct.name.addEventListener('input', () => {
       const v = acct.name.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
       if (v !== acct.name.value) acct.name.value = v;
     });
-    // typing in the boxes stays in the boxes (the game doesn't see it); Enter = LOG IN, Esc = back
+    // typing in the boxes stays in the boxes (the game doesn't see it); Enter = LOG IN
     for (const inp of [acct.name, acct.pw]) inp.addEventListener('keydown', (ev) => {
       ev.stopPropagation();
       if (ev.key === 'Enter') { ev.preventDefault(); accountDo('login'); }
-      else if (ev.key === 'Escape') { ev.preventDefault(); TD.game.toMenu(); }
     });
   }
   function acctMsg(t, cls) { acct.msg.textContent = t; acct.msg.className = 'ac-msg ' + (cls || ''); }
@@ -591,7 +587,6 @@
     board.rows = el('div', 'lb-rows', s, at(0, 45, 320, 100));
     board.msg = el('div', 'lb-msg', s);
     board.status = el('div', 'lb-status', s);
-    el('div', 'lb-hint', s).textContent = 'ESC TO CLOSE';
     closeX(s, 'boardx', 256, 3);
     board.key = null;
   }

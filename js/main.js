@@ -528,10 +528,8 @@
           if (key === 'Backspace') this.playerName = this.playerName.slice(0, -1);
           else this.toMenu();
           return;
-        case 'board': return this.toMenu();
+        case 'board': case 'account': case 'settings': return; // closed with their X button (or Enter on the board)
         case 'confirm': return this.toMenu();
-        case 'account': if (key === 'Escape') this.toMenu(); return;
-        case 'settings': return this.closeSettings();
         case 'paused': return this.resume();
         case 'over':
           if (key === 'Escape' && this.time - this.overAt > 0.8) this.toMenu();
@@ -1524,7 +1522,7 @@
         : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', C.red]
         : ['LOADING...', C.faint];
       F.draw(ctx, st[0], W / 2, 150, st[1], 1, 'center');
-      F.draw(ctx, 'ESC TO CLOSE', W / 2, 158, C.dim, 1, 'center');
+
     },
 
     drawGameOver() {
