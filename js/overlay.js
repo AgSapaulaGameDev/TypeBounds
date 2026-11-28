@@ -287,10 +287,10 @@
   const rows = {};
   {
     const s = scr('settings');
-    panel(s, 39, 28, 245, 98, true);
+    panel(s, 39, 28, 245, 104, true);
     ribbon(s, 82, 11, 159, 28, 'SETTINGS', 'gear', 'gear', 13);
     ['music', 'sfx', 'fs'].forEach((id, i) => {
-      const Y = 49 + i * 24;
+      const Y = 47 + i * 24;
       const row = el('div', 'row', s, at(52, Y, 219, 21));
       row.dataset.id = id;
       const cv = art(219, 21, row);
@@ -313,7 +313,7 @@
         rows[id].lv = null;
       }
     });
-    button(s, 'back', 'crimson', 111, 129, 102, 25, 'BACK', 'back', 12);
+    button(s, 'back', 'crimson', 111, 136, 102, 25, 'BACK', 'back', 12);
   }
   function drawRow(c, sel) {
     const x = c.getContext('2d'), w = c.width, h = c.height;
@@ -626,7 +626,10 @@
   }
 
   // ---- mouse ----
+  let hoverX = null; // one-off buttons (account, name, new game?) aren't menu items: hover sound here
   root.addEventListener('pointerover', (ev) => {
+    const x = ev.target.closest('.xbtn');
+    if (x !== hoverX) { hoverX = x; if (x) TD.Audio.hover(); }
     const e = ev.target.closest('[data-id],[data-row]');
     if (e) select(e.dataset.id || e.dataset.row);
   });
