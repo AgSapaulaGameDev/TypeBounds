@@ -261,8 +261,8 @@
     const s = scr('menu');
     for (const px of [14, 280]) drawPennant(art(26, 66, el('div', 'pennant', s, at(px, 0, 26, 66))));
     s.querySelectorAll('.pennant').forEach((p) => { const c = sprite('crown', { main: '#ffcd4a', shade: '#d98a1c', hi: '#fff3b0', ol: '#1e0a06' }, p); Object.assign(c.style, { position: 'absolute', left: '7px', top: '38px' }); });
-    // logo: pixel-art copy of the reference (200 x 81 png, 1 art pixel = 1 game pixel like every other sprite)
-    const logo = el('img', 'logo', s, at(60, 2, 200, 81));
+    // logo: pixel-art copy of the reference (200 x 81 png, shown at 86% so it doesn't crowd the buttons)
+    const logo = el('img', 'logo', s, at(74, 6, 172, 70));
     logo.src = 'img/logo.png?v=55'; logo.alt = 'TypeBounds - Protect the Tower'; logo.draggable = false;
     button(s, 'continue', 'gold', 95, 86, 131, 22, 'CONTINUE', null, 10);
     button(s, 'play', 'gold', 95, 90, 131, 23, 'PLAY', null, 12.5);
