@@ -185,10 +185,13 @@
 #ui .ac-who { left: 0; right: 0; top: 60px; text-align: center; font-size: 15px; letter-spacing: 1.5px; color: #ffcd4a; text-shadow: 0 2px 0 #b8283a, 1px 3px 0 #2a0a10; }
 #ui .ac-msg { left: 0; right: 0; top: 93.5px; text-align: center; font-size: 6.5px; letter-spacing: .5px; text-shadow: 1px 1px 0 #140508; }
 #ui .ac-msg.err { color: #ff5a4a; } #ui .ac-msg.ok { color: #a7f070; } #ui .ac-msg.wait { color: #cdbca6; }
-#ui .ac-hint { left: 0; right: 0; top: 160px; text-align: center; font-size: 5.5px; letter-spacing: .5px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
+#ui .ac-hint { left: 0; right: 0; top: 135px; text-align: center; font-size: 5.5px; letter-spacing: .5px; color: #e0d6c6; text-shadow: 1px 1px 0 #140508; }
 
 /* leaderboard: crown after names that belong to an account */
 #ui .scr[data-s="account"] .rib-txt { font-weight: 500; }
 /* ACCOUNT pill: icon on the left, label centred in the rest */
 #ui .pill .pic { position: absolute; left: 5px; top: 4px; }
 #ui .pill.sel .lbl { color: #ffe066 !important; }
+/* "ESC TO CLOSE" under panels that have the X close button */
+#ui .esc-hint { position: absolute; left: 0; right: 0; text-align: center; font-size: 6px; letter-spacing: .6px; color: #cdbca6; text-shadow: 1px 1px 0 #140508; font-weight: 500; }
+#ui .xbtn[data-id$="back"] .lbl, #ui .xbtn[data-id="boardx"] .lbl, #ui .btn[data-id="back"] .lbl { gap: 0; }

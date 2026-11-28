@@ -1524,7 +1524,7 @@
         : LB.status === 'offline' ? ['OFFLINE - SHOWING THIS DEVICE ONLY', C.red]
         : ['LOADING...', C.faint];
       F.draw(ctx, st[0], W / 2, 150, st[1], 1, 'center');
-      F.draw(ctx, 'ENTER / ESC / CLICK TO GO BACK', W / 2, 158, C.dim, 1, 'center');
+      F.draw(ctx, 'ESC TO CLOSE', W / 2, 158, C.dim, 1, 'center');
     },
 
     drawGameOver() {

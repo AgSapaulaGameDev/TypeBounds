@@ -80,6 +80,7 @@
     star: ['....#....', '...###...', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '##.....##'],
     aa: ['.##......', '#..#.###.', '#..#....#', '####.####', '#..#.#..#', '#..#..###'],
     crown: ['#...#...#', '##.###.##', '#########', '#*#*#*#*#', '#########'],
+    x: ['##...##', '###.###', '.#####.', '..###..', '.#####.', '###.###', '##...##'],
     backS: ['...#', '..##', '.###', '####', '.###', '..##', '...#'],
     signup: ['..##.....', '.####....', '.####..#.', '..##..###', '.......#.', '######...', '######...'],
     key: ['.####.......', '#****#......', '#*..*#######', '#+..+#++++++', '#++++#..#.##', '.####...#.#.'],
@@ -287,10 +288,10 @@
   const rows = {};
   {
     const s = scr('settings');
-    panel(s, 39, 28, 245, 104, true);
-    ribbon(s, 82, 11, 159, 28, 'SETTINGS', 'gear', 'gear', 13);
+    panel(s, 39, 40, 245, 104, true);
+    ribbon(s, 82, 23, 159, 28, 'SETTINGS', 'gear', 'gear', 13);
     ['music', 'sfx', 'fs'].forEach((id, i) => {
-      const Y = 47 + i * 24;
+      const Y = 59 + i * 24;
       const row = el('div', 'row', s, at(52, Y, 219, 21));
       row.dataset.id = id;
       const cv = art(219, 21, row);
@@ -313,7 +314,8 @@
         rows[id].lv = null;
       }
     });
-    button(s, 'back', 'crimson', 111, 136, 102, 25, 'BACK', 'back', 12);
+    button(s, 'back', 'crimson', 273, 32, 17, 17, '', 'x', 8); // X close (keyboard: the last item)
+    escHint(s, 150);
   }
   function drawRow(c, sel) {
     const x = c.getContext('2d'), w = c.width, h = c.height;
@@ -365,12 +367,8 @@
     nameUI.count = el('div', 'nm-count', s);
     nameUI.err = el('div', 'nm-err', s);
     nameUI.err.textContent = 'TYPE A NAME FIRST';
-    for (const [id, theme, X, label, ic] of [['namego', 'gold', 84, 'START', 'play'], ['nameback', 'crimson', 164, 'BACK', 'back']]) {
-      const b = button(s, id, theme, X, 112, 72, 20, label, ic, 9);
-      buttons.pop(); // not a game menu: drawn once here
-      drawButton(b.cv, THEME[theme], false);
-      b.wrap.classList.add('xbtn');
-    }
+    xbtn(s, 'namego', 'gold', 120, 112, 80, 20, 'START', 'play', 9);
+    closeX(s, 'nameback', 253, 38);
   }
   function syncName(g) {
     const n = g.playerName || '', cur = n.length < 10 && Math.floor(g.time * 3) % 2 === 0 ? '_' : ' ';
@@ -389,6 +387,10 @@
     b.wrap.classList.add('xbtn');
     return b;
   }
+  // X close button on a panel's top-right corner (replaces the old BACK bars)
+  function closeX(s, id, X, Y) { return xbtn(s, id, 'crimson', X, Y, 17, 17, '', 'x', 8); }
+  function escHint(s, Y, text) { el('div', 'esc-hint', s, { top: Y + 'px' }).textContent = text || 'ESC TO CLOSE'; }
+
   // gold-framed dark text box (name entry, account fields)
   function drawField(c) {
     const x = c.getContext('2d'), w = c.width, h = c.height;
@@ -437,9 +439,10 @@
     acct.who = el('div', 'ac-who', inn);
     el('div', 'ac-note', inn, { top: '82px' }).textContent = 'YOUR SAVE AND NAME ARE KEPT ONLINE';
     xbtn(inn, 'aclogout', 'crimson', 118, 103, 84, 18, 'LOG OUT', null, 9);
-    xbtn(s, 'acback', 'crimson', 115, 135, 90, 19, 'BACK', 'back', 9);
+    closeX(s, 'acback', 251, 22);
     acct.msg = el('div', 'ac-msg', s);
     el('div', 'ac-hint', s).textContent = 'NO ACCOUNT NEEDED TO PLAY  -  FORGOT YOUR PASSWORD? ASK THE DEV';
+    escHint(s, 143);
 
     acct.name.addEventListener('input', () => {
       const v = acct.name.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
@@ -588,7 +591,8 @@
     board.rows = el('div', 'lb-rows', s, at(0, 45, 320, 100));
     board.msg = el('div', 'lb-msg', s);
     board.status = el('div', 'lb-status', s);
-    el('div', 'lb-hint', s).textContent = 'ENTER / ESC / CLICK TO GO BACK';
+    el('div', 'lb-hint', s).textContent = 'ESC TO CLOSE';
+    closeX(s, 'boardx', 256, 3);
     board.key = null;
   }
 
@@ -638,6 +642,7 @@
     TD.Audio.unlock();
     if (ev.target.closest('[data-id="namego"]')) { ev.preventDefault(); if (g.state === 'name') g.confirmName(); return; }
     if (ev.target.closest('[data-id="nameback"]')) { ev.preventDefault(); if (g.state === 'name') g.toMenu(); return; }
+    if (ev.target.closest('[data-id="boardx"]')) { ev.preventDefault(); if (g.state === 'board') g.toMenu(); return; }
     const ab = ev.target.closest('[data-id^="ac"]');
     if (ab && g.state === 'account') {
       ev.preventDefault();
