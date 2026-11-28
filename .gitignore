@@ -3,5 +3,4 @@ desktop/dist/
 desktop/app/
 
 # local docs (not in the repo)
-*.md
-!desktop/**
+/*.md
