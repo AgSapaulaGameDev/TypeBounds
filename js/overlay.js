@@ -115,6 +115,7 @@
     crimson: { o: '#1e0a06', b: '#e0a640', hi: '#c4495c', f: ['#a93248', '#8e2639', '#721c2e'], sh: '#4e1220', rv: '#ffd36a', tx: '#fbe9d0', ts: '#2a0a10', ic: { main: '#fbe9d0', ol: '#2a0a10' } },
     green:   { o: '#0e2210', b: '#e0a640', hi: '#8fe486', f: ['#62c75c', '#45a842', '#348a34'], sh: '#1f5e22', rv: '#ffd36a', tx: '#fbfff0', ts: '#174a1e', ic: { main: '#fbfff0', ol: '#174a1e' } },
     brown:   { o: '#1a0e04', b: '#e0a640', hi: '#a88040', f: ['#8e6428', '#7a5420', '#5e3e16'], sh: '#3e2808', rv: '#ffd36a', tx: '#ffe9b0', ts: '#2a1a06', ic: { main: '#ffe9b0', ol: '#2a1a06' } },
+    wine:    { o: '#140508', b: '#6a2434', hi: '#52202c', f: ['#42161f', '#38121a', '#2e0e15'], sh: '#1a060c', rv: '#6a2434', tx: '#cdbca6', ts: '#000', ic: { main: '#cdbca6' } },
     navy:    { o: '#0a0a10', b: '#4a4658', hi: '#46434f', f: ['#34323e', '#2b2933', '#232129'], sh: '#18161d', rv: '#4a4658', tx: '#d8d2e4', ts: '#000', ic: { main: '#d8d2e4' } },
   };
   function drawButton(c, t, sel) { // sel: bright outline (main menu uses chevrons instead)
@@ -286,7 +287,7 @@
   const rows = {};
   {
     const s = scr('settings');
-    panel(s, 39, 28, 245, 98);
+    panel(s, 39, 28, 245, 98, true);
     ribbon(s, 82, 11, 159, 28, 'SETTINGS', 'gear', 'gear', 13);
     ['music', 'sfx', 'fs'].forEach((id, i) => {
       const Y = 49 + i * 24;
@@ -317,17 +318,17 @@
   function drawRow(c, sel) {
     const x = c.getContext('2d'), w = c.width, h = c.height;
     x.clearRect(0, 0, w, h);
-    step(x, sel ? '#e0a640' : '#2e2a36', 0, 0, w, h, 2);
-    step(x, sel ? '#2a2430' : '#1a1720', 1, 1, w - 2, h - 2, 1);
-    step(x, '#2e2a36', 4, 2, 25, 17, 1);
-    step(x, '#121017', 5, 3, 23, 15, 1);
+    step(x, sel ? '#e0a640' : '#4a1a26', 0, 0, w, h, 2);
+    step(x, sel ? '#3a1420' : '#200a10', 1, 1, w - 2, h - 2, 1);
+    step(x, '#4a1a26', 4, 2, 25, 17, 1);
+    step(x, '#140508', 5, 3, 23, 15, 1);
   }
   function drawTrack(c, lv, max) {
     const x = c.getContext('2d'), w = c.width;
     x.clearRect(0, 0, w, 9);
-    step(x, '#0c0a10', 0, 2, w, 5, 1);
-    R(x, '#2b2733', 1, 3, w - 2, 3);
-    R(x, '#3a3542', 1, 5, w - 2, 1);
+    step(x, '#120408', 0, 2, w, 5, 1);
+    R(x, '#3a1420', 1, 3, w - 2, 3);
+    R(x, '#4a1a28', 1, 5, w - 2, 1);
     const k = 3 + Math.round((lv / max) * (w - 7)); // knob centre
     R(x, '#f6c12f', 1, 3, k - 1, 3); R(x, '#ffe27a', 1, 3, k - 1, 1); R(x, '#c98a1c', 1, 5, k - 1, 1);
     step(x, '#2a1404', k - 3, 0, 7, 9, 1);
@@ -414,7 +415,7 @@
   const acct = { busy: false, view: null };
   {
     const s = scr('account');
-    panel(s, 58, 30, 204, 124, true);
+    panel(s, 58, 30, 204, 100, true);
     ribbon(s, 96, 16, 128, 27, 'ACCOUNT', 'crown', 'crown', 12);
     const out = (acct.out = el('div', 'ac-view', s));
     el('div', 'ac-note', out, { top: '45px' }).textContent = 'SAVE ONLINE AND PROTECT YOUR NAME';
@@ -431,13 +432,12 @@
     acct.pw = field('PASSWORD', 74, 'password');
     xbtn(out, 'aclogin', 'gold', 72, 103, 84, 18, 'LOG IN', 'play', 9);
     xbtn(out, 'acsignup', 'crimson', 164, 103, 84, 18, 'SIGN UP', 'signup', 9);
-    xbtn(out, 'acback', 'crimson', 120, 126, 80, 16, 'BACK', 'backS', 8);
     const inn = (acct.in = el('div', 'ac-view', s));
     el('div', 'ac-note', inn, { top: '50px' }).textContent = 'LOGGED IN AS';
     acct.who = el('div', 'ac-who', inn);
     el('div', 'ac-note', inn, { top: '82px' }).textContent = 'YOUR SAVE AND NAME ARE KEPT ONLINE';
-    xbtn(inn, 'aclogout', 'crimson', 72, 103, 84, 18, 'LOG OUT', null, 9);
-    xbtn(inn, 'acback', 'gold', 164, 103, 84, 18, 'BACK', 'back', 9);
+    xbtn(inn, 'aclogout', 'crimson', 118, 103, 84, 18, 'LOG OUT', null, 9);
+    xbtn(s, 'acback', 'crimson', 115, 135, 90, 19, 'BACK', 'back', 9);
     acct.msg = el('div', 'ac-msg', s);
     el('div', 'ac-hint', s).textContent = 'NO ACCOUNT NEEDED TO PLAY  -  FORGOT YOUR PASSWORD? ASK THE DEV';
 
@@ -597,7 +597,7 @@
   let rankEl;
   {
     const s = scr('over');
-    panel(s, 62, 27, 198, 110, 'dark');
+    panel(s, 62, 27, 198, 110, true);
     ribbon(s, 83, 9, 156, 27, 'GAME OVER', 'skull', 'skull', 12);
     const STAT = [['score', 'trophy', 'SCORE'], ['wave', 'flag', 'WAVE'], ['words', 'aa', 'WORDS'],
       ['gold', 'coin', 'GOLD EARNED'], ['acc', 'target', 'ACCURACY'], ['best', 'star', 'BEST SCORE']];
@@ -973,7 +973,7 @@
           const t = rows['tog' + v], act = (v === '1') === fsOn;
           if (t.act !== act) {
             t.act = act;
-            const th = THEME[act ? 'gold' : 'navy'];
+            const th = THEME[act ? 'gold' : 'wine'];
             drawButton(t.c, th, false);
             Object.assign(t.t.lastChild.style, { color: th.tx, textShadow: '0 1px 0 ' + th.ts });
           }
