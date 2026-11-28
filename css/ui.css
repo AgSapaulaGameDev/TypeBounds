@@ -194,4 +194,6 @@
 #ui .pill.sel .lbl { color: #ffe066 !important; }
 /* "ESC TO CLOSE" under panels that have the X close button */
 #ui .esc-hint { position: absolute; left: 0; right: 0; text-align: center; font-size: 6px; letter-spacing: .6px; color: #cdbca6; text-shadow: 1px 1px 0 #140508; font-weight: 500; }
-#ui .xbtn[data-id$="back"] .lbl, #ui .xbtn[data-id="boardx"] .lbl, #ui .btn[data-id="back"] .lbl { gap: 0; }
+#ui .xclose .lbl { gap: 0; }
+/* X placed on whole pixels: the 19x18 face is 15x13, the X 9x9, so 3px each side, 2px top and bottom */
+#ui .xclose .lbl .ic { position: absolute; left: 5px; top: 4px; }

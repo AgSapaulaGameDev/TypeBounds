@@ -314,7 +314,7 @@
         rows[id].lv = null;
       }
     });
-    button(s, 'back', 'crimson', 273, 32, 17, 17, '', 'x', 8); // X close (keyboard: the last item)
+    button(s, 'back', 'crimson', 272, 31, 19, 18, '', 'x', 8).wrap.classList.add('xclose'); // X close (keyboard: the last item)
     escHint(s, 150);
   }
   function drawRow(c, sel) {
@@ -388,7 +388,7 @@
     return b;
   }
   // X close button on a panel's top-right corner (replaces the old BACK bars)
-  function closeX(s, id, X, Y) { return xbtn(s, id, 'crimson', X, Y, 17, 17, '', 'x', 8); }
+  function closeX(s, id, X, Y) { const b = xbtn(s, id, 'crimson', X, Y, 19, 18, '', 'x', 8); b.wrap.classList.add('xclose'); return b; }
   function escHint(s, Y, text) { el('div', 'esc-hint', s, { top: Y + 'px' }).textContent = text || 'ESC TO CLOSE'; }
 
   // gold-framed dark text box (name entry, account fields)
